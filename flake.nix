@@ -21,23 +21,23 @@
 
   in {
 
-    # NixOS configuration entrypoint
-    # Available through 'nixos-rebuild --flake .#your-hostname'
     nixosConfigurations = {
-      vm = nixpkgs.lib.nixosSystem {
-        specialArgs = {inherit inputs outputs;};
-        modules = [ ./hosts/vm ];
-      };
-    };
 
-    homeConfigurations = {
-      "nima@vm" = home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
-        extraSpecialArgs = {inherit inputs outputs;};
-        modules = [
-          ./home/nima/vm.nix
-        ];
+      # vm for testing nixos
+      vm = nixpkgs.lib.nixosSystem {
+        modules = [ ./hosts/vm ];
+        specialArgs = {
+          inherit inputs outputs;
+        };
       };
+
     };
+    #homeConfigurations = {
+    #  "nima@vm" = home-manager.lib.homeManagerConfiguration {
+    #        pkgs = nixpkgs.legacyPackages."x86_64-linux";
+    #        extraSpecialArgs = {inherit inputs outputs;};
+    #        modules = [./home/nima/vm.nix];
+    #      };
+    #};
   };
 }
