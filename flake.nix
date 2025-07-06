@@ -9,10 +9,16 @@
     # Home manager
     home-manager.url = "github:nix-community/home-manager/release-25.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     self,
+    disko,
     nixpkgs,
     home-manager,
     ...
@@ -25,7 +31,10 @@
 
       # vm for testing nixos
       vm = nixpkgs.lib.nixosSystem {
-        modules = [ ./hosts/vm ];
+        modules = [
+          ./hosts/vm
+          inputs.disko.nixosModules.disko
+        ];
         specialArgs = {
           inherit inputs outputs;
         };
