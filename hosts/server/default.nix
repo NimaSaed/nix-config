@@ -13,6 +13,12 @@
       ../common/users/nima
     ];
 
+  # ZFS filesystem mounts
+  fileSystems."/data" = {
+    device = "datapool/data";
+    fsType = "zfs";
+  };
+
   # Use the systemd-boot EFI boot loader
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -21,6 +27,7 @@
   boot.supportedFilesystems = [ "zfs" ];
   boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
   boot.zfs.forceImportRoot = false;
+  boot.zfs.extraPools = [ "datapool" ]; # Automatically import datapool at boot
   services.zfs.autoScrub.enable = true;
 
   # Enable networking
