@@ -19,6 +19,7 @@
 
   # Enable ZFS support
   boot.supportedFilesystems = [ "zfs" ];
+  boot.kernelPackages = pkgs.linuxPackages; # Use stable kernel with ZFS support
   boot.zfs.forceImportRoot = false;
   services.zfs.autoScrub.enable = true;
 
