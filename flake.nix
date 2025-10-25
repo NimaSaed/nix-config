@@ -10,8 +10,15 @@
     home-manager.url = "github:nix-community/home-manager/release-25.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Disko for declarative disk management
     disko = {
       url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Colmena for remote deployment
+    colmena = {
+      url = "github:zhaofengli/colmena";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -40,13 +47,45 @@
         };
       };
 
+      # Production server with RAID1
+      server = nixpkgs.lib.nixosSystem {
+        modules = [
+          ./hosts/server
+          inputs.disko.nixosModules.disko
+        ];
+        specialArgs = {
+          inherit inputs outputs;
+        };
+      };
+
     };
-    #homeConfigurations = {
-    #  "nima@vm" = home-manager.lib.homeManagerConfiguration {
-    #        pkgs = nixpkgs.legacyPackages."x86_64-linux";
-    #        extraSpecialArgs = {inherit inputs outputs;};
-    #        modules = [./home/nima/vm.nix];
-    #      };
-    #};
+
+    # Colmena deployment configuration
+    colmena = {
+      meta = {
+        nixpkgs = import nixpkgs {
+          system = "x86_64-linux";
+        };
+        specialArgs = {
+          inherit inputs outputs;
+        };
+      };
+
+      # Production server deployment
+      server = {
+        deployment = {
+          targetHost = "192.168.1.94";
+          targetUser = "root";
+
+          # Use SSH keys for authentication
+          keys = {};
+        };
+
+        imports = [
+          ./hosts/server
+          inputs.disko.nixosModules.disko
+        ];
+      };
+    };
   };
 }
