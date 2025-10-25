@@ -1,31 +1,53 @@
 {
   disko.devices = {
-    disk.data0 = {
-      type = "disk";
-      device = "/dev/sda";
-      content = {
-        type = "gpt";
-        partitions.data = {
-          size = "100%";
-          content = {
-            type = "filesystem";
-            format = "ext4";
-            mountpoint = "/data0";
+    disk = {
+      sda = {
+        type = "disk";
+        device = "/dev/sda";
+        content = {
+          type = "gpt";
+          partitions = {
+            zfs = {
+              size = "100%";
+              content = {
+                type = "zfs";
+                pool = "datapool";
+              };
+            };
+          };
+        };
+      };
+      sdb = {
+        type = "disk";
+        device = "/dev/sdb";
+        content = {
+          type = "gpt";
+          partitions = {
+            zfs = {
+              size = "100%";
+              content = {
+                type = "zfs";
+                pool = "datapool";
+              };
+            };
           };
         };
       };
     };
-    disk.data1 = {
-      type = "disk";
-      device = "/dev/sdb";
-      content = {
-        type = "gpt";
-        partitions.data = {
-          size = "100%";
-          content = {
-            type = "filesystem";
-            format = "ext4";
-            mountpoint = "/data1";
+    zpool = {
+      datapool = {
+        type = "zpool";
+        mode = "mirror";
+        rootFsOptions = {
+          compression = "zstd";
+          atime = "off";
+        };
+
+        datasets = {
+          data = {
+            type = "zfs_fs";
+            mountpoint = "/data";
+            options.mountpoint = "legacy";
           };
         };
       };
