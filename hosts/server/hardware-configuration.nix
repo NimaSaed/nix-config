@@ -13,11 +13,20 @@
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
-  # Filesystems are now managed by disko (see disko-config.nix)
-  # Boot: /dev/md/boot (RAID1 with metadata 1.0)
-  # Root: /dev/md/root (RAID1 with metadata 1.2)
+  fileSystems."/" =
+    { device = "/dev/disk/by-uuid/28d6e4fd-9b6c-4487-bca7-7c79d5a76948";
+      fsType = "ext4";
+    };
 
-  swapDevices = [ ];
+  fileSystems."/boot" =
+    { device = "/dev/disk/by-uuid/5362-FB08";
+      fsType = "vfat";
+      options = [ "fmask=0077" "dmask=0077" ];
+    };
+
+  swapDevices =
+    [ { device = "/dev/disk/by-uuid/d9fd397c-2e15-41c9-9119-807c7e9e6d9f"; }
+    ];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's
@@ -30,4 +39,3 @@
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }
-

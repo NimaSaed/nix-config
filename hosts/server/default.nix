@@ -8,23 +8,12 @@
   imports =
     [
       ./hardware-configuration.nix
-      ./disko-config.nix
       ../common/users/nima
     ];
 
   # Use the systemd-boot EFI boot loader
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-
-  # Enable software RAID support
-  boot.swraid.enable = true;
-  boot.swraid.mdadmConf = ''
-    MAILADDR root
-    # Boot partition RAID1 (metadata 1.0 for UEFI compatibility)
-    ARRAY /dev/md/boot level=raid1 num-devices=2 metadata=1.0
-    # Root partition RAID1
-    ARRAY /dev/md/root level=raid1 num-devices=2 metadata=1.2
-  '';
 
   # Enable networking
   networking.hostName = "server";
@@ -55,10 +44,6 @@
   # Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
-    settings = {
-      PermitRootLogin = "yes";
-      PasswordAuthentication = true;
-    };
   };
 
   system.stateVersion = "25.05";
