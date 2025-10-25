@@ -1,6 +1,6 @@
 {
   disko.devices = {
-    disk.data = {
+    disk.data0 = {
       type = "disk";
       device = "/dev/sdb";
       content = {
@@ -10,7 +10,7 @@
           content = {
             type = "filesystem";
             format = "ext4";
-            mountpoint = "/data";
+            mountpoint = "/data0";
           };
         };
       };
@@ -25,7 +25,7 @@
           content = {
             type = "filesystem";
             format = "ext4";
-            mountpoint = "/data";
+            mountpoint = "/data1";
           };
         };
       };
