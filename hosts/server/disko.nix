@@ -8,12 +8,19 @@
         content = {
           type = "gpt";
           partitions = {
-            boot = {
+            ESP = {
+              priority = 1;
               size = "1G";
               type = "EF00"; # EFI System Partition
               content = {
-                type = "mdraid";
-                name = "boot";
+                type = "filesystem";
+                format = "vfat";
+                mountpoint = "/boot";
+                mountOptions = [
+                  "fmask=0077"
+                  "dmask=0077"
+                  "noatime"
+                ];
               };
             };
             root = {
@@ -32,12 +39,14 @@
         content = {
           type = "gpt";
           partitions = {
-            boot = {
+            ESP = {
+              priority = 1;
               size = "1G";
-              type = "EF00"; # EFI System Partition
+              type = "EF00"; # EFI System Partition - mirror of nvme0 ESP
               content = {
-                type = "mdraid";
-                name = "boot";
+                type = "filesystem";
+                format = "vfat";
+                # Not mounted - this is a backup ESP
               };
             };
             root = {
@@ -53,21 +62,6 @@
     };
 
     mdadm = {
-      boot = {
-        type = "mdadm";
-        level = 1;
-        metadata = "1.0"; # Metadata at END of partition for UEFI compatibility
-        content = {
-          type = "filesystem";
-          format = "vfat";
-          mountpoint = "/boot";
-          mountOptions = [
-            "fmask=0022"
-            "dmask=0022"
-            "noatime"
-          ];
-        };
-      };
       root = {
         type = "mdadm";
         level = 1;
