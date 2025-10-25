@@ -15,7 +15,7 @@
         };
       };
     };
-    disk.data = {
+    disk.data1 = {
       type = "disk";
       device = "/dev/sdc";
       content = {
