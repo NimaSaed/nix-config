@@ -69,6 +69,7 @@
 
         imports = [
           ./hosts/server
+          inputs.disko.nixosModules.disko
         ];
       };
     };

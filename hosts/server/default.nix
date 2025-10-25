@@ -7,6 +7,7 @@
 {
   imports =
     [
+      ./disko.nix
       ./hardware-configuration.nix
       ../common/core
       ../common/users/nima
