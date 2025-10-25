@@ -17,8 +17,14 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Enable ZFS support
+  boot.supportedFilesystems = [ "zfs" ];
+  boot.zfs.forceImportRoot = false;
+  services.zfs.autoScrub.enable = true;
+
   # Enable networking
   networking.hostName = "server";
+  networking.hostId = "8425e349"; # Required for ZFS (generate with: head -c 8 /etc/machine-id)
   networking.networkmanager.enable = true;
 
   # Enable zram swap for better memory management
