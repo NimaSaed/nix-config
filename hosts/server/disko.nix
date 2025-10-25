@@ -2,7 +2,7 @@
   disko.devices = {
     disk.data0 = {
       type = "disk";
-      device = "/dev/sdb";
+      device = "/dev/sda";
       content = {
         type = "gpt";
         partitions.data = {
@@ -17,7 +17,7 @@
     };
     disk.data1 = {
       type = "disk";
-      device = "/dev/sdc";
+      device = "/dev/sdb";
       content = {
         type = "gpt";
         partitions.data = {
