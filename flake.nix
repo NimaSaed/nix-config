@@ -75,7 +75,7 @@
       server = {
         deployment = {
           targetHost = "192.168.1.94";
-          targetUser = "root";
+          targetUser = "nixos";
           buildOnTarget = true; # Build on server instead of locally
 
           # Use SSH keys for authentication
