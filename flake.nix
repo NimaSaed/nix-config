@@ -46,18 +46,6 @@
           inherit inputs outputs;
         };
       };
-
-      # Production server with RAID1
-      server = nixpkgs.lib.nixosSystem {
-        modules = [
-          ./hosts/server
-          inputs.disko.nixosModules.disko
-        ];
-        specialArgs = {
-          inherit inputs outputs;
-        };
-      };
-
     };
 
     # Colmena deployment configuration
@@ -75,16 +63,12 @@
       server = {
         deployment = {
           targetHost = "192.168.1.94";
-          targetUser = "nima";
+          targetUser = "root";
           buildOnTarget = true; # Build on server instead of locally
-
-          # Use SSH keys for authentication
-          keys = {};
         };
 
         imports = [
           ./hosts/server
-          inputs.disko.nixosModules.disko
         ];
       };
     };
