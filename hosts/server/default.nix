@@ -25,7 +25,6 @@
 
   # Enable ZFS support
   boot.supportedFilesystems = [ "zfs" ];
-  boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
   boot.zfs.forceImportRoot = false;
   # boot.zfs.extraPools = [ "datapool" ]; # Uncomment after creating pool with disko
   services.zfs.autoScrub.enable = true;
