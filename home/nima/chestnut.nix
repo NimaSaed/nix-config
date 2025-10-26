@@ -11,14 +11,14 @@
     stateVersion = "25.05";
   };
 
-  # Server-specific packages
+  # Chestnut-specific packages
   home.packages = with pkgs; [
-    # Add server-specific tools here
+    # Add chestnut-specific tools here
     tmux
     screen
   ];
 
-  # Server-specific program configurations
+  # Chestnut-specific program configurations
   programs = {
     # Enable home-manager
     home-manager.enable = true;

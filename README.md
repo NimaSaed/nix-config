@@ -31,7 +31,7 @@ nix-config/
 │   │   ├── disko.nix          # Disk partitioning
 │   │   └── hardware-configuration.nix
 │   │
-│   └── server/                 # Server configuration
+│   └── chestnut/                 # NAS server configuration
 │       ├── default.nix
 │       ├── disko.nix          # ZFS mirror setup
 │       └── hardware-configuration.nix
@@ -44,7 +44,6 @@ nix-config/
 │       │       ├── git.nix          # Git configuration
 │       │       ├── bash.nix         # Bash configuration
 │       │       ├── direnv.nix       # Direnv configuration
-│       │       ├── starship.nix     # Starship prompt
 │       │       ├── bat.nix          # Bat (better cat)
 │       │       ├── eza.nix          # Eza (better ls)
 │       │       ├── zoxide.nix       # Zoxide (smart cd)
@@ -52,7 +51,7 @@ nix-config/
 │       │
 │       ├── mac.nix            # macOS-specific home config
 │       ├── vm.nix             # VM-specific home config
-│       └── server.nix         # Server-specific home config
+│       └── chestnut.nix         # NAS server-specific home config
 │
 └── overlays/                   # Package overlays
     └── default.nix            # Custom package modifications
@@ -208,7 +207,6 @@ sudo nixos-rebuild switch --rollback
 ## Next Steps
 
 - [ ] Update git username/email in `home/nima/common/core/git.nix`
-- [ ] Customize starship prompt in `home/nima/common/core/starship.nix`
 - [ ] Add machine-specific packages to respective `home/nima/{mac,vm,server}.nix`
 - [ ] Configure Homebrew packages for macOS (optional)
 - [ ] Add optional modules for specific use cases

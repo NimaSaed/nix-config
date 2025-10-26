@@ -38,7 +38,8 @@
   # ============================================================================
   # Networking
   # ============================================================================
-  networking.hostName = "server";
+  # Chestnut - a safe place for your "nuts" (data)
+  networking.hostName = "chestnut";
   networking.hostId =
     "8425e349"; # Required for ZFS (generate with: head -c 8 /etc/machine-id)
   networking.networkmanager.enable = true;

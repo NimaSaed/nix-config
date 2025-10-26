@@ -79,14 +79,14 @@
           ];
           specialArgs = { inherit inputs outputs; };
         };
-        server = nixpkgs.lib.nixosSystem {
+        chestnut = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = [
-            ./hosts/server
+            ./hosts/chestnut
             inputs.disko.nixosModules.disko
             home-manager.nixosModules.home-manager
             ./hosts/common/home-manager.nix
-            { home-manager.users.nima = import ./home/nima/server.nix; }
+            { home-manager.users.nima = import ./home/nima/chestnut.nix; }
           ];
           specialArgs = { inherit inputs outputs; };
         };
@@ -114,7 +114,7 @@
       # =========================================================================
       # Colmena - Remote deployment configuration
       # Deploy: colmena apply
-      # Deploy specific host: colmena apply --on server
+      # Deploy specific host: colmena apply --on chestnut
       # =========================================================================
       colmena = {
         meta = {
@@ -122,22 +122,23 @@
           specialArgs = { inherit inputs outputs; };
         };
 
-        # Server - Production server at 192.168.1.94
+        # Chestnut - Production server (a safe place for your "nuts"/data)
+        # Address: chestnut.nmsd.xyz
         # Features: ZFS mirror pool, remote builds
-        server = {
+        chestnut = {
           deployment = {
-            targetHost = "192.168.1.94";
+            targetHost = "chestnut.nmsd.xyz";
             targetUser = "root";
             buildOnTarget = true; # Build on server to avoid large transfers
-            tags = [ "production" "server" ];
+            tags = [ "production" "storage" ];
           };
 
           imports = [
-            ./hosts/server
+            ./hosts/chestnut
             inputs.disko.nixosModules.disko
             home-manager.nixosModules.home-manager
             ./hosts/common/home-manager.nix
-            { home-manager.users.nima = import ./home/nima/server.nix; }
+            { home-manager.users.nima = import ./home/nima/chestnut.nix; }
           ];
         };
       };
