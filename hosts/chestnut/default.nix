@@ -76,12 +76,7 @@
   services.cockpit = {
     enable = true;
     openFirewall = true;
-    settings = {
-      WebService = {
-        # Space-separated list, as in cockpit.conf
-        Origins = "https://chestnut:9090 https://chestnut.nmsd.xyz:9090";
-      };
-    };
+    allowed-origins = [ "https://chestnut:9090" "https://chestnut.nmsd.xyz:9090" ];
   };
 
   services.udisks2.enable = true;
