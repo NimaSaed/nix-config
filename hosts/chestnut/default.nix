@@ -78,7 +78,7 @@
     openFirewall = true;
     allowed-origins =
       [ "https://chestnut:9090" "https://chestnut.nmsd.xyz:9090" ];
-    packages = pkgs.cockpit;
+    package = pkgs.cockpit;
   };
 
   # Required for Cockpit's Storage page
