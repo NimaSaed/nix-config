@@ -2,9 +2,7 @@
 
 {
   # Import shared core configurations
-  imports = [
-    ./common/core
-  ];
+  imports = [ ./common/core ];
 
   # Home Manager settings
   home = {
@@ -14,9 +12,10 @@
   };
 
   # VM-specific packages
-  home.packages = with pkgs; [
-    # Add VM-specific tools here
-  ];
+  home.packages = with pkgs;
+    [
+      # Add VM-specific tools here
+    ];
 
   # VM-specific program configurations
   programs = {

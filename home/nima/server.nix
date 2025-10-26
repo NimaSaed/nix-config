@@ -2,9 +2,7 @@
 
 {
   # Import shared core configurations
-  imports = [
-    ./common/core
-  ];
+  imports = [ ./common/core ];
 
   # Home Manager settings
   home = {

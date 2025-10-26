@@ -2,10 +2,7 @@
 
 {
   # Import shared configurations
-  imports = [
-    ../common/core
-    ../common/users/nima
-  ];
+  imports = [ ../common/core ../common/users/nima ];
 
   # Nix configuration
   nix.settings = {
@@ -51,14 +48,14 @@
   };
 
   # macOS-specific packages
-  environment.systemPackages = with pkgs; [
-    # Add macOS-specific tools here
-  ];
+  environment.systemPackages = with pkgs;
+    [
+      # Add macOS-specific tools here
+    ];
 
   # Fonts
-  fonts.packages = with pkgs; [
-    (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
-  ];
+  fonts.packages = with pkgs;
+    [ (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; }) ];
 
   # Homebrew integration (optional)
   # Uncomment if you want to manage Homebrew packages via Nix

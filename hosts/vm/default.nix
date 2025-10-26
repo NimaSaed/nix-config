@@ -1,18 +1,12 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ config, lib, pkgs, ... }:
 
 {
-  imports =
-    [
-      ./disko.nix
-      ./hardware-configuration.nix
-      ../common/core
-      ../common/users/nima
-    ];
+  imports = [
+    ./disko.nix
+    ./hardware-configuration.nix
+    ../common/core
+    ../common/users/nima
+  ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -48,7 +42,8 @@
   };
 
   # Allow root SSH access with public key
-  users.users.root.openssh.authorizedKeys.keys = lib.splitString "\n" (builtins.readFile ../../home/nima/ssh.pub);
+  users.users.root.openssh.authorizedKeys.keys =
+    lib.splitString "\n" (builtins.readFile ../../home/nima/ssh.pub);
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

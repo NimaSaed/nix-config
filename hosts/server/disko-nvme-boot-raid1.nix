@@ -1,5 +1,4 @@
-{ lib, ... }:
-{
+{ lib, ... }: {
   disko.devices = {
     disk = {
       nvme0 = {
@@ -10,7 +9,7 @@
           partitions = {
             boot = {
               size = "1M";
-              type = "EF02";  # BIOS boot partition for GRUB
+              type = "EF02"; # BIOS boot partition for GRUB
               priority = 1;
             };
             ESP = {
@@ -39,7 +38,7 @@
           partitions = {
             boot = {
               size = "1M";
-              type = "EF02";  # BIOS boot partition for GRUB
+              type = "EF02"; # BIOS boot partition for GRUB
               priority = 1;
             };
             ESP = {
@@ -65,7 +64,7 @@
       boot = {
         type = "mdadm";
         level = 1;
-        metadata = "1.0";  # Required for boot partition compatibility with GRUB
+        metadata = "1.0"; # Required for boot partition compatibility with GRUB
         content = {
           type = "filesystem";
           format = "vfat";
@@ -78,7 +77,7 @@
         level = 1;
         content = {
           type = "btrfs";
-          extraArgs = [ "-f" ];  # Force overwrite existing filesystem
+          extraArgs = [ "-f" ]; # Force overwrite existing filesystem
           subvolumes = {
             "/rootfs" = {
               mountpoint = "/";

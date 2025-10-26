@@ -6,7 +6,8 @@
 #     });
 #   };
 
-final: prev: {
+final: prev:
+{
   # Add your custom package overlays here
 
   # Example: Override a package version

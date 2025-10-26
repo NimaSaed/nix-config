@@ -12,8 +12,6 @@
     useUserPackages = true;
 
     # Pass extra arguments to home-manager modules
-    extraSpecialArgs = {
-      inherit inputs;
-    };
+    extraSpecialArgs = { inherit inputs; };
   };
 }

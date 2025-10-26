@@ -1,9 +1,4 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ config, lib, pkgs, ... }:
 
 {
   imports = [
@@ -23,12 +18,10 @@
     enable = true;
     efiSupport = true;
     efiInstallAsRemovable = true;
-    mirroredBoots = [
-      {
-        devices = [ "nodev" ];
-        path = "/boot";
-      }
-    ];
+    mirroredBoots = [{
+      devices = [ "nodev" ];
+      path = "/boot";
+    }];
   };
 
   # Enable ZFS support
@@ -46,7 +39,8 @@
   # Networking
   # ============================================================================
   networking.hostName = "server";
-  networking.hostId = "8425e349"; # Required for ZFS (generate with: head -c 8 /etc/machine-id)
+  networking.hostId =
+    "8425e349"; # Required for ZFS (generate with: head -c 8 /etc/machine-id)
   networking.networkmanager.enable = true;
 
   # ============================================================================
@@ -76,9 +70,7 @@
   # ============================================================================
 
   # Enable the OpenSSH daemon
-  services.openssh = {
-    enable = true;
-  };
+  services.openssh = { enable = true; };
 
   # ============================================================================
   # User Configuration
@@ -87,15 +79,15 @@
   # Configure root user for emergency mode access
   users.users.root = {
     # Set root password (same as nima's) for emergency mode access
-    initialHashedPassword = "$y$j9T$VIgEJ4u79wZRwEny9XepM1$1sYHPUO7bIl5PQtSYE.Ptra8zIFBQyh1AlxKmfAkFg/";
+    initialHashedPassword =
+      "$y$j9T$VIgEJ4u79wZRwEny9XepM1$1sYHPUO7bIl5PQtSYE.Ptra8zIFBQyh1AlxKmfAkFg/";
     # Allow root SSH access with public key
-    openssh.authorizedKeys.keys = lib.splitString "\n" (builtins.readFile ../../home/nima/ssh.pub);
+    openssh.authorizedKeys.keys =
+      lib.splitString "\n" (builtins.readFile ../../home/nima/ssh.pub);
   };
 
   # Grant nima access to /data directory
-  systemd.tmpfiles.rules = [
-    "d /data 0755 nima users - -"
-  ];
+  systemd.tmpfiles.rules = [ "d /data 0755 nima users - -" ];
 
   system.stateVersion = "25.05";
 }
