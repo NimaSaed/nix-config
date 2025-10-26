@@ -66,8 +66,18 @@
     enable = true;
   };
 
-  # Allow root SSH access with public key
-  users.users.root.openssh.authorizedKeys.keys = lib.splitString "\n" (builtins.readFile ../../home/nima/ssh.pub);
+  # Configure root user for emergency mode access
+  users.users.root = {
+    # Set root password (same as nima's) for emergency mode access
+    initialHashedPassword = "$y$j9T$VIgEJ4u79wZRwEny9XepM1$1sYHPUO7bIl5PQtSYE.Ptra8zIFBQyh1AlxKmfAkFg/";
+    # Allow root SSH access with public key
+    openssh.authorizedKeys.keys = lib.splitString "\n" (builtins.readFile ../../home/nima/ssh.pub);
+  };
+
+  # Grant nima access to /data directory
+  systemd.tmpfiles.rules = [
+    "d /data 0755 nima users - -"
+  ];
 
   system.stateVersion = "25.05";
 }

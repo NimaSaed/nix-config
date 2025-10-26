@@ -41,13 +41,7 @@
         rootFsOptions = {
           compression = "zstd";
           atime = "off";
-        };
-
-        datasets = {
-          data = {
-            type = "zfs_fs";
-            mountpoint = "/data";
-          };
+          mountpoint = "/data";
         };
       };
     };
