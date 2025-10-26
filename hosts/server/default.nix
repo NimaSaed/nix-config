@@ -6,14 +6,17 @@
 }:
 
 {
-  imports =
-    [
-      ./disko-nvme-boot-raid1.nix
-      ./disko-zfs-datapool.nix
-      ./hardware-configuration.nix
-      ../common/core
-      ../common/users/nima
-    ];
+  imports = [
+    ./disko-nvme-boot-raid1.nix
+    ./disko-zfs-datapool.nix
+    ./hardware-configuration.nix
+    ../common/core
+    ../common/users/nima
+  ];
+
+  # ============================================================================
+  # Boot Configuration
+  # ============================================================================
 
   # Use GRUB bootloader with RAID support
   boot.loader.grub = {
@@ -31,19 +34,26 @@
   # Enable ZFS support
   boot.supportedFilesystems = [ "zfs" ];
   boot.zfs.forceImportRoot = false;
-  #boot.zfs.extraPools = [ "datapool" ];
-  #services.zfs.autoScrub.enable = true;
-
-  # Enable networking
-  networking.hostName = "server";
-  networking.hostId = "8425e349"; # Required for ZFS (generate with: head -c 8 /etc/machine-id)
-  networking.networkmanager.enable = true;
+  # Note: ZFS pools and scrubbing can be configured here if needed
+  # boot.zfs.extraPools = [ "datapool" ];
+  # services.zfs.autoScrub.enable = true;
 
   # Enable zram swap for better memory management
   zramSwap.enable = true;
   zramSwap.memoryPercent = 50;
 
-  # Set your time zone.
+  # ============================================================================
+  # Networking
+  # ============================================================================
+  networking.hostName = "server";
+  networking.hostId = "8425e349"; # Required for ZFS (generate with: head -c 8 /etc/machine-id)
+  networking.networkmanager.enable = true;
+
+  # ============================================================================
+  # Localization
+  # ============================================================================
+
+  # Set your time zone
   time.timeZone = "Europe/Amsterdam";
 
   # Select internationalisation properties.
@@ -61,10 +71,18 @@
     LC_TIME = "nl_NL.UTF-8";
   };
 
-  # Enable the OpenSSH daemon.
+  # ============================================================================
+  # Services
+  # ============================================================================
+
+  # Enable the OpenSSH daemon
   services.openssh = {
     enable = true;
   };
+
+  # ============================================================================
+  # User Configuration
+  # ============================================================================
 
   # Configure root user for emergency mode access
   users.users.root = {
