@@ -35,7 +35,7 @@
   boot.supportedFilesystems = [ "zfs" ];
   boot.zfs.forceImportRoot = false;
   # Note: ZFS pools and scrubbing can be configured here if needed
-  # boot.zfs.extraPools = [ "datapool" ];
+  boot.zfs.extraPools = [ "datapool" ];
   # services.zfs.autoScrub.enable = true;
 
   # Enable zram swap for better memory management
