@@ -13,48 +13,56 @@ This is a multi-platform Nix configuration supporting:
 
 ```
 nix-config/
-├── flake.nix                    # Main flake configuration
-├── flake.lock                   # Dependency lock file
+├── flake.nix                      # Main flake configuration
+├── flake.lock                     # Dependency lock file
 │
-├── hosts/                       # System configurations
-│   ├── common/                  # Shared system modules
-│   │   ├── core/               # Core packages (vim, git)
-│   │   ├── optional/           # Optional modules
-│   │   ├── users/              # User account definitions
-│   │   └── home-manager.nix    # Shared home-manager settings
-│   │
-│   ├── mac/                    # macOS configuration
-│   │   └── default.nix
-│   │
-│   ├── vm/                     # VM configuration
+├── hosts/                         # System configurations
+│   ├── chestnut/                  # NAS/server configuration
 │   │   ├── default.nix
-│   │   ├── disko.nix          # Disk partitioning
+│   │   ├── disko-nvme-boot-raid1.nix   # Boot disk layout
+│   │   ├── disko-zfs-datapool.nix      # ZFS datapool layout
 │   │   └── hardware-configuration.nix
 │   │
-│   └── chestnut/                 # NAS server configuration
+│   ├── common/                    # Shared system modules
+│   │   ├── core/                  # Shared system options
+│   │   │   └── default.nix
+│   │   └── home-manager.nix       # Host-side Home Manager setup
+│   │
+│   ├── mac/                       # macOS (nix-darwin) configuration
+│   │   └── default.nix
+│   │
+│   └── vm/                        # NixOS VM configuration
 │       ├── default.nix
-│       ├── disko.nix          # ZFS mirror setup
+│       ├── disko.nix              # Disk partitioning for the VM
 │       └── hardware-configuration.nix
 │
-├── home/                       # Home Manager configurations
+├── home/                          # Home Manager configurations
 │   └── nima/
-│       ├── common/            # Shared home configurations
-│       │   └── core/          # Core apps and settings
-│       │       ├── default.nix      # Module aggregator
-│       │       ├── git.nix          # Git configuration
-│       │       ├── bash.nix         # Bash configuration
-│       │       ├── direnv.nix       # Direnv configuration
-│       │       ├── bat.nix          # Bat (better cat)
-│       │       ├── eza.nix          # Eza (better ls)
-│       │       ├── zoxide.nix       # Zoxide (smart cd)
-│       │       └── packages.nix     # Common packages
+│       ├── common/
+│       │   └── core/              # Shared user environment modules
+│       │       ├── bash.nix
+│       │       ├── bat.nix
+│       │       ├── default.nix
+│       │       ├── direnv.nix
+│       │       ├── eza.nix
+│       │       ├── git.nix
+│       │       ├── packages.nix
+│       │       ├── tmux.nix
+│       │       └── zoxide.nix
 │       │
-│       ├── mac.nix            # macOS-specific home config
-│       ├── vm.nix             # VM-specific home config
-│       └── chestnut.nix         # NAS server-specific home config
+│       ├── chestnut.nix           # Host-specific home config
+│       ├── mac.nix                # macOS-specific home config
+│       ├── ssh.pub                # Public SSH key for deployments
+│       └── vm.nix                 # VM-specific home config
 │
-└── overlays/                   # Package overlays
-    └── default.nix            # Custom package modifications
+├── overlays/                      # Package overlays
+│   └── default.nix                # Custom package modifications
+│
+└── scripts/                       # Helper scripts
+    ├── authorize-key.sh
+    ├── disko.sh
+    ├── install.sh
+    └── update.sh
 ```
 
 ## Key Improvements
@@ -136,7 +144,7 @@ nix flake update
 
 ### Shared Configurations
 - `hosts/common/core/`: System-wide packages (vim, git)
-- `hosts/common/users/`: User account definitions
+- `hosts/common/home-manager.nix`: Shared Home Manager wiring for hosts
 - `home/nima/common/core/`: User environment essentials
 
 ## Adding New Configurations

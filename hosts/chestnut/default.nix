@@ -73,6 +73,12 @@
   # Enable the OpenSSH daemon
   services.openssh = { enable = true; };
 
+  services.cockpit = {
+    enable = true;
+    openFirewall = true;
+    packages = [ pkgs.cockpit-storaged ];
+  };
+
   # ============================================================================
   # User Configuration
   # ============================================================================
