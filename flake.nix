@@ -90,6 +90,21 @@
           inherit inputs outputs;
         };
       };
+      server = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ./hosts/server
+          inputs.disko.nixosModules.disko
+          home-manager.nixosModules.home-manager
+          ./hosts/common/home-manager.nix
+          {
+            home-manager.users.nima = import ./home/nima/server.nix;
+          }
+        ];
+        specialArgs = {
+          inherit inputs outputs;
+        };
+      };
     };
 
     # =========================================================================
