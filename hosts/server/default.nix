@@ -65,5 +65,8 @@
     enable = true;
   };
 
+  # Allow root SSH access with public key
+  users.users.root.openssh.authorizedKeys.keys = lib.splitString "\n" (builtins.readFile ../../home/nima/ssh.pub);
+
   system.stateVersion = "25.05";
 }
