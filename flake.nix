@@ -3,8 +3,7 @@
 
   inputs = {
     # Nixpkgs
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
 
     # Home manager
     home-manager.url = "github:nix-community/home-manager/release-25.05";
@@ -38,9 +37,16 @@
 
       # vm for testing nixos
       vm = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
         modules = [
           ./hosts/vm
           inputs.disko.nixosModules.disko
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.nima = import ./home/nima/vm.nix;
+          }
         ];
         specialArgs = {
           inherit inputs outputs;
@@ -65,11 +71,18 @@
           targetHost = "192.168.1.94";
           targetUser = "root";
           buildOnTarget = true; # Build on server instead of locally
+          tags = [ "production" "server" ];
         };
 
         imports = [
           ./hosts/server
           inputs.disko.nixosModules.disko
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.nima = import ./home/nima/server.nix;
+          }
         ];
       };
     };
