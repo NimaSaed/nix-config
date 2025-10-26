@@ -76,8 +76,9 @@
   services.cockpit = {
     enable = true;
     openFirewall = true;
-    packages = [ pkgs.cockpit-storaged ];
   };
+
+  services.udisks2.enable = true;
 
   # ============================================================================
   # User Configuration
