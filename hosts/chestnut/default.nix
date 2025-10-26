@@ -73,18 +73,6 @@
   # Enable the OpenSSH daemon
   services.openssh = { enable = true; };
 
-  services.cockpit = {
-    enable = true;
-    openFirewall = true;
-    allowed-origins =
-      [ "https://chestnut:9090" "https://chestnut.nmsd.xyz:9090" ];
-    package = pkgs.cockpit;
-  };
-
-  # Required for Cockpit's Storage page
-  services.udisks2.enable = true;
-  security.polkit.enable = true; # lets Cockpit authorize storage actions
-
   # ============================================================================
   # User Configuration
   # ============================================================================
