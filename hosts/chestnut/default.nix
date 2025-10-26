@@ -77,6 +77,7 @@
     enable = true;
     openFirewall = true;
     allowed-origins = [ "https://chestnut:9090" "https://chestnut.nmsd.xyz:9090" ];
+    packages = [ pkgs.cockpit-storaged ];
   };
 
   services.udisks2.enable = true;
