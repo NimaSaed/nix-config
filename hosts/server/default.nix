@@ -13,12 +13,6 @@
       ../common/users/nima
     ];
 
-  # ZFS filesystem mounts
-  fileSystems."/data" = {
-    device = "datapool/data";
-    fsType = "zfs";
-  };
-
   # Use the systemd-boot EFI boot loader
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
