@@ -22,6 +22,17 @@
     # Custom configuration
     extraConfig = ''
       # =========================================================================
+      # Platform-Specific Prefix Key
+      # =========================================================================
+      ${lib.optionalString (!pkgs.stdenv.isDarwin) ''
+        # Change prefix from C-b to C-a on Linux/Server
+        unbind-key C-b
+        set-option -g prefix C-a
+        bind-key C-a send-prefix
+      ''}
+      # macOS keeps default C-b prefix
+
+      # =========================================================================
       # Vi Copy Mode Settings
       # =========================================================================
       set-window-option -g mode-keys vi
