@@ -7,15 +7,25 @@
 {
   imports =
     [
-#      ./disko.nix
+      ./disko-nvme-boot-raid1.nix
+      ./disko-zfs-datapool.nix
       ./hardware-configuration.nix
       ../common/core
       ../common/users/nima
     ];
 
-  # Use the systemd-boot EFI boot loader
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  # Use GRUB bootloader with RAID support
+  boot.loader.grub = {
+    enable = true;
+    efiSupport = true;
+    efiInstallAsRemovable = true;
+    mirroredBoots = [
+      {
+        devices = [ "nodev" ];
+        path = "/boot";
+      }
+    ];
+  };
 
   # Enable ZFS support
   boot.supportedFilesystems = [ "zfs" ];
