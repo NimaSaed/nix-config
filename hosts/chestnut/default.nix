@@ -76,11 +76,10 @@
   services.cockpit = {
     enable = true;
     openFirewall = true;
-    allowed-origins = [ "https://chestnut:9090" "https://chestnut.nmsd.xyz:9090" ];
-    packages = [ pkgs.cockpit-storaged ];
+    allowed-origins =
+      [ "https://chestnut:9090" "https://chestnut.nmsd.xyz:9090" ];
+    packages = with pkgs; [ cockpit cockpit-storaged ];
   };
-
-  services.udisks2.enable = true;
 
   # ============================================================================
   # User Configuration
