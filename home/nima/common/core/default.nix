@@ -5,8 +5,8 @@
   imports = [
     ./git.nix
     ./bash.nix
+    ./tmux.nix
     ./direnv.nix
-    ./starship.nix
     ./bat.nix
     ./eza.nix
     ./zoxide.nix
