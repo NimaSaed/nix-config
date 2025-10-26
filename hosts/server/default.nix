@@ -31,8 +31,8 @@
   # Enable ZFS support
   boot.supportedFilesystems = [ "zfs" ];
   boot.zfs.forceImportRoot = false;
-  boot.zfs.extraPools = [ "datapool" ];
-  services.zfs.autoScrub.enable = true;
+  #boot.zfs.extraPools = [ "datapool" ];
+  #services.zfs.autoScrub.enable = true;
 
   # Enable networking
   networking.hostName = "server";
