@@ -30,12 +30,18 @@
       url = "github:zhaofengli/colmena";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # nixos-generators - Tool for generating various NixOS image formats
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   # ============================================================================
   # Flake Outputs - What this flake provides
   # ============================================================================
-  outputs = { self, disko, nixpkgs, home-manager, darwin, ... }@inputs:
+  outputs = { self, disko, nixpkgs, home-manager, darwin, nixos-generators, ... }@inputs:
     let inherit (self) outputs;
 
     in {
@@ -59,6 +65,27 @@
       # Overlays - Package modifications and custom packages
       # -------------------------------------------------------------------------
       overlays.default = import ./overlays/default.nix;
+
+      # -------------------------------------------------------------------------
+      # Packages - Installer images for different architectures
+      # -------------------------------------------------------------------------
+      packages = {
+        # x86_64 installer ISO for regular PCs and servers
+        # Build on Linux x86_64 machine (e.g., chestnut): nix build .#installer-iso
+        x86_64-linux.installer-iso = nixos-generators.nixosGenerate {
+          system = "x86_64-linux";
+          modules = [ ./iso/default.nix ];
+          format = "install-iso";
+        };
+
+        # ARM64 installer image for Raspberry Pi 4/5
+        # Build on ARM64 Linux machine (e.g., UTM VM on Mac): nix build .#rpi-installer
+        aarch64-linux.rpi-installer = nixos-generators.nixosGenerate {
+          system = "aarch64-linux";
+          modules = [ ./iso/default.nix ];
+          format = "sd-aarch64-installer";
+        };
+      };
 
       # =========================================================================
       # NixOS Configurations - Linux systems
