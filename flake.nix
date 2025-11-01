@@ -70,20 +70,26 @@
       # Packages - Installer images for different architectures
       # -------------------------------------------------------------------------
       packages = {
-        # x86_64 installer ISO for regular PCs and servers
-        # Build on Linux x86_64 machine (e.g., chestnut): nix build .#installer-iso
-        x86_64-linux.installer-iso = nixos-generators.nixosGenerate {
-          system = "x86_64-linux";
-          modules = [ ./iso/default.nix ];
-          format = "install-iso";
+        # x86_64 packages - Build on x86_64 Linux (e.g., chestnut)
+        x86_64-linux = {
+          # Minimal installer ISO for regular PCs and servers
+          # Build: nix build .#installer-iso
+          installer-iso = nixos-generators.nixosGenerate {
+            system = "x86_64-linux";
+            modules = [ ./iso/default.nix ];
+            format = "install-iso";
+          };
         };
 
-        # ARM64 installer image for Raspberry Pi 4/5
-        # Build on ARM64 Linux machine (e.g., UTM VM on Mac): nix build .#rpi-installer
-        aarch64-linux.rpi-installer = nixos-generators.nixosGenerate {
-          system = "aarch64-linux";
-          modules = [ ./iso/default.nix ];
-          format = "sd-aarch64-installer";
+        # ARM64 packages - Build on aarch64 Linux (e.g., UTM VM)
+        aarch64-linux = {
+          # SD card image for Raspberry Pi 4/5
+          # Build: nix build .#rpi-installer
+          rpi-installer = nixos-generators.nixosGenerate {
+            system = "aarch64-linux";
+            modules = [ ./iso/default.nix ];
+            format = "sd-aarch64-installer";
+          };
         };
       };
 
