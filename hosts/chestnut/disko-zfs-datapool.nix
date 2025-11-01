@@ -3,7 +3,7 @@
     disk = {
       sda = {
         type = "disk";
-        device = "/dev/sda";
+        device = "/dev/disk/by-id/wwn-0x5000c500e9dbd8c6";
         content = {
           type = "gpt";
           partitions = {
@@ -19,7 +19,7 @@
       };
       sdb = {
         type = "disk";
-        device = "/dev/sdb";
+        device = "/dev/disk/by-id/wwn-0x5000c500e9e021d0";
         content = {
           type = "gpt";
           partitions = {
