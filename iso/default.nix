@@ -3,10 +3,9 @@
 { config, pkgs, lib, modulesPath, ... }:
 
 {
-  # Import the minimal installation ISO base configuration
-  imports = [
-    "${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix"
-  ];
+  # nixos-generators automatically imports the appropriate base configuration
+  # based on the format parameter (install-iso, sd-aarch64-installer, etc.)
+  imports = [ ];
 
   # =========================================================================
   # SSH Configuration - Enable remote access
@@ -50,20 +49,6 @@
     git    # For cloning configurations
     vim    # Text editor
   ];
-
-  # =========================================================================
-  # ISO Image Configuration
-  # =========================================================================
-  isoImage = {
-    # Make the ISO bootable on UEFI systems
-    makeEfiBootable = true;
-
-    # Make the ISO bootable on BIOS systems
-    makeUsbBootable = true;
-
-    # Compress the ISO image
-    squashfsCompression = "zstd";
-  };
 
   # =========================================================================
   # System Settings
