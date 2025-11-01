@@ -79,15 +79,15 @@
           type = "btrfs";
           extraArgs = [ "-f" ]; # Force overwrite existing filesystem
           subvolumes = {
-            "/rootfs" = {
+            "rootfs" = {
               mountpoint = "/";
               mountOptions = [ "compress=zstd" "noatime" ];
             };
-            "/home" = {
+            "home" = {
               mountpoint = "/home";
               mountOptions = [ "compress=zstd" ];
             };
-            "/nix" = {
+            "nix" = {
               mountpoint = "/nix";
               mountOptions = [ "compress=zstd" "noatime" ];
             };
