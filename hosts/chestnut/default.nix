@@ -78,6 +78,7 @@
     enable = true;
     port = 9090;
     openFirewall = true;
+    allowed-origins = [ "0.0.0.0/0" ];
     settings = {
       WebService = {
         AllowUnencrypted = true;
