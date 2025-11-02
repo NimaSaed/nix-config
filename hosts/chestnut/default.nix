@@ -3,7 +3,7 @@
 {
   imports = [
     ./disko-nvme-boot-raid1.nix
-    ./disko-zfs-datapool.nix
+    #./disko-zfs-datapool.nix
     ./hardware-configuration.nix
     ../common/core
     ../common/users/nima
@@ -41,7 +41,7 @@
   # Chestnut - a safe place for your "nuts" (data)
   networking.hostName = "chestnut";
   networking.hostId =
-    "8425e349"; # Required for ZFS (generate with: head -c 8 /etc/machine-id)
+    "6b2b4dde"; # Required for ZFS (generate with: head -c 8 /etc/machine-id)
   networking.networkmanager.enable = true;
 
   # ============================================================================
