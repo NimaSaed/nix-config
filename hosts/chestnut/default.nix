@@ -78,7 +78,7 @@
     enable = true;
     port = 9090;
     openFirewall = true;
-    allowed-origins = [ "chestnut:9090" "chestnut.nmsd.xyz:9090" ];
+    allowed-origins = [ "https://chestnut:9090" "https://chestnut.nmsd.xyz:9090" ];
   };
 
   # Enable udisks2 for storage management in Cockpit
