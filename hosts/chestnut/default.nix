@@ -7,6 +7,7 @@
     ./hardware-configuration.nix
     ../common/core
     ../common/users/nima
+    ../common/podman/podman.nix
   ];
 
   # ============================================================================
@@ -72,33 +73,6 @@
 
   # Enable the OpenSSH daemon
   services.openssh = { enable = true; };
-
-  # Enable Cockpit web-based server management interface
-  services.cockpit = {
-    enable = true;
-    port = 9090;
-    openFirewall = true;
-    allowed-origins = [ "https://chestnut:9090" "https://chestnut.nmsd.xyz:9090" ];
-  };
-
-  # Enable udisks2 for storage management in Cockpit
-  services.udisks2.enable = true;
-
-  # ============================================================================
-  # Virtualization
-  # ============================================================================
-
-  # Enable Podman for container management
-  virtualisation.podman = {
-    enable = true;
-    # Enable Docker compatibility
-    dockerCompat = true;
-    # Recommended for rootless containers
-    defaultNetwork.settings.dns_enabled = true;
-  };
-
-  # Enable common container configuration files in /etc/containers
-  virtualisation.containers.enable = true;
 
   # ============================================================================
   # User Configuration
