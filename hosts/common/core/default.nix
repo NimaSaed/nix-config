@@ -1,4 +1,9 @@
 { pkgs, ... }: {
+  # Nix configuration
+  nix.settings = {
+    experimental-features = "nix-command flakes";
+  };
+
   # System-level packages
   # Keep this minimal - most packages should be in home-manager (home/nima/common/core/packages.nix)
   # Only include packages that are:
