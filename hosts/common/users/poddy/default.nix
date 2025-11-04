@@ -21,7 +21,7 @@ in
 
     # Disable interactive login for security
     # User only needs systemd service access (via lingering)
-    shell = pkgs.nologin;
+    shell = "${pkgs.shadow}/bin/nologin";
 
     # Required for rootless Podman networking and port binding
     extraGroups = [ "podman" ];
