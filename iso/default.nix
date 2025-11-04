@@ -46,8 +46,8 @@
   # System Packages - Minimal tools for installation
   # =========================================================================
   environment.systemPackages = with pkgs; [
-    git    # For cloning configurations
-    vim    # Text editor
+    git # For cloning configurations
+    vim # Text editor
   ];
 
   # =========================================================================

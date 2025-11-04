@@ -19,7 +19,7 @@
     # Removes dangling images and unused containers weekly to free up disk space
     autoPrune = {
       enable = true;
-      flags = [ "--all" ];  # Remove all unused images, not just dangling ones
+      flags = [ "--all" ]; # Remove all unused images, not just dangling ones
     };
   };
 
@@ -59,9 +59,9 @@
     description = "Podman Auto-Update Timer";
     wantedBy = [ "timers.target" ];
     timerConfig = {
-      OnCalendar = "daily";           # Run once per day at midnight
-      Persistent = true;              # Run on boot if missed while powered off
-      RandomizedDelaySec = "15min";   # Add random delay to prevent load spikes
+      OnCalendar = "daily"; # Run once per day at midnight
+      Persistent = true; # Run on boot if missed while powered off
+      RandomizedDelaySec = "15min"; # Add random delay to prevent load spikes
     };
   };
 
@@ -74,7 +74,8 @@
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${pkgs.podman}/bin/podman auto-update";
-      ExecStartPost = "${pkgs.podman}/bin/podman image prune -f";  # Clean up old images after update
+      ExecStartPost =
+        "${pkgs.podman}/bin/podman image prune -f"; # Clean up old images after update
     };
   };
 }
