@@ -24,15 +24,14 @@
   # Creates a Podman pod with published ports for HTTP/HTTPS/Dashboard/LDAPS
 
   systemd.user.services.pod-reverse_proxy = {
-    Unit = {
-      Description = "Podman pod-reverse_proxy";
-      Documentation = "man:podman-generate-systemd(1)";
-      Wants = "network-online.target";
-      After = "network-online.target";
-      RequiresMountsFor = "%t/containers";
-    };
+    description = "Podman pod-reverse_proxy";
+    documentation = [ "man:podman-generate-systemd(1)" ];
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" ];
+    requires = [ "%t/containers" ];
+    wantedBy = [ "default.target" ];
 
-    Service = {
+    serviceConfig = {
       Environment = "PODMAN_SYSTEMD_UNIT=%n";
       Restart = "always";
       TimeoutStopSec = 70;
@@ -55,8 +54,6 @@
       ExecStopPost = "${pkgs.podman}/bin/podman pod rm " + "--ignore " + "-f "
         + "--pod-id-file %t/pod-reverse_proxy.pod-id";
     };
-
-    wantedBy = [ "default.target" ];
   };
 
   # ============================================================================
@@ -69,16 +66,15 @@
   # - Cockpit proxy on srv1.nmsd.xyz
 
   systemd.user.services.container-traefik = {
-    Unit = {
-      Description = "Podman container-traefik";
-      Documentation = "man:podman-generate-systemd(1)";
-      Wants = "network-online.target";
-      After = [ "network-online.target" "pod-reverse_proxy.service" ];
-      BindsTo = "pod-reverse_proxy.service";
-      RequiresMountsFor = "%t/containers";
-    };
+    description = "Podman container-traefik";
+    documentation = [ "man:podman-generate-systemd(1)" ];
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" "pod-reverse_proxy.service" ];
+    bindsTo = [ "pod-reverse_proxy.service" ];
+    requires = [ "%t/containers" ];
+    wantedBy = [ "default.target" ];
 
-    Service = {
+    serviceConfig = {
       Environment = "PODMAN_SYSTEMD_UNIT=%n";
       Restart = "always";
       TimeoutStopSec = 70;
@@ -160,8 +156,6 @@
       ExecStopPost = "${pkgs.podman}/bin/podman rm " + "-f " + "--ignore -t 10 "
         + "--cidfile=%t/%n.ctr-id";
     };
-
-    wantedBy = [ "default.target" ];
   };
 
   # ============================================================================
