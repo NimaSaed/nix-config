@@ -56,7 +56,7 @@
         + "--pod-id-file %t/pod-reverse_proxy.pod-id";
     };
 
-    Install = { WantedBy = [ "default.target" ]; };
+    wantedBy = [ "default.target" ];
   };
 
   # ============================================================================
@@ -161,7 +161,7 @@
         + "--cidfile=%t/%n.ctr-id";
     };
 
-    Install = { WantedBy = [ "default.target" ]; };
+    wantedBy = [ "default.target" ];
   };
 
   # ============================================================================
