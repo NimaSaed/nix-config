@@ -28,8 +28,11 @@
     documentation = [ "man:podman-generate-systemd(1)" ];
     wants = [ "network-online.target" ];
     after = [ "network-online.target" ];
-    requires = [ "%t/containers" ];
     wantedBy = [ "default.target" ];
+
+    unitConfig = {
+      RequiresMountsFor = "%t/containers";
+    };
 
     serviceConfig = {
       Environment = "PODMAN_SYSTEMD_UNIT=%n";
@@ -71,8 +74,11 @@
     wants = [ "network-online.target" ];
     after = [ "network-online.target" "pod-reverse_proxy.service" ];
     bindsTo = [ "pod-reverse_proxy.service" ];
-    requires = [ "%t/containers" ];
     wantedBy = [ "default.target" ];
+
+    unitConfig = {
+      RequiresMountsFor = "%t/containers";
+    };
 
     serviceConfig = {
       Environment = "PODMAN_SYSTEMD_UNIT=%n";
