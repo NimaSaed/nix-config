@@ -102,11 +102,11 @@ in
   # ============================================================================
   # Override XDG directories to point to ZFS datapool for data persistence
   # This moves all Podman data (images, containers, volumes, config) to /data
-  systemd.services."user@${poddyUid}".serviceConfig = {
-    Environment = [
-      "XDG_CONFIG_HOME=${poddyDataRoot}/config"
-      "XDG_DATA_HOME=${poddyDataRoot}/containers"
-      "PATH=${pkgs.shadow}/bin:${pkgs.coreutils}/bin:/run/current-system/sw/bin"
-    ];
-  };
+  # Uses environment.d for the poddy user systemd manager
+  environment.etc."systemd/user.conf.d/poddy-env.conf".text = ''
+    [Manager]
+    DefaultEnvironment="XDG_CONFIG_HOME=${poddyDataRoot}/config"
+    DefaultEnvironment="XDG_DATA_HOME=${poddyDataRoot}/containers"
+    DefaultEnvironment="PATH=${pkgs.shadow}/bin:${pkgs.coreutils}/bin:/run/current-system/sw/bin"
+  '';
 }
