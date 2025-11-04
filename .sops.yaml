@@ -1,0 +1,16 @@
+# SOPS Configuration File
+keys:
+  # Your personal age key (stored in 1Password)
+  # For local encryption/decryption
+  - &personal age17xvxtg5me0cqeaecfsdtver2p84hnvxw9deftwr5dq2vhu2j0g3snp0fqz
+
+  # Chestnut server - SSH host key converted to age format
+  - &chestnut age1rn2v43ujy9hrxua9vngkpsqq8yz3avcr2ujx8dtdqzquhpjqsehsdz2m7m
+
+creation_rules:
+  # Chestnut server secrets
+  - path_regex: hosts/chestnut/secrets\.yaml$
+    key_groups:
+      - age:
+          - *personal
+          - *chestnut

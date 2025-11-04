@@ -36,12 +36,18 @@
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # sops-nix - Secrets management with SOPS (Secrets OPerationS)
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   # ============================================================================
   # Flake Outputs - What this flake provides
   # ============================================================================
-  outputs = { self, disko, nixpkgs, home-manager, darwin, nixos-generators, ...
+  outputs = { self, disko, nixpkgs, home-manager, darwin, nixos-generators, sops-nix, ...
     }@inputs:
     let inherit (self) outputs;
 
@@ -118,6 +124,7 @@
           modules = [
             ./hosts/chestnut
             inputs.disko.nixosModules.disko
+            inputs.sops-nix.nixosModules.sops
             home-manager.nixosModules.home-manager
             ./hosts/common/home-manager.nix
             { home-manager.users.nima = import ./home/nima/chestnut.nix; }
@@ -170,6 +177,7 @@
           imports = [
             ./hosts/chestnut
             inputs.disko.nixosModules.disko
+            inputs.sops-nix.nixosModules.sops
             home-manager.nixosModules.home-manager
             ./hosts/common/home-manager.nix
             { home-manager.users.nima = import ./home/nima/chestnut.nix; }

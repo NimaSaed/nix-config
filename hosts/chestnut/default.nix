@@ -7,7 +7,9 @@
     ./hardware-configuration.nix
     ../common/core
     ../common/users/nima
+    ../common/users/poddy
     ../common/podman/podman.nix
+    ../common/podman/container-traefik.nix
   ];
 
   # ============================================================================
@@ -89,7 +91,46 @@
   };
 
   # Grant nima access to /data directory
-  systemd.tmpfiles.rules = [ "d /data 0755 nima users - -" ];
+  systemd.tmpfiles.rules = [
+    "d /data 0755 nima users - -"
+    # Traefik storage directory on ZFS datapool
+    "d /data/traefik 0755 poddy poddy - -"
+    "f /data/traefik/acme.json 0600 poddy poddy - -"
+  ];
+
+  # ============================================================================
+  # Secrets Management - sops-nix
+  # ============================================================================
+  # Secrets are encrypted with age and stored in secrets.yaml
+  # Generate age key: ssh-keyscan localhost | ssh-to-age
+  # Or use existing SSH host key: /etc/ssh/ssh_host_ed25519_key
+
+  sops = {
+    # Default secrets file for this host
+    defaultSopsFile = ./secrets.yaml;
+
+    # Validate sops file exists at evaluation time
+    validateSopsFiles = true;  # Set to true after creating secrets.yaml
+
+    # Use SSH host key for decryption (no separate age key needed)
+    age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+
+    # Define secrets that will be available to services
+    secrets = {
+      namecheap_email = {
+        owner = "poddy";
+        group = "poddy";
+      };
+      namecheap_api_user = {
+        owner = "poddy";
+        group = "poddy";
+      };
+      namecheap_api_key = {
+        owner = "poddy";
+        group = "poddy";
+      };
+    };
+  };
 
   system.stateVersion = "25.05";
 }
