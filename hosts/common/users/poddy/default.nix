@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 
 let
-  poddyUid = toString config.users.users.poddy.uid;
+  poddyUid = "1001";  # Fixed UID for poddy user
   poddyDataRoot = "/data/poddy";
 in
 {
@@ -18,6 +18,7 @@ in
     home = "/home/poddy";
     createHome = true;
     group = "poddy";
+    uid = 1001;  # Fixed UID to match configuration
 
     # Disable interactive login for security
     # User only needs systemd service access (via lingering)
@@ -105,6 +106,7 @@ in
     Environment = [
       "XDG_CONFIG_HOME=${poddyDataRoot}/config"
       "XDG_DATA_HOME=${poddyDataRoot}/containers"
+      "PATH=${pkgs.shadow}/bin:${pkgs.coreutils}/bin:/run/current-system/sw/bin"
     ];
   };
 }
