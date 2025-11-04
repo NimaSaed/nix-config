@@ -107,6 +107,6 @@ in
     [Manager]
     DefaultEnvironment="XDG_CONFIG_HOME=${poddyDataRoot}/config"
     DefaultEnvironment="XDG_DATA_HOME=${poddyDataRoot}/containers"
-    DefaultEnvironment="PATH=${pkgs.shadow}/bin:${pkgs.coreutils}/bin:/run/current-system/sw/bin"
+    DefaultEnvironment="PATH=/run/wrappers/bin:${pkgs.shadow}/bin:${pkgs.coreutils}/bin:/run/current-system/sw/bin"
   '';
 }
