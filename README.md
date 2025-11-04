@@ -26,6 +26,10 @@ nix-config/
 │   ├── common/                    # Shared system modules
 │   │   ├── core/                  # Shared system options
 │   │   │   └── default.nix
+│   │   ├── podman/                # Container infrastructure
+│   │   │   └── podman.nix         # Podman configuration & auto-update
+│   │   ├── users/                 # System user configurations
+│   │   │   └── nima/              # Primary user configuration
 │   │   └── home-manager.nix       # Host-side Home Manager setup
 │   │
 │   ├── mac/                       # macOS (nix-darwin) configuration
@@ -55,6 +59,9 @@ nix-config/
 │       ├── ssh.pub                # Public SSH key for deployments
 │       └── vm.nix                 # VM-specific home config
 │
+├── iso/                           # NixOS installer images
+│   └── default.nix                # ISO build configuration
+│
 ├── overlays/                      # Package overlays
 │   └── default.nix                # Custom package modifications
 │
@@ -64,33 +71,6 @@ nix-config/
     ├── install.sh
     └── update.sh
 ```
-
-## Key Improvements
-
-### 1. **Modular Home Manager Configuration**
-- Created separate files for each application (`git.nix`, `bash.nix`, etc.)
-- Easy to enable/disable specific tools
-- Shared configurations across all machines via `common/core/`
-
-### 2. **Darwin (macOS) Support**
-- Added nix-darwin input and configuration
-- Configured system defaults (dock, finder, keyboard)
-- Ready to use with `darwin-rebuild switch --flake .#mac`
-
-### 3. **Eliminated Duplication**
-- Created `hosts/common/home-manager.nix` shared module
-- Removed repeated home-manager configuration blocks
-- Consistent settings across all hosts
-
-### 4. **Standard Flake Outputs**
-- **formatter**: Format Nix files with `nix fmt`
-- **nixosModules**: Reusable modules for other flakes
-- **overlays**: Package modifications and custom packages
-
-### 5. **Better Documentation**
-- Comprehensive comments in `flake.nix`
-- Usage examples for each configuration
-- Clear structure and organization
 
 ## Usage
 
@@ -115,6 +95,16 @@ darwin-rebuild build --flake .#mac
 darwin-rebuild switch --flake .#mac
 ```
 
+### Build Custom Installer ISO
+
+```bash
+# Build bootable installer image
+nix build .#installer-iso
+
+# ISO will be in result/iso/
+ls -lh result/iso/*.iso
+```
+
 ### Format Nix Files
 
 ```bash
@@ -127,6 +117,31 @@ nix fmt
 nix flake update
 ```
 
+## Container Infrastructure
+
+This configuration includes Podman for containerized workloads with the following features:
+
+- **Rootless Podman**: Secure container runtime with Docker compatibility
+- **Auto-Update**: Automated daily updates for containers with `io.containers.autoupdate=registry` label
+- **Auto-Prune**: Weekly cleanup of unused images and containers
+- **DNS Enabled**: Proper DNS resolution for rootless containers
+
+The Podman configuration is located at `hosts/common/podman/podman.nix` and can be imported by any host.
+
+## ISO Building
+
+Build custom NixOS installer images for deployment:
+
+```bash
+# Build x86_64 installer ISO
+nix build .#installer-iso
+
+# Find the generated ISO
+ls -lh result/iso/*.iso
+```
+
+The ISO configuration is in `iso/default.nix` and creates bootable installer images with your SSH keys and configuration pre-loaded for automated deployments with `nixos-anywhere`.
+
 ## Configuration Hierarchy
 
 ### System Level (hosts/)
@@ -135,6 +150,7 @@ nix flake update
 - Services and daemons
 - User account definitions
 - ZFS/disk configuration
+- Container infrastructure (Podman)
 
 ### User Level (home/)
 - User packages
@@ -144,6 +160,8 @@ nix flake update
 
 ### Shared Configurations
 - `hosts/common/core/`: System-wide packages (vim, git)
+- `hosts/common/podman/`: Container infrastructure modules
+- `hosts/common/users/`: System user configurations
 - `hosts/common/home-manager.nix`: Shared Home Manager wiring for hosts
 - `home/nima/common/core/`: User environment essentials
 
@@ -185,14 +203,6 @@ final: prev: {
 }
 ```
 
-## Best Practices
-
-1. **Keep modules focused**: Each file should configure one application
-2. **Use shared modules**: Avoid duplication across hosts
-3. **Document changes**: Add comments for non-obvious configurations
-4. **Test changes**: Use VM configuration for testing before deploying
-5. **Pin versions**: Use `flake.lock` for reproducibility
-
 ## Useful Commands
 
 ```bash
@@ -211,10 +221,3 @@ sudo nix-env --list-generations --profile /nix/var/nix/profiles/system
 # Rollback
 sudo nixos-rebuild switch --rollback
 ```
-
-## Next Steps
-
-- [ ] Update git username/email in `home/nima/common/core/git.nix`
-- [ ] Add machine-specific packages to respective `home/nima/{mac,vm,server}.nix`
-- [ ] Configure Homebrew packages for macOS (optional)
-- [ ] Add optional modules for specific use cases
