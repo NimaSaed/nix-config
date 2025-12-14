@@ -45,10 +45,6 @@
     description = "Create reverse_proxy Podman network";
     wantedBy = [ "default.target" ];
     before = [ "pod-reverse_proxy.service" ];
-    # Wait for tmpfiles to be created before starting
-    unitConfig = {
-      ConditionPathExists = "/data/poddy/config/containers/storage.conf";
-    };
 
     serviceConfig = {
       Type = "oneshot";
@@ -79,8 +75,6 @@
 
     unitConfig = {
       RequiresMountsFor = "%t/containers";
-      # Wait for tmpfiles to be created before starting
-      ConditionPathExists = "/data/poddy/config/containers/storage.conf";
     };
 
     serviceConfig = {
@@ -135,8 +129,6 @@
 
     unitConfig = {
       RequiresMountsFor = "%t/containers";
-      # Wait for tmpfiles to be created before starting
-      ConditionPathExists = "/data/poddy/config/containers/storage.conf";
     };
 
     serviceConfig = {
