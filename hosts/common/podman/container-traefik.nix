@@ -12,11 +12,46 @@
   # - poddy user must exist (import ../users/poddy)
   # - sops-nix configured with Namecheap secrets
   # - /data/traefik/acme.json must exist with 600 permissions
+  # - Firewall ports 80 and 443 opened (configured automatically by this module)
   #
   # SECRETS (via sops-nix):
   # - namecheap_email
   # - namecheap_api_user
   # - namecheap_api_key
+
+  # ============================================================================
+  # Firewall Configuration
+  # ============================================================================
+  # Open required ports for Traefik reverse proxy
+  # Port 80: HTTP (web entrypoint) - redirects to HTTPS
+  # Port 443: HTTPS (websecure entrypoint) - main traffic
+
+  networking.firewall = {
+    allowedTCPPorts = [
+      80    # HTTP - Traefik web entrypoint (auto-redirects to HTTPS)
+      443   # HTTPS - Traefik websecure entrypoint
+      # 8080  # Traefik API/Dashboard (keep closed for security)
+      # 636   # LDAPS (for future LDAP service)
+    ];
+  };
+
+  # ============================================================================
+  # Network Service: reverse_proxy
+  # ============================================================================
+  # Creates the Podman network before the pod starts
+  # This prevents "network not found" errors on first deployment
+
+  systemd.user.services.create-reverse_proxy-network = {
+    description = "Create reverse_proxy Podman network";
+    wantedBy = [ "default.target" ];
+    before = [ "pod-reverse_proxy.service" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.podman}/bin/podman network exists reverse_proxy || ${pkgs.podman}/bin/podman network create reverse_proxy'";
+    };
+  };
 
   # ============================================================================
   # Pod Service: reverse_proxy
@@ -65,8 +100,7 @@
   # Traefik reverse proxy container with:
   # - Namecheap DNS challenge for Let's Encrypt
   # - Automatic HTTPS redirects
-  # - Dashboard on traefik.nmsd.xyz
-  # - Cockpit proxy on srv1.nmsd.xyz
+  # - Dashboard on traefik1.nmsd.xyz (no authentication)
 
   systemd.user.services.container-traefik = {
     description = "Podman container-traefik";
@@ -139,17 +173,12 @@
 
         # Traefik dashboard labels
         "--label traefik.enable=true"
-        "--label traefik.http.routers.srv1.rule=Host(`srv1.nmsd.xyz`)"
-        "--label traefik.http.routers.srv1.entrypoints=websecure"
-        "--label traefik.http.routers.srv1.tls=true"
-        "--label traefik.http.routers.srv1.tls.certresolver=namecheap"
-        "--label traefik.http.services.cockpit-service.loadbalancer.server.url=https://host.docker.internal:9090"
 
         # Traefik API/Dashboard routing
-        "--label traefik.http.routers.traefik.rule=Host(`traefik.nmsd.xyz`)"
+        "--label traefik.http.routers.traefik.rule=Host(`traefik1.nmsd.xyz`)"
         "--label traefik.http.routers.traefik.entrypoints=websecure"
+        "--label traefik.http.routers.traefik.tls=true"
         "--label traefik.http.routers.traefik.tls.certresolver=namecheap"
-        "--label traefik.http.routers.traefik.middlewares=authelia"
         "--label traefik.http.routers.traefik.service=api@internal"
 
         # Container image
