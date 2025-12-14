@@ -46,10 +46,14 @@ in
   users.groups.poddy = { };
 
   # ============================================================================
-  # Podman Data Directories
+  # Podman Data Directories and Runtime Configuration
   # ============================================================================
   # Create Podman data directories and configuration files on ZFS datapool
+  # Also ensure runtime directory exists for systemd user services
   systemd.tmpfiles.rules = [
+    # Runtime directory for poddy user (required for systemd user services)
+    "d /run/user/${poddyUid} 0700 poddy poddy - -"
+
     # Create Podman data directories on ZFS datapool
     "d ${poddyDataRoot} 0750 poddy poddy - -"
     "d ${poddyDataRoot}/containers 0750 poddy poddy - -"
@@ -106,6 +110,9 @@ in
     text = ''
       # Create tmpfiles for poddy user before starting services
       ${pkgs.systemd}/bin/systemd-tmpfiles --create --prefix=${poddyDataRoot}
+
+      # Ensure runtime directory exists for poddy user
+      ${pkgs.systemd}/bin/systemd-tmpfiles --create --prefix=/run/user/${poddyUid}
     '';
   };
 }

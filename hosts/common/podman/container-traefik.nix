@@ -53,10 +53,9 @@
       Environment = [
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
-        "XDG_RUNTIME_DIR=/run/user/1001"
       ];
-      # Ensure runtime directory exists
-      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers";
+      # Ensure runtime containers directory exists (systemd creates /run/user/1001 via lingering)
+      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p %t/containers";
       ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.podman}/bin/podman network exists reverse_proxy || ${pkgs.podman}/bin/podman network create reverse_proxy'";
     };
   };
@@ -83,7 +82,6 @@
         "PODMAN_SYSTEMD_UNIT=%n"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
-        "XDG_RUNTIME_DIR=/run/user/1001"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
@@ -91,7 +89,8 @@
       PIDFile = "%t/pod-reverse_proxy.pid";
 
       ExecStartPre = [
-        "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers"
+        # Ensure runtime containers directory exists (systemd creates /run/user/1001 via lingering)
+        "${pkgs.coreutils}/bin/mkdir -p %t/containers"
         ("${pkgs.podman}/bin/podman pod create "
         + "--infra-conmon-pidfile %t/pod-reverse_proxy.pid "
         + "--pod-id-file %t/pod-reverse_proxy.pod-id " + "--exit-policy=stop "
@@ -137,7 +136,6 @@
         "PODMAN_SYSTEMD_UNIT=%n"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
-        "XDG_RUNTIME_DIR=/run/user/1001"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
@@ -148,8 +146,8 @@
       # These files are created by sops-nix at /run/user/$(id -u poddy)/secrets/
       EnvironmentFile = [ "${config.sops.templates."traefik-secrets".path}" ];
 
-      # Ensure runtime directory exists
-      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers";
+      # Ensure runtime containers directory exists (systemd creates /run/user/1001 via lingering)
+      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p %t/containers";
 
       ExecStart = lib.concatStringsSep " " [
         "${pkgs.podman}/bin/podman run"
