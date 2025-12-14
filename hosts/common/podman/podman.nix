@@ -27,6 +27,19 @@
   virtualisation.containers.enable = true;
 
   # ============================================================================
+  # Sysctl: Allow Rootless Podman to Bind to Privileged Ports
+  # ============================================================================
+  # By default, only root can bind to ports below 1024 (privileged ports).
+  # This setting allows unprivileged users to bind to ports starting from 80,
+  # enabling rootless Podman to expose services on standard HTTP (80) and HTTPS (443) ports.
+  #
+  # Security note: This is safe for rootless containers because they still run
+  # within user namespaces with proper UID/GID mapping configured via subuid/subgid.
+  boot.kernel.sysctl = {
+    "net.ipv4.ip_unprivileged_port_start" = 80;
+  };
+
+  # ============================================================================
   # Podman Auto-Update: Automatically update containers with registry label
   # ============================================================================
   # This enables the native podman-auto-update systemd timer and service.
