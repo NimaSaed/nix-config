@@ -47,8 +47,8 @@
   # ============================================================================
   # Flake Outputs - What this flake provides
   # ============================================================================
-  outputs = { self, disko, nixpkgs, home-manager, darwin, nixos-generators, sops-nix, ...
-    }@inputs:
+  outputs = { self, disko, nixpkgs, home-manager, darwin, nixos-generators
+    , sops-nix, ... }@inputs:
     let inherit (self) outputs;
 
     in {
