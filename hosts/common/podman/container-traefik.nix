@@ -55,13 +55,17 @@
       Group = "poddy";
       # Explicitly set Podman config paths and PATH for rootless tools
       Environment = [
+        "HOME=/home/poddy"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
         "PATH=/run/wrappers/bin:${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
       ];
-      # Ensure runtime containers directory exists
-      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers";
+      # Ensure the runtime directory is created with proper ownership
+      RuntimeDirectory = "user/1001 user/1001/containers user/1001/podman";
+      RuntimeDirectoryMode = "0700";
+      RuntimeDirectoryPreserve = true;
+      # No need for ExecStartPre mkdir anymore - RuntimeDirectory handles it
       ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.podman}/bin/podman network exists reverse_proxy || ${pkgs.podman}/bin/podman network create reverse_proxy'";
     };
   };
@@ -88,6 +92,7 @@
       # Explicitly set Podman config paths and PATH for rootless tools
       Environment = [
         "PODMAN_SYSTEMD_UNIT=%n"
+        "HOME=/home/poddy"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
@@ -97,10 +102,12 @@
       TimeoutStopSec = 70;
       Type = "forking";
       PIDFile = "/run/user/1001/pod-reverse_proxy.pid";
+      # Ensure the runtime directory is created with proper ownership
+      RuntimeDirectory = "user/1001 user/1001/containers user/1001/podman";
+      RuntimeDirectoryMode = "0700";
+      RuntimeDirectoryPreserve = true;
 
       ExecStartPre = [
-        # Ensure runtime containers directory exists
-        "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers"
         ("${pkgs.podman}/bin/podman pod create "
         + "--infra-conmon-pidfile /run/user/1001/pod-reverse_proxy.pid "
         + "--pod-id-file /run/user/1001/pod-reverse_proxy.pod-id " + "--exit-policy=stop "
@@ -146,6 +153,7 @@
       # Explicitly set Podman config paths and PATH for rootless tools
       Environment = [
         "PODMAN_SYSTEMD_UNIT=%n"
+        "HOME=/home/poddy"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
@@ -155,13 +163,14 @@
       TimeoutStopSec = 70;
       Type = "notify";
       NotifyAccess = "all";
+      # Ensure the runtime directory is created with proper ownership
+      RuntimeDirectory = "user/1001 user/1001/containers user/1001/podman";
+      RuntimeDirectoryMode = "0700";
+      RuntimeDirectoryPreserve = true;
 
       # Load secrets as environment variables
       # These files are created by sops-nix at /run/user/1001/secrets/
       EnvironmentFile = [ "${config.sops.templates."traefik-secrets".path}" ];
-
-      # Ensure runtime containers directory exists
-      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers";
 
       ExecStart = lib.concatStringsSep " " [
         "${pkgs.podman}/bin/podman run"
