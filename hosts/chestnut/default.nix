@@ -2,8 +2,8 @@
 
 {
   imports = [
-    ./disko-nvme-boot-raid1.nix
-    ./disko-zfs-datapool.nix
+    #./disko-nvme-boot-raid1.nix
+    #./disko-zfs-datapool.nix
     ./hardware-configuration.nix
     ../common/core
     ../common/users/nima
@@ -19,19 +19,20 @@
   # Use GRUB bootloader with RAID support
   boot.loader.grub = {
     enable = true;
-    efiSupport = true;
-    efiInstallAsRemovable = true;
-    mirroredBoots = [{
-      devices = [ "nodev" ];
-      path = "/boot";
-    }];
+    #efiSupport = true;
+    #efiInstallAsRemovable = true;
+    #mirroredBoots = [{
+    #  devices = [ "nodev" ];
+    #  path = "/boot";
+    #}];
+    device = "/dev/sda";
   };
 
   # Enable ZFS support
-  boot.supportedFilesystems = [ "zfs" ];
-  boot.zfs.forceImportRoot = false;
+  #boot.supportedFilesystems = [ "zfs" ];
+  #boot.zfs.forceImportRoot = false;
   # Note: ZFS pools and scrubbing can be configured here if needed
-  boot.zfs.extraPools = [ "datapool" ];
+  #boot.zfs.extraPools = [ "datapool" ];
   # services.zfs.autoScrub.enable = true;
 
   # Enable zram swap for better memory management
@@ -43,8 +44,8 @@
   # ============================================================================
   # Chestnut - a safe place for your "nuts" (data)
   networking.hostName = "chestnut";
-  networking.hostId =
-    "6b2b4dde"; # Required for ZFS (generate with: head -c 8 /etc/machine-id)
+  #networking.hostId =
+  #  "6b2b4dde"; # Required for ZFS (generate with: head -c 8 /etc/machine-id)
   networking.networkmanager.enable = true;
 
   # ============================================================================
