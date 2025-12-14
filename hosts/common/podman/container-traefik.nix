@@ -49,6 +49,11 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
+      # Explicitly set Podman config paths
+      Environment = [
+        "XDG_CONFIG_HOME=/data/poddy/config"
+        "XDG_DATA_HOME=/data/poddy/containers"
+      ];
       ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.podman}/bin/podman network exists reverse_proxy || ${pkgs.podman}/bin/podman network create reverse_proxy'";
     };
   };
@@ -70,7 +75,12 @@
     };
 
     serviceConfig = {
-      Environment = "PODMAN_SYSTEMD_UNIT=%n";
+      # Explicitly set Podman config paths
+      Environment = [
+        "PODMAN_SYSTEMD_UNIT=%n"
+        "XDG_CONFIG_HOME=/data/poddy/config"
+        "XDG_DATA_HOME=/data/poddy/containers"
+      ];
       Restart = "always";
       TimeoutStopSec = 70;
       Type = "forking";
@@ -115,7 +125,12 @@
     };
 
     serviceConfig = {
-      Environment = "PODMAN_SYSTEMD_UNIT=%n";
+      # Explicitly set Podman config paths
+      Environment = [
+        "PODMAN_SYSTEMD_UNIT=%n"
+        "XDG_CONFIG_HOME=/data/poddy/config"
+        "XDG_DATA_HOME=/data/poddy/containers"
+      ];
       Restart = "always";
       TimeoutStopSec = 70;
       Type = "notify";

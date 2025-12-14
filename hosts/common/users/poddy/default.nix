@@ -20,6 +20,10 @@ in
     group = "poddy";
     uid = 1001;  # Fixed UID to match configuration
 
+    # Enable lingering so systemd user services start at boot
+    # This is the proper declarative NixOS way to enable lingering
+    linger = true;
+
     # Disable interactive login for security
     # User only needs systemd service access (via lingering)
     shell = "${pkgs.shadow}/bin/nologin";
@@ -42,15 +46,10 @@ in
   users.groups.poddy = { };
 
   # ============================================================================
-  # Systemd User Service Lingering
+  # Podman Data Directories
   # ============================================================================
-  # Enable lingering so systemd user services start at boot and persist
-  # even when the user is not logged in. Essential for container services.
+  # Create Podman data directories and configuration files on ZFS datapool
   systemd.tmpfiles.rules = [
-    # Systemd lingering
-    "d /var/lib/systemd/linger 0755 root root - -"
-    "f /var/lib/systemd/linger/poddy 0644 root root - -"
-
     # Create Podman data directories on ZFS datapool
     "d ${poddyDataRoot} 0750 poddy poddy - -"
     "d ${poddyDataRoot}/containers 0750 poddy poddy - -"
@@ -109,4 +108,20 @@ in
     DefaultEnvironment="XDG_DATA_HOME=${poddyDataRoot}/containers"
     DefaultEnvironment="PATH=/run/wrappers/bin:${pkgs.shadow}/bin:${pkgs.coreutils}/bin:/run/current-system/sw/bin"
   '';
+
+  # ============================================================================
+  # Activation Script - Ensure Podman Directories Exist
+  # ============================================================================
+  # This activation script ensures tmpfiles are created before user services start
+  # It runs during system activation (nixos-rebuild switch)
+  system.activationScripts.setupPoddyDirectories = {
+    deps = [ "users" ];
+    text = ''
+      # Create tmpfiles for poddy user before starting services
+      ${pkgs.systemd}/bin/systemd-tmpfiles --create --prefix=${poddyDataRoot}
+
+      # Ensure correct ownership
+      ${pkgs.coreutils}/bin/chown -R poddy:poddy ${poddyDataRoot} || true
+    '';
+  };
 }
