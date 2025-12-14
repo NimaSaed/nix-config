@@ -4,9 +4,9 @@
   # ============================================================================
   # Traefik Reverse Proxy - Rootless Podman Container
   # ============================================================================
-  # This module creates systemd user services for the Traefik reverse proxy
-  # running in a rootless Podman pod. The configuration mirrors the systemd
-  # units from pod-reverse_proxy.service and container-traefik.service.
+  # This module creates systemd system services (running as poddy user) for the
+  # Traefik reverse proxy running in a rootless Podman pod. The configuration
+  # mirrors the systemd units from pod-reverse_proxy.service and container-traefik.service.
   #
   # REQUIREMENTS:
   # - poddy user must exist (import ../users/poddy)
@@ -41,21 +41,26 @@
   # Creates the Podman network before the pod starts
   # This prevents "network not found" errors on first deployment
 
-  systemd.user.services.create-reverse_proxy-network = {
+  systemd.services.create-reverse_proxy-network = {
     description = "Create reverse_proxy Podman network";
-    wantedBy = [ "default.target" ];
+    wantedBy = [ "multi-user.target" ];
     before = [ "pod-reverse_proxy.service" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
 
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
+      User = "poddy";
+      Group = "poddy";
       # Explicitly set Podman config paths
       Environment = [
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
+        "XDG_RUNTIME_DIR=/run/user/1001"
       ];
-      # Ensure runtime containers directory exists (systemd creates /run/user/1001 via lingering)
-      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p %t/containers";
+      # Ensure runtime containers directory exists
+      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers";
       ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.podman}/bin/podman network exists reverse_proxy || ${pkgs.podman}/bin/podman network create reverse_proxy'";
     };
   };
@@ -65,48 +70,51 @@
   # ============================================================================
   # Creates a Podman pod with published ports for HTTP/HTTPS/Dashboard/LDAPS
 
-  systemd.user.services.pod-reverse_proxy = {
+  systemd.services.pod-reverse_proxy = {
     description = "Podman pod-reverse_proxy";
     documentation = [ "man:podman-generate-systemd(1)" ];
     wants = [ "network-online.target" ];
-    after = [ "network-online.target" ];
-    wantedBy = [ "default.target" ];
+    after = [ "network-online.target" "create-reverse_proxy-network.service" ];
+    wantedBy = [ "multi-user.target" ];
 
     unitConfig = {
-      RequiresMountsFor = "%t/containers";
+      RequiresMountsFor = "/run/user/1001/containers";
     };
 
     serviceConfig = {
+      User = "poddy";
+      Group = "poddy";
       # Explicitly set Podman config paths
       Environment = [
         "PODMAN_SYSTEMD_UNIT=%n"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
+        "XDG_RUNTIME_DIR=/run/user/1001"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
       Type = "forking";
-      PIDFile = "%t/pod-reverse_proxy.pid";
+      PIDFile = "/run/user/1001/pod-reverse_proxy.pid";
 
       ExecStartPre = [
-        # Ensure runtime containers directory exists (systemd creates /run/user/1001 via lingering)
-        "${pkgs.coreutils}/bin/mkdir -p %t/containers"
+        # Ensure runtime containers directory exists
+        "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers"
         ("${pkgs.podman}/bin/podman pod create "
-        + "--infra-conmon-pidfile %t/pod-reverse_proxy.pid "
-        + "--pod-id-file %t/pod-reverse_proxy.pod-id " + "--exit-policy=stop "
+        + "--infra-conmon-pidfile /run/user/1001/pod-reverse_proxy.pid "
+        + "--pod-id-file /run/user/1001/pod-reverse_proxy.pod-id " + "--exit-policy=stop "
         + "--name reverse_proxy " + "--network reverse_proxy "
         + "--publish 80:80/tcp " + "--publish 443:443/tcp "
         + "--publish 8080:8080/tcp " + "--publish 636:636/tcp " + "--replace")
       ];
 
       ExecStart = "${pkgs.podman}/bin/podman pod start "
-        + "--pod-id-file %t/pod-reverse_proxy.pod-id";
+        + "--pod-id-file /run/user/1001/pod-reverse_proxy.pod-id";
 
       ExecStop = "${pkgs.podman}/bin/podman pod stop " + "--ignore "
-        + "--pod-id-file %t/pod-reverse_proxy.pod-id " + "-t 10";
+        + "--pod-id-file /run/user/1001/pod-reverse_proxy.pod-id " + "-t 10";
 
       ExecStopPost = "${pkgs.podman}/bin/podman pod rm " + "--ignore " + "-f "
-        + "--pod-id-file %t/pod-reverse_proxy.pod-id";
+        + "--pod-id-file /run/user/1001/pod-reverse_proxy.pod-id";
     };
   };
 
@@ -118,24 +126,27 @@
   # - Automatic HTTPS redirects
   # - Dashboard on traefik1.nmsd.xyz (no authentication)
 
-  systemd.user.services.container-traefik = {
+  systemd.services.container-traefik = {
     description = "Podman container-traefik";
     documentation = [ "man:podman-generate-systemd(1)" ];
     wants = [ "network-online.target" ];
     after = [ "network-online.target" "pod-reverse_proxy.service" ];
     bindsTo = [ "pod-reverse_proxy.service" ];
-    wantedBy = [ "default.target" ];
+    wantedBy = [ "multi-user.target" ];
 
     unitConfig = {
-      RequiresMountsFor = "%t/containers";
+      RequiresMountsFor = "/run/user/1001/containers";
     };
 
     serviceConfig = {
+      User = "poddy";
+      Group = "poddy";
       # Explicitly set Podman config paths
       Environment = [
         "PODMAN_SYSTEMD_UNIT=%n"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
+        "XDG_RUNTIME_DIR=/run/user/1001"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
@@ -143,18 +154,18 @@
       NotifyAccess = "all";
 
       # Load secrets as environment variables
-      # These files are created by sops-nix at /run/user/$(id -u poddy)/secrets/
+      # These files are created by sops-nix at /run/user/1001/secrets/
       EnvironmentFile = [ "${config.sops.templates."traefik-secrets".path}" ];
 
-      # Ensure runtime containers directory exists (systemd creates /run/user/1001 via lingering)
-      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p %t/containers";
+      # Ensure runtime containers directory exists
+      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers";
 
       ExecStart = lib.concatStringsSep " " [
         "${pkgs.podman}/bin/podman run"
-        "--cidfile=%t/%n.ctr-id"
+        "--cidfile=/run/user/1001/%n.ctr-id"
         "--cgroups=no-conmon"
         "--rm"
-        "--pod-id-file %t/pod-reverse_proxy.pod-id"
+        "--pod-id-file /run/user/1001/pod-reverse_proxy.pod-id"
         "--sdnotify=conmon"
         "--replace"
         "--detach"
@@ -166,7 +177,7 @@
         "--security-opt label=type:container_runtime_t"
 
         # Volume mounts
-        "--volume %t/podman/podman.sock:/var/run/docker.sock:ro,Z"
+        "--volume /run/user/1001/podman/podman.sock:/var/run/docker.sock:ro,Z"
         "--volume /data/traefik/acme.json:/acme.json:Z"
 
         # Traefik configuration via environment variables
@@ -210,10 +221,10 @@
       ];
 
       ExecStop = "${pkgs.podman}/bin/podman stop " + "--ignore -t 10 "
-        + "--cidfile=%t/%n.ctr-id";
+        + "--cidfile=/run/user/1001/%n.ctr-id";
 
       ExecStopPost = "${pkgs.podman}/bin/podman rm " + "-f " + "--ignore -t 10 "
-        + "--cidfile=%t/%n.ctr-id";
+        + "--cidfile=/run/user/1001/%n.ctr-id";
     };
   };
 
