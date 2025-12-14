@@ -107,23 +107,13 @@
       Type = "forking";
       PIDFile = "/run/user/1001/pod-reverse_proxy.pid";
 
-      ExecStartPre = [
-        ("${pkgs.podman}/bin/podman pod create "
-        + "--infra-conmon-pidfile /run/user/1001/pod-reverse_proxy.pid "
-        + "--pod-id-file /run/user/1001/pod-reverse_proxy.pod-id " + "--exit-policy=stop "
-        + "--name reverse_proxy " + "--network reverse_proxy "
-        + "--publish 80:80/tcp " + "--publish 443:443/tcp "
-        + "--publish 8080:8080/tcp " + "--publish 636:636/tcp " + "--replace")
-      ];
+      ExecStartPre = "${pkgs.bash}/bin/bash -c '${pkgs.podman}/bin/podman pod create --infra-conmon-pidfile /run/user/1001/pod-reverse_proxy.pid --pod-id-file /run/user/1001/pod-reverse_proxy.pod-id --exit-policy=stop --name reverse_proxy --network reverse_proxy --publish 80:80/tcp --publish 443:443/tcp --publish 8080:8080/tcp --publish 636:636/tcp --replace'";
 
-      ExecStart = "${pkgs.podman}/bin/podman pod start "
-        + "--pod-id-file /run/user/1001/pod-reverse_proxy.pod-id";
+      ExecStart = "${pkgs.podman}/bin/podman pod start --pod-id-file /run/user/1001/pod-reverse_proxy.pod-id";
 
-      ExecStop = "${pkgs.podman}/bin/podman pod stop " + "--ignore "
-        + "--pod-id-file /run/user/1001/pod-reverse_proxy.pod-id " + "-t 10";
+      ExecStop = "${pkgs.podman}/bin/podman pod stop --ignore --pod-id-file /run/user/1001/pod-reverse_proxy.pod-id -t 10";
 
-      ExecStopPost = "${pkgs.podman}/bin/podman pod rm " + "--ignore " + "-f "
-        + "--pod-id-file /run/user/1001/pod-reverse_proxy.pod-id";
+      ExecStopPost = "${pkgs.podman}/bin/podman pod rm --ignore -f --pod-id-file /run/user/1001/pod-reverse_proxy.pod-id";
     };
   };
 
