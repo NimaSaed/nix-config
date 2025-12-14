@@ -1,27 +1,27 @@
-{ config, lib, pkgs, modulesPath, ... }:
-
 {
-  imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
+  imports =
+    [
+      (modulesPath + "/profiles/qemu-guest.nix")
+    ];
 
-  # Hardware detection - kernel modules for this system
-  boot.initrd.availableKernelModules =
-    [ "xhci_pci" "nvme" "usb_storage" "usbhid" "uas" "sd_mod" ];
+  boot.initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sd_mod" "sr_mod" ];
   boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-intel" ];
+  boot.kernelModules = [ ];
   boot.extraModulePackages = [ ];
 
-  # Filesystems are managed by disko configurations:
-  # - disko-nvme-boot-raid1.nix (boot partition with RAID1)
-  # - disko-zfs-datapool.nix (ZFS data pool)
+  fileSystems."/" =
+    {
+      device = "/dev/sda1";
+      fsType = "xfs";
+    };
 
-  # Network configuration
-  networking.useDHCP = lib.mkDefault true;
+  fileSystems."/data" =
+    {
+      device = "/dev/sdb1";
+      fsType = "xfs";
+    };
 
-  # Platform and hardware
+  swapDevices = [ ];
+
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  hardware.cpu.intel.updateMicrocode =
-    lib.mkDefault config.hardware.enableRedistributableFirmware;
-
-  # Enable software RAID support
-  boot.swraid.enable = true;
 }
