@@ -45,8 +45,12 @@
     description = "Create reverse_proxy Podman network";
     wantedBy = [ "multi-user.target" ];
     before = [ "pod-reverse_proxy.service" ];
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "systemd-user-sessions.service" ];
     wants = [ "network-online.target" ];
+    # Require that user runtime dir exists (created by lingering)
+    unitConfig = {
+      ConditionPathExists = "/run/user/1001";
+    };
 
     serviceConfig = {
       Type = "oneshot";
@@ -59,13 +63,10 @@
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
+        "CONTAINERS_STORAGE_CONF=/data/poddy/config/containers/storage.conf"
+        "CONTAINERS_CONF=/data/poddy/config/containers/containers.conf"
         "PATH=/run/wrappers/bin:${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
       ];
-      # Ensure the runtime directory is created with proper ownership
-      RuntimeDirectory = "user/1001 user/1001/containers user/1001/podman";
-      RuntimeDirectoryMode = "0700";
-      RuntimeDirectoryPreserve = true;
-      # No need for ExecStartPre mkdir anymore - RuntimeDirectory handles it
       ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.podman}/bin/podman network exists reverse_proxy || ${pkgs.podman}/bin/podman network create reverse_proxy'";
     };
   };
@@ -79,11 +80,12 @@
     description = "Podman pod-reverse_proxy";
     documentation = [ "man:podman-generate-systemd(1)" ];
     wants = [ "network-online.target" ];
-    after = [ "network-online.target" "create-reverse_proxy-network.service" ];
+    after = [ "network-online.target" "create-reverse_proxy-network.service" "systemd-user-sessions.service" ];
     wantedBy = [ "multi-user.target" ];
 
     unitConfig = {
       RequiresMountsFor = "/run/user/1001/containers";
+      ConditionPathExists = "/run/user/1001";
     };
 
     serviceConfig = {
@@ -96,16 +98,14 @@
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
+        "CONTAINERS_STORAGE_CONF=/data/poddy/config/containers/storage.conf"
+        "CONTAINERS_CONF=/data/poddy/config/containers/containers.conf"
         "PATH=/run/wrappers/bin:${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
       Type = "forking";
       PIDFile = "/run/user/1001/pod-reverse_proxy.pid";
-      # Ensure the runtime directory is created with proper ownership
-      RuntimeDirectory = "user/1001 user/1001/containers user/1001/podman";
-      RuntimeDirectoryMode = "0700";
-      RuntimeDirectoryPreserve = true;
 
       ExecStartPre = [
         ("${pkgs.podman}/bin/podman pod create "
@@ -139,12 +139,13 @@
     description = "Podman container-traefik";
     documentation = [ "man:podman-generate-systemd(1)" ];
     wants = [ "network-online.target" ];
-    after = [ "network-online.target" "pod-reverse_proxy.service" ];
+    after = [ "network-online.target" "pod-reverse_proxy.service" "systemd-user-sessions.service" ];
     bindsTo = [ "pod-reverse_proxy.service" ];
     wantedBy = [ "multi-user.target" ];
 
     unitConfig = {
       RequiresMountsFor = "/run/user/1001/containers";
+      ConditionPathExists = "/run/user/1001";
     };
 
     serviceConfig = {
@@ -157,16 +158,14 @@
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
+        "CONTAINERS_STORAGE_CONF=/data/poddy/config/containers/storage.conf"
+        "CONTAINERS_CONF=/data/poddy/config/containers/containers.conf"
         "PATH=/run/wrappers/bin:${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
       Type = "notify";
       NotifyAccess = "all";
-      # Ensure the runtime directory is created with proper ownership
-      RuntimeDirectory = "user/1001 user/1001/containers user/1001/podman";
-      RuntimeDirectoryMode = "0700";
-      RuntimeDirectoryPreserve = true;
 
       # Load secrets as environment variables
       # These files are created by sops-nix at /run/user/1001/secrets/
