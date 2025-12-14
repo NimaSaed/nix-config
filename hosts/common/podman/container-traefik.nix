@@ -45,6 +45,10 @@
     description = "Create reverse_proxy Podman network";
     wantedBy = [ "default.target" ];
     before = [ "pod-reverse_proxy.service" ];
+    # Wait for tmpfiles to be created before starting
+    unitConfig = {
+      ConditionPathExists = "/data/poddy/config/containers/storage.conf";
+    };
 
     serviceConfig = {
       Type = "oneshot";
@@ -53,7 +57,10 @@
       Environment = [
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
+        "XDG_RUNTIME_DIR=/run/user/1001"
       ];
+      # Ensure runtime directory exists
+      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers";
       ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.podman}/bin/podman network exists reverse_proxy || ${pkgs.podman}/bin/podman network create reverse_proxy'";
     };
   };
@@ -72,6 +79,8 @@
 
     unitConfig = {
       RequiresMountsFor = "%t/containers";
+      # Wait for tmpfiles to be created before starting
+      ConditionPathExists = "/data/poddy/config/containers/storage.conf";
     };
 
     serviceConfig = {
@@ -80,18 +89,22 @@
         "PODMAN_SYSTEMD_UNIT=%n"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
+        "XDG_RUNTIME_DIR=/run/user/1001"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
       Type = "forking";
       PIDFile = "%t/pod-reverse_proxy.pid";
 
-      ExecStartPre = "${pkgs.podman}/bin/podman pod create "
+      ExecStartPre = [
+        "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers"
+        ("${pkgs.podman}/bin/podman pod create "
         + "--infra-conmon-pidfile %t/pod-reverse_proxy.pid "
         + "--pod-id-file %t/pod-reverse_proxy.pod-id " + "--exit-policy=stop "
         + "--name reverse_proxy " + "--network reverse_proxy "
         + "--publish 80:80/tcp " + "--publish 443:443/tcp "
-        + "--publish 8080:8080/tcp " + "--publish 636:636/tcp " + "--replace";
+        + "--publish 8080:8080/tcp " + "--publish 636:636/tcp " + "--replace")
+      ];
 
       ExecStart = "${pkgs.podman}/bin/podman pod start "
         + "--pod-id-file %t/pod-reverse_proxy.pod-id";
@@ -122,6 +135,8 @@
 
     unitConfig = {
       RequiresMountsFor = "%t/containers";
+      # Wait for tmpfiles to be created before starting
+      ConditionPathExists = "/data/poddy/config/containers/storage.conf";
     };
 
     serviceConfig = {
@@ -130,6 +145,7 @@
         "PODMAN_SYSTEMD_UNIT=%n"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
+        "XDG_RUNTIME_DIR=/run/user/1001"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
@@ -139,6 +155,9 @@
       # Load secrets as environment variables
       # These files are created by sops-nix at /run/user/$(id -u poddy)/secrets/
       EnvironmentFile = [ "${config.sops.templates."traefik-secrets".path}" ];
+
+      # Ensure runtime directory exists
+      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers";
 
       ExecStart = lib.concatStringsSep " " [
         "${pkgs.podman}/bin/podman run"
