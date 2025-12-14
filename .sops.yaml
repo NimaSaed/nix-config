@@ -4,8 +4,8 @@ keys:
   # For local encryption/decryption
   - &personal age17xvxtg5me0cqeaecfsdtver2p84hnvxw9deftwr5dq2vhu2j0g3snp0fqz
 
-  # Chestnut server - SSH host key converted to age format
-  - &chestnut age1rn2v43ujy9hrxua9vngkpsqq8yz3avcr2ujx8dtdqzquhpjqsehsdz2m7m
+  # Chestnut server - age key
+  - &chestnut age1zqgtk82eu8mre77q39un2vqvcnxg5twu858tph07gaat7jxzvggqdn06jk
 
 creation_rules:
   # Chestnut server secrets

@@ -116,8 +116,8 @@
     # Validate sops file exists at evaluation time
     validateSopsFiles = false;  # Set to true after creating secrets.yaml
 
-    # Use SSH host key for decryption (no separate age key needed)
-    age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+    # Use dedicated age key for decryption
+    age.keyFile = "/var/lib/sops-nix/key.txt";
 
     # Define secrets that will be available to services
     secrets = {
