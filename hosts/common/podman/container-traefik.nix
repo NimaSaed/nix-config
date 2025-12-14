@@ -53,11 +53,12 @@
       RemainAfterExit = true;
       User = "poddy";
       Group = "poddy";
-      # Explicitly set Podman config paths
+      # Explicitly set Podman config paths and PATH for rootless tools
       Environment = [
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
+        "PATH=${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
       ];
       # Ensure runtime containers directory exists
       ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers";
@@ -84,12 +85,13 @@
     serviceConfig = {
       User = "poddy";
       Group = "poddy";
-      # Explicitly set Podman config paths
+      # Explicitly set Podman config paths and PATH for rootless tools
       Environment = [
         "PODMAN_SYSTEMD_UNIT=%n"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
+        "PATH=${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
@@ -141,12 +143,13 @@
     serviceConfig = {
       User = "poddy";
       Group = "poddy";
-      # Explicitly set Podman config paths
+      # Explicitly set Podman config paths and PATH for rootless tools
       Environment = [
         "PODMAN_SYSTEMD_UNIT=%n"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
+        "PATH=${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
