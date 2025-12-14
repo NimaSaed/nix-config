@@ -123,7 +123,7 @@
           system = "x86_64-linux";
           modules = [
             ./hosts/chestnut
-            inputs.disko.nixosModules.disko
+            # inputs.disko.nixosModules.disko  # Not needed for manual partitioning
             inputs.sops-nix.nixosModules.sops
             home-manager.nixosModules.home-manager
             ./hosts/common/home-manager.nix
@@ -176,7 +176,7 @@
 
           imports = [
             ./hosts/chestnut
-            inputs.disko.nixosModules.disko
+            # inputs.disko.nixosModules.disko  # Not needed for manual partitioning
             inputs.sops-nix.nixosModules.sops
             home-manager.nixosModules.home-manager
             ./hosts/common/home-manager.nix
