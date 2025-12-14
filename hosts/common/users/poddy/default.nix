@@ -115,13 +115,10 @@ in
   # This activation script ensures tmpfiles are created before user services start
   # It runs during system activation (nixos-rebuild switch)
   system.activationScripts.setupPoddyDirectories = {
-    deps = [ "users" ];
+    deps = [ "users" "specialfs" ];
     text = ''
       # Create tmpfiles for poddy user before starting services
       ${pkgs.systemd}/bin/systemd-tmpfiles --create --prefix=${poddyDataRoot}
-
-      # Ensure correct ownership
-      ${pkgs.coreutils}/bin/chown -R poddy:poddy ${poddyDataRoot} || true
     '';
   };
 }

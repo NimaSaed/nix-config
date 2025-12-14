@@ -90,9 +90,12 @@
       lib.splitString "\n" (builtins.readFile ../../home/nima/ssh.pub);
   };
 
-  # Grant nima access to /data directory
+  # Create /data directory structure
+  # /data must be owned by root to allow subdirectories with different owners
   systemd.tmpfiles.rules = [
-    "d /data 0755 nima users - -"
+    "d /data 0755 root root - -"
+    # Nima's personal data directory
+    "d /data/nima 0755 nima users - -"
     # Traefik storage directory on ZFS datapool
     "d /data/traefik 0755 poddy poddy - -"
     "f /data/traefik/acme.json 0600 poddy poddy - -"
