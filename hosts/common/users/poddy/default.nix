@@ -46,14 +46,11 @@ in
   users.groups.poddy = { };
 
   # ============================================================================
-  # Podman Data Directories and Runtime Configuration
+  # Podman Data Directories
   # ============================================================================
   # Create Podman data directories and configuration files on ZFS datapool
-  # Also ensure runtime directory exists for systemd user services
+  # Note: /run/user/1001 is managed by systemd-logind via lingering, not tmpfiles
   systemd.tmpfiles.rules = [
-    # Runtime directory for poddy user (required for systemd user services)
-    "d /run/user/${poddyUid} 0700 poddy poddy - -"
-
     # Create Podman data directories on ZFS datapool
     "d ${poddyDataRoot} 0750 poddy poddy - -"
     "d ${poddyDataRoot}/containers 0750 poddy poddy - -"
@@ -111,8 +108,16 @@ in
       # Create tmpfiles for poddy user before starting services
       ${pkgs.systemd}/bin/systemd-tmpfiles --create --prefix=${poddyDataRoot}
 
-      # Ensure runtime directory exists for poddy user
-      ${pkgs.systemd}/bin/systemd-tmpfiles --create --prefix=/run/user/${poddyUid}
+      # Ensure runtime directory exists via systemd-logind
+      # This triggers lingering to create /run/user/1001 if it doesn't exist
+      if [ ! -d "/run/user/${poddyUid}" ]; then
+        ${pkgs.systemd}/bin/loginctl enable-linger poddy || true
+        # Wait a moment for logind to create the directory
+        for i in {1..10}; do
+          [ -d "/run/user/${poddyUid}" ] && break
+          sleep 0.5
+        done
+      fi
     '';
   };
 }
