@@ -58,7 +58,7 @@
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
-        "PATH=${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
+        "PATH=/run/wrappers/bin:${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
       ];
       # Ensure runtime containers directory exists
       ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /run/user/1001/containers";
@@ -91,7 +91,7 @@
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
-        "PATH=${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
+        "PATH=/run/wrappers/bin:${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
@@ -149,7 +149,7 @@
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "XDG_RUNTIME_DIR=/run/user/1001"
-        "PATH=${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
+        "PATH=/run/wrappers/bin:${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
       ];
       Restart = "always";
       TimeoutStopSec = 70;
