@@ -1,10 +1,9 @@
 { config, lib, pkgs, ... }:
 
 let
-  poddyUid = "1001";  # Fixed UID for poddy user
+  poddyUid = "1001"; # Fixed UID for poddy user
   poddyDataRoot = "/data/poddy";
-in
-{
+in {
   # ============================================================================
   # Poddy User - Dedicated user for rootless Podman containers
   # ============================================================================
@@ -18,7 +17,7 @@ in
     home = "/home/poddy";
     createHome = true;
     group = "poddy";
-    uid = 1001;  # Fixed UID to match configuration
+    uid = 1001; # Fixed UID to match configuration
 
     # Enable lingering so systemd user services start at boot
     # This is the proper declarative NixOS way to enable lingering
@@ -55,29 +54,33 @@ in
     "d ${poddyDataRoot}/config/systemd/user 0750 poddy poddy - -"
 
     # Create user-specific Podman configuration files
-    "L+ ${poddyDataRoot}/config/containers/storage.conf - - - - ${pkgs.writeText "poddy-storage.conf" ''
-      [storage]
-      driver = "overlay"
-      runroot = "/run/user/${poddyUid}/containers"
-      graphroot = "${poddyDataRoot}/containers/storage"
+    "L+ ${poddyDataRoot}/config/containers/storage.conf - - - - ${
+      pkgs.writeText "poddy-storage.conf" ''
+        [storage]
+        driver = "overlay"
+        runroot = "/run/user/${poddyUid}/containers"
+        graphroot = "${poddyDataRoot}/containers/storage"
 
-      [storage.options]
-      # Use fuse-overlayfs for rootless overlay mounts
-      mount_program = "${pkgs.fuse-overlayfs}/bin/fuse-overlayfs"
-    ''}"
+        [storage.options]
+        # Use fuse-overlayfs for rootless overlay mounts
+        mount_program = "${pkgs.fuse-overlayfs}/bin/fuse-overlayfs"
+      ''
+    }"
 
-    "L+ ${poddyDataRoot}/config/containers/containers.conf - - - - ${pkgs.writeText "poddy-containers.conf" ''
-      [engine]
-      # Custom volume path on ZFS datapool
-      volume_path = "${poddyDataRoot}/containers/volumes"
+    "L+ ${poddyDataRoot}/config/containers/containers.conf - - - - ${
+      pkgs.writeText "poddy-containers.conf" ''
+        [engine]
+        # Custom volume path on ZFS datapool
+        volume_path = "${poddyDataRoot}/containers/volumes"
 
-      # Number of locks for container operations
-      num_locks = 2048
+        # Number of locks for container operations
+        num_locks = 2048
 
-      [network]
-      # Default network backend for rootless containers
-      network_backend = "netavark"
-    ''}"
+        [network]
+        # Default network backend for rootless containers
+        network_backend = "netavark"
+      ''
+    }"
   ];
 
   # ============================================================================

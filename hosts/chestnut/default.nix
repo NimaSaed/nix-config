@@ -114,7 +114,7 @@
     defaultSopsFile = ./secrets.yaml;
 
     # Validate sops file exists at evaluation time
-    validateSopsFiles = false;  # Set to true after creating secrets.yaml
+    validateSopsFiles = true;
 
     # Use dedicated age key for decryption
     age.keyFile = "/var/lib/sops-nix/key.txt";

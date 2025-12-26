@@ -35,9 +35,7 @@
   #
   # Security note: This is safe for rootless containers because they still run
   # within user namespaces with proper UID/GID mapping configured via subuid/subgid.
-  boot.kernel.sysctl = {
-    "net.ipv4.ip_unprivileged_port_start" = 80;
-  };
+  boot.kernel.sysctl = { "net.ipv4.ip_unprivileged_port_start" = 80; };
 
   # ============================================================================
   # Podman Auto-Update: Automatically update containers with registry label

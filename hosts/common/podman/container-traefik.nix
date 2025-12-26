@@ -39,8 +39,8 @@ in {
 
   networking.firewall = {
     allowedTCPPorts = [
-      80    # HTTP - Traefik web entrypoint (auto-redirects to HTTPS)
-      443   # HTTPS - Traefik websecure entrypoint
+      80 # HTTP - Traefik web entrypoint (auto-redirects to HTTPS)
+      443 # HTTPS - Traefik websecure entrypoint
       # 8080  # Traefik API/Dashboard (keep closed for security)
       # 636   # LDAPS (for future LDAP service)
     ];
@@ -98,10 +98,10 @@ in {
           # Port mappings: host_port:container_port
           # These are published on the pod, shared by all containers in it
           publishPorts = [
-            "80:80"      # HTTP - Traefik web entrypoint
-            "443:443"    # HTTPS - Traefik websecure entrypoint
-            "8080:8080"  # Traefik Dashboard (internal access only)
-            "636:636"    # LDAPS (future LDAP service)
+            "80:80" # HTTP - Traefik web entrypoint
+            "443:443" # HTTPS - Traefik websecure entrypoint
+            "8080:8080" # Traefik Dashboard (internal access only)
+            "636:636" # LDAPS (future LDAP service)
           ];
         };
       };
@@ -122,7 +122,7 @@ in {
         # Service configuration (passed to generated systemd unit)
         serviceConfig = {
           Restart = "always";
-          TimeoutStartSec = 120;  # Allow time for image pull
+          TimeoutStartSec = 120; # Allow time for image pull
         };
 
         # Unit configuration
@@ -187,13 +187,17 @@ in {
             TRAEFIK_ENTRYPOINTS_LLDAPSECURE_ADDRESS = ":636";
 
             # HTTP to HTTPS redirect
-            TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_TO = "websecure";
-            TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_SCHEME = "https";
+            TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_TO =
+              "websecure";
+            TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_SCHEME =
+              "https";
 
             # Namecheap DNS challenge configuration
             TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE = "true";
-            TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_PROVIDER = "namecheap";
-            TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_RESOLVERS = "1.1.1.1:53";
+            TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_PROVIDER =
+              "namecheap";
+            TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_RESOLVERS =
+              "1.1.1.1:53";
             TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_STORAGE = "/acme.json";
 
             # Skip TLS verification for upstream servers
