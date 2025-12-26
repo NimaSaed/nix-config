@@ -26,7 +26,7 @@
     #  devices = [ "nodev" ];
     #  path = "/boot";
     #}];
-    device = "/dev/sda";
+    #device = "/dev/sda"; # Handled by disko.nix (EF02 partition)
   };
 
   # Enable ZFS support

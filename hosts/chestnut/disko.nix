@@ -11,9 +11,10 @@
           type = "gpt";
           partitions = {
             # BIOS boot partition for GRUB (required for GPT + BIOS)
+            # This partition is used by GRUB to store its core.img
             boot = {
               size = "1M";
-              type = "EF02"; # BIOS boot partition
+              type = "EF02";
               priority = 1;
             };
             # Root filesystem
