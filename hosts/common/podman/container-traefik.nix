@@ -74,7 +74,8 @@ in {
       networks.reverse_proxy = {
         networkConfig = {
           # Network name as it appears in `podman network ls`
-          networkName = "reverse_proxy";
+          # If not set, defaults to the attribute key (reverse_proxy)
+          name = "reverse_proxy";
         };
       };
 
