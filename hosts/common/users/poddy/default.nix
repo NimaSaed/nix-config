@@ -62,15 +62,13 @@ in
     "d ${poddyDataRoot}/config/systemd/user 0750 poddy poddy - -"
 
     # Create user-specific Podman configuration files
+    # NOTE: Using vfs driver temporarily to debug permission issues
+    # TODO: Switch back to overlay once fixed (vfs is slower but simpler)
     "L+ ${poddyDataRoot}/config/containers/storage.conf - - - - ${pkgs.writeText "poddy-storage.conf" ''
       [storage]
-      driver = "overlay"
+      driver = "vfs"
       runroot = "/run/user/${poddyUid}/containers"
       graphroot = "${poddyDataRoot}/containers/storage"
-
-      [storage.options]
-      # Use fuse-overlayfs for rootless overlay mounts
-      mount_program = "${pkgs.fuse-overlayfs}/bin/fuse-overlayfs"
     ''}"
 
     "L+ ${poddyDataRoot}/config/containers/containers.conf - - - - ${pkgs.writeText "poddy-containers.conf" ''
