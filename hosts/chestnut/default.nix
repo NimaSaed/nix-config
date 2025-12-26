@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./disko.nix
     #./disko-nvme-boot-raid1.nix
     #./disko-zfs-datapool.nix
     ./hardware-configuration.nix

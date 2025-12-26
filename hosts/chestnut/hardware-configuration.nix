@@ -9,15 +9,7 @@
   boot.kernelModules = [ ];
   boot.extraModulePackages = [ ];
 
-  fileSystems."/" = {
-    device = "/dev/sda1";
-    fsType = "xfs";
-  };
-
-  fileSystems."/data" = {
-    device = "/dev/sdb1";
-    fsType = "xfs";
-  };
+  # Filesystem mounts are handled by disko.nix
 
   swapDevices = [ ];
 
