@@ -45,10 +45,7 @@
 
     # quadlet-nix - Declarative Podman Quadlet configuration for NixOS
     # Enables managing rootless containers via systemd with proper permissions
-    quadlet-nix = {
-      url = "github:SEIAROTg/quadlet-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    quadlet-nix = { url = "github:SEIAROTg/quadlet-nix"; };
   };
 
   # ============================================================================
@@ -134,7 +131,9 @@
             inputs.sops-nix.nixosModules.sops
             home-manager.nixosModules.home-manager
             ./hosts/common/home-manager.nix
-            { home-manager.users.nima = import ./home/nima/chestnut.nix; }
+            {
+              home-manager.users.nima = import ./home/nima/chestnut.nix;
+            }
 
             # Quadlet support for rootless Podman containers
             quadlet-nix.nixosModules.quadlet
@@ -198,7 +197,9 @@
             inputs.sops-nix.nixosModules.sops
             home-manager.nixosModules.home-manager
             ./hosts/common/home-manager.nix
-            { home-manager.users.nima = import ./home/nima/chestnut.nix; }
+            {
+              home-manager.users.nima = import ./home/nima/chestnut.nix;
+            }
 
             # Quadlet support for rootless Podman containers
             quadlet-nix.nixosModules.quadlet
