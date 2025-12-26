@@ -52,7 +52,9 @@
       Type = "oneshot";
       RemainAfterExit = true;
       # Explicitly set Podman config paths and PATH for rootless tools
+      # XDG_RUNTIME_DIR=%t ensures Podman knows where its runtime directory is
       Environment = [
+        "XDG_RUNTIME_DIR=%t"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
         "CONTAINERS_STORAGE_CONF=/data/poddy/config/containers/storage.conf"
@@ -76,8 +78,16 @@
     wantedBy = [ "default.target" ];
 
     serviceConfig = {
+      # Let systemd create and manage the containers runtime directory
+      # This ensures proper ownership (user, not root) of the directory
+      RuntimeDirectory = "containers";
+      RuntimeDirectoryMode = "0700";
+      RuntimeDirectoryPreserve = "yes";
+
       # Explicitly set Podman config paths and PATH for rootless tools
+      # XDG_RUNTIME_DIR=%t is critical - without it, Podman may create files as root
       Environment = [
+        "XDG_RUNTIME_DIR=%t"
         "PODMAN_SYSTEMD_UNIT=%n"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
@@ -118,7 +128,9 @@
 
     serviceConfig = {
       # Explicitly set Podman config paths and PATH for rootless tools
+      # XDG_RUNTIME_DIR=%t is critical - without it, Podman may create files as root
       Environment = [
+        "XDG_RUNTIME_DIR=%t"
         "PODMAN_SYSTEMD_UNIT=%n"
         "XDG_CONFIG_HOME=/data/poddy/config"
         "XDG_DATA_HOME=/data/poddy/containers"
