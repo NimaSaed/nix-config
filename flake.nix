@@ -42,13 +42,20 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # quadlet-nix - Declarative Podman Quadlet configuration for NixOS
+    # Enables managing rootless containers via systemd with proper permissions
+    quadlet-nix = {
+      url = "github:SEIAROTg/quadlet-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   # ============================================================================
   # Flake Outputs - What this flake provides
   # ============================================================================
   outputs = { self, disko, nixpkgs, home-manager, darwin, nixos-generators
-    , sops-nix, ... }@inputs:
+    , sops-nix, quadlet-nix, ... }@inputs:
     let inherit (self) outputs;
 
     in {
@@ -128,6 +135,17 @@
             home-manager.nixosModules.home-manager
             ./hosts/common/home-manager.nix
             { home-manager.users.nima = import ./home/nima/chestnut.nix; }
+
+            # Quadlet support for rootless Podman containers
+            quadlet-nix.nixosModules.quadlet
+            {
+              # Home Manager for poddy user (minimal - just for Quadlet containers)
+              home-manager.users.poddy = { pkgs, config, ... }: {
+                imports = [ quadlet-nix.homeManagerModules.quadlet ];
+                home.stateVersion = "25.05";
+                # Quadlet container configuration is in hosts/common/podman/container-traefik.nix
+              };
+            }
           ];
           specialArgs = { inherit inputs outputs; };
         };
@@ -181,6 +199,17 @@
             home-manager.nixosModules.home-manager
             ./hosts/common/home-manager.nix
             { home-manager.users.nima = import ./home/nima/chestnut.nix; }
+
+            # Quadlet support for rootless Podman containers
+            quadlet-nix.nixosModules.quadlet
+            {
+              # Home Manager for poddy user (minimal - just for Quadlet containers)
+              home-manager.users.poddy = { pkgs, config, ... }: {
+                imports = [ quadlet-nix.homeManagerModules.quadlet ];
+                home.stateVersion = "25.05";
+                # Quadlet container configuration is in hosts/common/podman/container-traefik.nix
+              };
+            }
           ];
         };
       };

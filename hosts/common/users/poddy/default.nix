@@ -31,16 +31,9 @@ in
     # Required for rootless Podman networking and port binding
     extraGroups = [ "podman" ];
 
-    # Subuid and subgid ranges for user namespace mapping
-    # Required for rootless containers
-    subUidRanges = [{
-      startUid = 100000;
-      count = 65536;
-    }];
-    subGidRanges = [{
-      startGid = 100000;
-      count = 65536;
-    }];
+    # Auto-allocate subuid/subgid ranges for rootless containers
+    # This is the recommended approach for quadlet-nix
+    autoSubUidGidRange = true;
   };
 
   users.groups.poddy = { };

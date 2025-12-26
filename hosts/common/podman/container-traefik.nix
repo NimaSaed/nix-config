@@ -1,18 +1,29 @@
 { config, lib, pkgs, ... }:
 
-{
+let
+  # Capture the NixOS system config for use inside Home Manager
+  # (where 'config' refers to HM config, not system config)
+  nixosConfig = config;
+in {
   # ============================================================================
-  # Traefik Reverse Proxy - Rootless Podman Container
+  # Traefik Reverse Proxy - Rootless Podman Container via Quadlet
   # ============================================================================
-  # This module creates systemd system services (running as poddy user) for the
-  # Traefik reverse proxy running in a rootless Podman pod. The configuration
-  # mirrors the systemd units from pod-reverse_proxy.service and container-traefik.service.
+  # This module uses Podman Quadlet (via quadlet-nix) to manage the Traefik
+  # reverse proxy as a rootless container under the poddy user.
+  #
+  # HOW QUADLET WORKS:
+  # - Instead of writing systemd units manually, we define .container/.pod/.network
+  #   files in a declarative Nix syntax
+  # - Podman's systemd generator converts these to proper systemd units at boot
+  # - For rootless containers, files go to ~/.config/containers/systemd/
+  # - The generator runs as part of the user's systemd startup, so permissions
+  #   are handled correctly (solving our previous root ownership issues!)
   #
   # REQUIREMENTS:
-  # - poddy user must exist (import ../users/poddy)
+  # - poddy user must exist with linger=true (import ../users/poddy)
+  # - quadlet-nix modules imported in flake.nix
   # - sops-nix configured with Namecheap secrets
   # - /data/traefik/acme.json must exist with 600 permissions
-  # - Firewall ports 80 and 443 opened (configured automatically by this module)
   #
   # SECRETS (via sops-nix):
   # - namecheap_email
@@ -36,187 +47,164 @@
   };
 
   # ============================================================================
-  # Network Service: reverse_proxy
+  # Quadlet Configuration for poddy user
   # ============================================================================
-  # Creates the Podman network before the pod starts
-  # This prevents "network not found" errors on first deployment
+  # All Quadlet configuration goes under home-manager.users.poddy.virtualisation.quadlet
+  # This creates the appropriate .network, .pod, and .container files in
+  # ~/.config/containers/systemd/ for the poddy user.
 
-  systemd.user.services.create-reverse_proxy-network = {
-    description = "Create reverse_proxy Podman network";
-    wantedBy = [ "default.target" ];
-    before = [ "pod-reverse_proxy.service" ];
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
+  home-manager.users.poddy = { pkgs, config, ... }: {
+    # Enable Quadlet for this user
+    virtualisation.quadlet = let
+      # Reference the sops-nix template path from the NixOS SYSTEM config
+      # Note: 'config' here is Home Manager config, so we use 'nixosConfig' captured above
+      secretsPath = nixosConfig.sops.templates."traefik-secrets".path;
+      # Get references to our defined networks and pods for cross-referencing
+      # These come from the Home Manager quadlet config
+      inherit (config.virtualisation.quadlet) networks pods;
+    in {
+      # ========================================================================
+      # Network: reverse_proxy
+      # ========================================================================
+      # Creates a Podman network for containers to communicate.
+      # Quadlet generates: reverse_proxy-network.service
+      #
+      # The .ref attribute provides a reference that other Quadlet units can use
+      # to depend on this network (e.g., networks.reverse_proxy.ref)
+      networks.reverse_proxy = {
+        networkConfig = {
+          # Network name as it appears in `podman network ls`
+          networkName = "reverse_proxy";
+        };
+      };
 
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      # Explicitly set Podman config paths and PATH for rootless tools
-      # XDG_RUNTIME_DIR=%t ensures Podman knows where its runtime directory is
-      Environment = [
-        "XDG_RUNTIME_DIR=%t"
-        "XDG_CONFIG_HOME=/data/poddy/config"
-        "XDG_DATA_HOME=/data/poddy/containers"
-        "CONTAINERS_STORAGE_CONF=/data/poddy/config/containers/storage.conf"
-        "CONTAINERS_CONF=/data/poddy/config/containers/containers.conf"
-        "PATH=/run/wrappers/bin:${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
-      ];
-      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.podman}/bin/podman network exists reverse_proxy || ${pkgs.podman}/bin/podman network create reverse_proxy'";
-    };
-  };
+      # ========================================================================
+      # Pod: reverse_proxy
+      # ========================================================================
+      # Creates a Podman pod that groups related containers.
+      # Containers in the same pod share:
+      # - Network namespace (same IP, can communicate via localhost)
+      # - Port mappings (defined at pod level)
+      #
+      # Quadlet generates: reverse_proxy-pod.service
+      pods.reverse_proxy = {
+        podConfig = {
+          # Pod name as it appears in `podman pod ls`
+          podName = "reverse_proxy";
 
-  # ============================================================================
-  # Pod Service: reverse_proxy
-  # ============================================================================
-  # Creates a Podman pod with published ports for HTTP/HTTPS/Dashboard/LDAPS
+          # Network to attach the pod to
+          # Uses the .ref from our network definition for proper dependency
+          networks = [ networks.reverse_proxy.ref ];
 
-  systemd.user.services.pod-reverse_proxy = {
-    description = "Podman pod-reverse_proxy";
-    documentation = [ "man:podman-generate-systemd(1)" ];
-    wants = [ "network-online.target" ];
-    after = [ "network-online.target" "create-reverse_proxy-network.service" ];
-    wantedBy = [ "default.target" ];
+          # Port mappings: host_port:container_port
+          # These are published on the pod, shared by all containers in it
+          publishPorts = [
+            "80:80"      # HTTP - Traefik web entrypoint
+            "443:443"    # HTTPS - Traefik websecure entrypoint
+            "8080:8080"  # Traefik Dashboard (internal access only)
+            "636:636"    # LDAPS (future LDAP service)
+          ];
+        };
+      };
 
-    serviceConfig = {
-      # Let systemd create and manage the containers runtime directory
-      # This ensures proper ownership (user, not root) of the directory
-      RuntimeDirectory = "containers";
-      RuntimeDirectoryMode = "0700";
-      RuntimeDirectoryPreserve = "yes";
+      # ========================================================================
+      # Container: traefik
+      # ========================================================================
+      # The Traefik reverse proxy container with:
+      # - Namecheap DNS challenge for Let's Encrypt
+      # - Automatic HTTPS redirects
+      # - Dashboard on traefik1.nmsd.xyz
+      #
+      # Quadlet generates: traefik.service
+      containers.traefik = {
+        # Auto-start this container on boot (user login not required due to linger)
+        autoStart = true;
 
-      # Explicitly set Podman config paths and PATH for rootless tools
-      # XDG_RUNTIME_DIR=%t is critical - without it, Podman may create files as root
-      Environment = [
-        "XDG_RUNTIME_DIR=%t"
-        "PODMAN_SYSTEMD_UNIT=%n"
-        "XDG_CONFIG_HOME=/data/poddy/config"
-        "XDG_DATA_HOME=/data/poddy/containers"
-        "CONTAINERS_STORAGE_CONF=/data/poddy/config/containers/storage.conf"
-        "CONTAINERS_CONF=/data/poddy/config/containers/containers.conf"
-        "PATH=/run/wrappers/bin:${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
-      ];
-      Restart = "always";
-      TimeoutStopSec = 70;
-      Type = "forking";
-      PIDFile = "%t/pod-reverse_proxy.pid";
+        # Service configuration (passed to generated systemd unit)
+        serviceConfig = {
+          Restart = "always";
+          TimeoutStartSec = 120;  # Allow time for image pull
+        };
 
-      # Initialize storage in user namespace first, then create pod
-      # The "podman unshare true" initializes storage with correct ownership
-      ExecStartPre = [
-        "${pkgs.podman}/bin/podman unshare true"
-        "${pkgs.bash}/bin/bash -c '${pkgs.podman}/bin/podman pod create --infra-conmon-pidfile %t/pod-reverse_proxy.pid --pod-id-file %t/pod-reverse_proxy.pod-id --exit-policy=stop --name reverse_proxy --network reverse_proxy --publish 80:80/tcp --publish 443:443/tcp --publish 8080:8080/tcp --publish 636:636/tcp --replace'"
-      ];
+        # Unit configuration
+        unitConfig = {
+          Description = "Traefik reverse proxy container";
+          # Depend on the pod being ready
+          After = [ "reverse_proxy-pod.service" ];
+        };
 
-      ExecStart = "${pkgs.podman}/bin/podman pod start --pod-id-file %t/pod-reverse_proxy.pod-id";
+        containerConfig = {
+          # Container image - using latest for auto-updates
+          image = "docker.io/library/traefik:latest";
 
-      ExecStop = "${pkgs.podman}/bin/podman pod stop --ignore --pod-id-file %t/pod-reverse_proxy.pod-id -t 10";
+          # Join the reverse_proxy pod using .ref for proper dependency
+          # This means ports are already mapped at pod level
+          pod = pods.reverse_proxy.ref;
 
-      ExecStopPost = "${pkgs.podman}/bin/podman pod rm --ignore -f --pod-id-file %t/pod-reverse_proxy.pod-id";
-    };
-  };
+          # Auto-update label - enables `podman auto-update`
+          labels = [
+            "io.containers.autoupdate=registry"
+            # Traefik configuration via labels
+            "traefik.enable=true"
+            # Dashboard routing
+            "traefik.http.routers.traefik.rule=Host(`traefik1.nmsd.xyz`)"
+            "traefik.http.routers.traefik.entrypoints=websecure"
+            "traefik.http.routers.traefik.tls=true"
+            "traefik.http.routers.traefik.tls.certresolver=namecheap"
+            "traefik.http.routers.traefik.service=api@internal"
+          ];
 
-  # ============================================================================
-  # Container Service: traefik
-  # ============================================================================
-  # Traefik reverse proxy container with:
-  # - Namecheap DNS challenge for Let's Encrypt
-  # - Automatic HTTPS redirects
-  # - Dashboard on traefik1.nmsd.xyz (no authentication)
+          # Volume mounts
+          # %t = XDG_RUNTIME_DIR (e.g., /run/user/1001)
+          # Note: NixOS doesn't use SELinux, so we omit :Z/:z options
+          volumes = [
+            # Podman socket for Docker provider (read-only)
+            "%t/podman/podman.sock:/var/run/docker.sock:ro"
+            # ACME certificates storage (rw needed for Let's Encrypt updates)
+            "/data/traefik/acme.json:/acme.json"
+          ];
 
-  systemd.user.services.container-traefik = {
-    description = "Podman container-traefik";
-    documentation = [ "man:podman-generate-systemd(1)" ];
-    wants = [ "network-online.target" ];
-    after = [ "network-online.target" "pod-reverse_proxy.service" ];
-    bindsTo = [ "pod-reverse_proxy.service" ];
-    wantedBy = [ "default.target" ];
+          # Environment file with Namecheap secrets
+          # This file is created by sops-nix
+          environmentFiles = [ secretsPath ];
 
-    serviceConfig = {
-      # Explicitly set Podman config paths and PATH for rootless tools
-      # XDG_RUNTIME_DIR=%t is critical - without it, Podman may create files as root
-      Environment = [
-        "XDG_RUNTIME_DIR=%t"
-        "PODMAN_SYSTEMD_UNIT=%n"
-        "XDG_CONFIG_HOME=/data/poddy/config"
-        "XDG_DATA_HOME=/data/poddy/containers"
-        "CONTAINERS_STORAGE_CONF=/data/poddy/config/containers/storage.conf"
-        "CONTAINERS_CONF=/data/poddy/config/containers/containers.conf"
-        "PATH=/run/wrappers/bin:${lib.makeBinPath [ pkgs.shadow pkgs.coreutils pkgs.podman pkgs.fuse-overlayfs ]}"
-      ];
-      Restart = "always";
-      TimeoutStopSec = 70;
-      Type = "notify";
-      NotifyAccess = "all";
+          # Traefik configuration via environment variables
+          environments = {
+            # Logging
+            TRAEFIK_LOG_LEVEL = "DEBUG";
 
-      # Load secrets as environment variables
-      # These files are created by sops-nix at /run/user/1001/secrets/
-      EnvironmentFile = [ "${config.sops.templates."traefik-secrets".path}" ];
+            # Docker provider configuration
+            TRAEFIK_PROVIDERS_DOCKER = "true";
+            TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT = "false";
 
-      ExecStart = lib.concatStringsSep " " [
-        "${pkgs.podman}/bin/podman run"
-        "--cidfile=%t/%n.ctr-id"
-        "--cgroups=no-conmon"
-        "--rm"
-        "--pod-id-file %t/pod-reverse_proxy.pod-id"
-        "--sdnotify=conmon"
-        "--replace"
-        "--detach"
+            # API and Dashboard
+            TRAEFIK_API = "true";
+            TRAEFIK_API_DASHBOARD = "true";
+            TRAEFIK_API_INSECURE = "true";
 
-        # Auto-update label - enables podman-auto-update
-        "--label io.containers.autoupdate=registry"
+            # Entry points
+            TRAEFIK_ENTRYPOINTS_WEB_ADDRESS = ":80";
+            TRAEFIK_ENTRYPOINTS_WEBSECURE_ADDRESS = ":443";
+            TRAEFIK_ENTRYPOINTS_LLDAPSECURE_ADDRESS = ":636";
 
-        "--name traefik"
-        "--security-opt label=type:container_runtime_t"
+            # HTTP to HTTPS redirect
+            TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_TO = "websecure";
+            TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_SCHEME = "https";
 
-        # Volume mounts
-        "--volume %t/podman/podman.sock:/var/run/docker.sock:ro,Z"
-        "--volume /data/traefik/acme.json:/acme.json:Z"
+            # Namecheap DNS challenge configuration
+            TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE = "true";
+            TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_PROVIDER = "namecheap";
+            TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_RESOLVERS = "1.1.1.1:53";
+            TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_STORAGE = "/acme.json";
 
-        # Traefik configuration via environment variables
-        "--env TRAEFIK_LOG_LEVEL=DEBUG"
-        "--env TRAEFIK_PROVIDERS_DOCKER=true"
-        "--env TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT=false"
-        "--env TRAEFIK_API_INSECURE=true"
-        "--env TRAEFIK_API=true"
-        "--env TRAEFIK_API_DASHBOARD=true"
+            # Skip TLS verification for upstream servers
+            TRAEFIK_SERVERSTRANSPORT_INSECURESKIPVERIFY = "true";
+          };
 
-        # Entry points
-        "--env TRAEFIK_ENTRYPOINTS_WEB_ADDRESS=:80"
-        "--env TRAEFIK_ENTRYPOINTS_WEBSECURE_ADDRESS=:443"
-        "--env TRAEFIK_ENTRYPOINTS_LLDAPSECURE_ADDRESS=:636"
-
-        # HTTP to HTTPS redirect
-        "--env TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_TO=websecure"
-        "--env TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_SCHEME=https"
-
-        # Namecheap DNS challenge configuration
-        "--env TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE=true"
-        "--env TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_PROVIDER=namecheap"
-        "--env TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_RESOLVERS=1.1.1.1:53"
-        "--env TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_STORAGE=/acme.json"
-
-        # Skip TLS verification for upstream servers
-        "--env TRAEFIK_SERVERSTRANSPORT_INSECURESKIPVERIFY=true"
-
-        # Traefik dashboard labels
-        "--label traefik.enable=true"
-
-        # Traefik API/Dashboard routing
-        "--label traefik.http.routers.traefik.rule=Host(`traefik1.nmsd.xyz`)"
-        "--label traefik.http.routers.traefik.entrypoints=websecure"
-        "--label traefik.http.routers.traefik.tls=true"
-        "--label traefik.http.routers.traefik.tls.certresolver=namecheap"
-        "--label traefik.http.routers.traefik.service=api@internal"
-
-        # Container image
-        "docker.io/library/traefik:latest"
-      ];
-
-      ExecStop = "${pkgs.podman}/bin/podman stop " + "--ignore -t 10 "
-        + "--cidfile=%t/%n.ctr-id";
-
-      ExecStopPost = "${pkgs.podman}/bin/podman rm " + "-f " + "--ignore -t 10 "
-        + "--cidfile=%t/%n.ctr-id";
+          # Security options
+          securityLabelType = "container_runtime_t";
+        };
+      };
     };
   };
 
@@ -225,6 +213,9 @@
   # ============================================================================
   # Creates an environment file with decrypted secrets for Traefik container
   # Format: KEY=value (systemd EnvironmentFile format)
+  #
+  # This is a system-level config because sops-nix operates at the system level.
+  # The file is made readable by poddy user so the container can access it.
 
   sops.templates."traefik-secrets" = {
     content = ''
