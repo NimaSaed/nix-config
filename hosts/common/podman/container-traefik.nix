@@ -87,14 +87,12 @@ in {
       # - Port mappings (defined at pod level)
       #
       # Quadlet generates: reverse_proxy-pod.service
+      # Pod name comes from the attribute key (reverse_proxy)
       pods.reverse_proxy = {
         podConfig = {
-          # Pod name as it appears in `podman pod ls`
-          podName = "reverse_proxy";
-
-          # Network to attach the pod to
+          # Network to attach the pod to (singular 'network', not 'networks')
           # Uses the .ref from our network definition for proper dependency
-          networks = [ networks.reverse_proxy.ref ];
+          network = [ networks.reverse_proxy.ref ];
 
           # Port mappings: host_port:container_port
           # These are published on the pod, shared by all containers in it
