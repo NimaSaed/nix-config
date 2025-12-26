@@ -90,9 +90,9 @@ in {
       # Pod name comes from the attribute key (reverse_proxy)
       pods.reverse_proxy = {
         podConfig = {
-          # Network to attach the pod to (singular 'network', not 'networks')
+          # Network to attach the pod to
           # Uses the .ref from our network definition for proper dependency
-          network = [ networks.reverse_proxy.ref ];
+          networks = [ networks.reverse_proxy.ref ];
 
           # Port mappings: host_port:container_port
           # These are published on the pod, shared by all containers in it
