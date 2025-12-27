@@ -11,6 +11,8 @@
     ../common/users/poddy
     ../common/podman/podman.nix
     ../common/podman/container-traefik.nix
+    ../common/podman/pod-tools.nix
+    ../common/podman/container-homepage.nix
   ];
 
   # ============================================================================
