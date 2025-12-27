@@ -42,7 +42,7 @@
             "/data/homepage/config:/app/config"
           ];
 
-          healthCmd = "wget --no-verbose --tries=1 --spider http://localhost:3000/api/healthcheck || exit 1";
+          healthCmd = "wget --no-verbose --tries=1 --spider http://tools:3000/api/healthcheck || exit 1";
         };
       };
     };
