@@ -21,7 +21,6 @@
         containerConfig = {
           image = "ghcr.io/gethomepage/homepage:latest";
           pod = pods.tools.ref;
-          user = "1000:1000";
 
           labels = [
             "io.containers.autoupdate=registry"
