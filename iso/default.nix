@@ -20,12 +20,13 @@
 
   # Add SSH public key for root user
   users.users.root = {
-    # Set a default password for emergency console access
-    # Password: "installer"
-    initialPassword = "installer";
+    # Set a hashed password for emergency console access
+    # Generate with: nix-shell -p mkpasswd --run 'mkpasswd -m yescrypt "yourpassword"'
+    initialHashedPassword =
+      "$y$j9T$6.ikh29FQbxd5LnlwGk6V/$49/QaAmG9ZbqrmLJRTOdOGpWL7xZPqHJvUlgHY9PV38";
 
     openssh.authorizedKeys.keys = [
-      # Your SSH public key from home/nima/ssh.pub
+      # My SSH public key from home/nima/ssh.pub
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILusNnhBC/pBjhZpx312e7TEzwS69SyN/0e/osA6Jez9"
     ];
   };
