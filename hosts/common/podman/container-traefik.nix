@@ -197,7 +197,7 @@ in {
             TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_PROVIDER =
               "namecheap";
             TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_RESOLVERS =
-              "198.54.117.10:53";
+              "1.1.1.1:53,198.54.117.10:53,198.54.117.11:53";
             TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_STORAGE = "/acme.json";
 
             # Skip TLS verification for upstream servers
