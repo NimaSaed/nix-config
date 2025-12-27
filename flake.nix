@@ -53,7 +53,25 @@
   # ============================================================================
   outputs = { self, disko, nixpkgs, home-manager, darwin, nixos-generators
     , sops-nix, quadlet-nix, ... }@inputs:
-    let inherit (self) outputs;
+    let
+      inherit (self) outputs;
+
+      # Shared modules for chestnut host - used by both nixosConfigurations and colmena
+      chestnutModules = [
+        ./hosts/chestnut
+        inputs.disko.nixosModules.disko
+        inputs.sops-nix.nixosModules.sops
+        home-manager.nixosModules.home-manager
+        ./hosts/common/home-manager.nix
+        { home-manager.users.nima = import ./home/nima/chestnut.nix; }
+        quadlet-nix.nixosModules.quadlet
+        {
+          home-manager.users.poddy = { pkgs, config, ... }: {
+            imports = [ quadlet-nix.homeManagerModules.quadlet ];
+            home.stateVersion = "25.05";
+          };
+        }
+      ];
 
     in {
       # -------------------------------------------------------------------------
@@ -125,27 +143,7 @@
         };
         chestnut = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          modules = [
-            ./hosts/chestnut
-            inputs.disko.nixosModules.disko
-            inputs.sops-nix.nixosModules.sops
-            home-manager.nixosModules.home-manager
-            ./hosts/common/home-manager.nix
-            {
-              home-manager.users.nima = import ./home/nima/chestnut.nix;
-            }
-
-            # Quadlet support for rootless Podman containers
-            quadlet-nix.nixosModules.quadlet
-            {
-              # Home Manager for poddy user (minimal - just for Quadlet containers)
-              home-manager.users.poddy = { pkgs, config, ... }: {
-                imports = [ quadlet-nix.homeManagerModules.quadlet ];
-                home.stateVersion = "25.05";
-                # Quadlet container configuration is in hosts/common/podman/container-traefik.nix
-              };
-            }
-          ];
+          modules = chestnutModules;
           specialArgs = { inherit inputs outputs; };
         };
       };
@@ -190,28 +188,7 @@
             buildOnTarget = true; # Build on server to avoid large transfers
             tags = [ "production" "storage" ];
           };
-
-          imports = [
-            ./hosts/chestnut
-            inputs.disko.nixosModules.disko
-            inputs.sops-nix.nixosModules.sops
-            home-manager.nixosModules.home-manager
-            ./hosts/common/home-manager.nix
-            {
-              home-manager.users.nima = import ./home/nima/chestnut.nix;
-            }
-
-            # Quadlet support for rootless Podman containers
-            quadlet-nix.nixosModules.quadlet
-            {
-              # Home Manager for poddy user (minimal - just for Quadlet containers)
-              home-manager.users.poddy = { pkgs, config, ... }: {
-                imports = [ quadlet-nix.homeManagerModules.quadlet ];
-                home.stateVersion = "25.05";
-                # Quadlet container configuration is in hosts/common/podman/container-traefik.nix
-              };
-            }
-          ];
+          imports = chestnutModules;
         };
       };
     };
