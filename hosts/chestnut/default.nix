@@ -49,6 +49,12 @@
   #  "6b2b4dde"; # Required for ZFS (generate with: head -c 8 /etc/machine-id)
   networking.networkmanager.enable = true;
 
+  # Enable network-online.target at boot for podman user containers
+  # Without this, podman-user-wait-network-online.service times out (90s)
+  # during nixos-rebuild switch, causing slow sysinit-reactivation.target
+  # See: https://github.com/containers/podman/issues/24796
+  systemd.targets.network-online.wantedBy = [ "multi-user.target" ];
+
   # ============================================================================
   # Localization
   # ============================================================================
