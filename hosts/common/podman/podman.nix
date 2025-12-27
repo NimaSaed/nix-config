@@ -5,6 +5,10 @@
   # Virtualization - Podman Configuration
   # ============================================================================
 
+  # Enable Quadlet NixOS module for declarative container management
+  # Required by quadlet-nix for rootless Home Manager containers
+  virtualisation.quadlet.enable = true;
+
   # Enable Podman for container management
   virtualisation.podman = {
     enable = true;
