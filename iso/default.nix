@@ -22,7 +22,7 @@
   users.users.root = {
     # Set a hashed password for emergency console access
     # Generate with: nix-shell -p mkpasswd --run 'mkpasswd -m yescrypt "yourpassword"'
-    initialHashedPassword =
+    initialHashedPassword = lib.mkForce
       "$y$j9T$6.ikh29FQbxd5LnlwGk6V/$49/QaAmG9ZbqrmLJRTOdOGpWL7xZPqHJvUlgHY9PV38";
 
     openssh.authorizedKeys.keys = [
