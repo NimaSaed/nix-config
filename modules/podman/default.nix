@@ -108,9 +108,9 @@ in {
       # Enable podman auto-update for rootless containers
       # Runs daily at midnight to update containers with AutoUpdate=registry label
       # Note: Individual containers need autoUpdate = "registry" in their config
-      virtualisation.quadlet = {
-        enablePodmanAutoUpdate = true;
-        podmanAutoUpdateSchedule = "*-*-* 00:00:00"; # Daily at midnight
+      virtualisation.quadlet.autoUpdate = {
+        enable = true;
+        calendar = "*-*-* 00:00:00"; # Daily at midnight
       };
 
       # Configure storage paths on ZFS datapool
