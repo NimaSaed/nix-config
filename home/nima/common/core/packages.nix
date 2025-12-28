@@ -43,7 +43,6 @@
       coreutils # For gdircolors (macOS) and other GNU tools
       util-linux # For colrm and other utilities (Linux)
       awscli2 # AWS CLI v2 for AWS functions
-      podman # Container management (aliased as docker)
 
       # macOS-specific (conditionally included)
     ] ++ (if pkgs.stdenv.isDarwin then
