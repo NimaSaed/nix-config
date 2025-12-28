@@ -15,7 +15,10 @@
   # ============================================================================
   # Pod modules are defined in modules/podman/ with enable options
   services.pods = {
-    reverse-proxy.enable = true; # Traefik reverse proxy
+    reverse-proxy = {
+      enable = true;
+      useAcmeStaging = true; # Use Let's Encrypt staging (avoid rate limits)
+    };
     tools.enable = true; # Homepage dashboard and utilities
   };
 

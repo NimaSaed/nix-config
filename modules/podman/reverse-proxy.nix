@@ -11,6 +11,12 @@ in {
   # ============================================================================
   options.services.pods.reverse-proxy = {
     enable = lib.mkEnableOption "Traefik reverse proxy pod";
+    useAcmeStaging = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description =
+        "Use Let's Encrypt staging server (for testing, avoids rate limits)";
+    };
   };
 
   # ============================================================================
@@ -183,15 +189,21 @@ in {
                 "https";
 
               # Namecheap DNS challenge configuration
-              TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE = "true";
+              TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE =
+                "true";
               TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_PROVIDER =
                 "namecheap";
               TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_RESOLVERS =
                 "1.1.1.1:53,198.54.117.10:53,198.54.117.11:53";
-              TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_STORAGE = "/acme.json";
+              TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_STORAGE =
+                "/acme.json";
 
               # Skip TLS verification for upstream servers
               TRAEFIK_SERVERSTRANSPORT_INSECURESKIPVERIFY = "true";
+            } // lib.optionalAttrs cfg.useAcmeStaging {
+              # Let's Encrypt staging server (for testing, avoids rate limits)
+              TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_CASERVER =
+                "https://acme-staging-v02.api.letsencrypt.org/directory";
             };
 
             # Security options
