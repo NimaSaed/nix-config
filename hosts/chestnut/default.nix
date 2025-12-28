@@ -8,12 +8,16 @@
     ./hardware-configuration.nix
     ../common/core
     ../common/users/nima
-    ../common/users/poddy
-    ../common/podman/podman.nix
-    ../common/podman/container-traefik.nix
-    ../common/podman/pod-tools.nix
-    ../common/podman/container-homepage.nix
   ];
+
+  # ============================================================================
+  # Podman Pods - Enable container services for this host
+  # ============================================================================
+  # Pod modules are defined in modules/podman/ with enable options
+  services.pods = {
+    reverse-proxy.enable = true; # Traefik reverse proxy
+    tools.enable = true; # Homepage dashboard and utilities
+  };
 
   # ============================================================================
   # Boot Configuration

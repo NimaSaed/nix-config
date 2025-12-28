@@ -64,13 +64,7 @@
         home-manager.nixosModules.home-manager
         ./hosts/common/home-manager.nix
         { home-manager.users.nima = import ./home/nima/chestnut.nix; }
-        quadlet-nix.nixosModules.quadlet
-        {
-          home-manager.users.poddy = { pkgs, config, ... }: {
-            imports = [ quadlet-nix.homeManagerModules.quadlet ];
-            home.stateVersion = "25.05";
-          };
-        }
+        ./modules/podman
       ];
 
     in {
@@ -88,6 +82,7 @@
       nixosModules = {
         default = ./hosts/common/home-manager.nix;
         home-manager = ./hosts/common/home-manager.nix;
+        podman = ./modules/podman;
       };
 
       # -------------------------------------------------------------------------
