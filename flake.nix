@@ -5,12 +5,12 @@
   # Flake Inputs - External dependencies and their sources
   # ============================================================================
   inputs = {
-    # Nixpkgs - The main package repository (stable branch)
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    # Nixpkgs - The main package repository (unstable branch)
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     # Home Manager - Declarative user environment management
     # Follows nixpkgs version to ensure compatibility
-    home-manager.url = "github:nix-community/home-manager/release-25.05";
+    home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     # nix-darwin - macOS system configuration management
