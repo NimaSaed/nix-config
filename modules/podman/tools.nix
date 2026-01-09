@@ -47,7 +47,6 @@ in {
 
           containers.homepage = lib.mkIf cfg.homepage.enable {
             autoStart = true;
-            autoUpdate = "registry";
 
             serviceConfig = {
               Restart = "always";
@@ -62,6 +61,7 @@ in {
             containerConfig = {
               image = "ghcr.io/gethomepage/homepage:latest";
               pod = pods.tools.ref;
+              autoUpdate = "registry";
 
               labels = {
                 "traefik.enable" = "true";
@@ -96,7 +96,6 @@ in {
 
           containers.it_tools = lib.mkIf cfg.itTools.enable {
             autoStart = true;
-            autoUpdate = "registry";
 
             serviceConfig = {
               Restart = "always";
@@ -111,6 +110,7 @@ in {
             containerConfig = {
               image = "ghcr.io/corentinth/it-tools:latest";
               pod = pods.tools.ref;
+              autoUpdate = "registry";
 
               labels = {
                 "traefik.enable" = "true";
