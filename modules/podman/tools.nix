@@ -15,6 +15,14 @@ in {
         description = "Enable Homepage dashboard container in the tools pod";
       };
     };
+
+    itTools = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable IT Tools container in the tools pod";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -39,6 +47,7 @@ in {
 
           containers.homepage = lib.mkIf cfg.homepage.enable {
             autoStart = true;
+            autoUpdate = "registry";
 
             serviceConfig = {
               Restart = "always";
@@ -54,16 +63,17 @@ in {
               image = "ghcr.io/gethomepage/homepage:latest";
               pod = pods.tools.ref;
 
-              labels = [
-                "io.containers.autoupdate=registry"
-                "traefik.enable=true"
-                "traefik.http.routers.homepage.rule=Host(`home1.nmsd.xyz`)"
-                "traefik.http.routers.homepage.entrypoints=websecure"
-                "traefik.http.routers.homepage.tls.certresolver=namecheap"
-                "traefik.http.routers.homepage.service=homepage"
-                "traefik.http.services.homepage.loadbalancer.server.scheme=http"
-                "traefik.http.services.homepage.loadbalancer.server.port=3000"
-              ];
+              labels = {
+                "traefik.enable" = "true";
+                "traefik.http.routers.homepage.rule" = "Host(`home1.nmsd.xyz`)";
+                "traefik.http.routers.homepage.entrypoints" = "websecure";
+                "traefik.http.routers.homepage.tls.certresolver" = "namecheap";
+                "traefik.http.routers.homepage.service" = "homepage";
+                "traefik.http.services.homepage.loadbalancer.server.scheme" =
+                  "http";
+                "traefik.http.services.homepage.loadbalancer.server.port" =
+                  "3000";
+              };
 
               environments = { HOMEPAGE_ALLOWED_HOSTS = "*"; };
 
@@ -81,6 +91,38 @@ in {
 
               healthCmd =
                 "wget --no-verbose --tries=1 --spider http://tools:3000/api/healthcheck || exit 1";
+            };
+          };
+
+          containers.it_tools = lib.mkIf cfg.itTools.enable {
+            autoStart = true;
+            autoUpdate = "registry";
+
+            serviceConfig = {
+              Restart = "always";
+              TimeoutStopSec = 70;
+            };
+
+            unitConfig = {
+              Description = "IT Tools container";
+              After = [ "tools-pod.service" ];
+            };
+
+            containerConfig = {
+              image = "ghcr.io/corentinth/it-tools:latest";
+              pod = pods.tools.ref;
+
+              labels = {
+                "traefik.enable" = "true";
+                "traefik.http.routers.tools.rule" = "Host(`tools1.nmsd.xyz`)";
+                "traefik.http.routers.tools.entrypoints" = "websecure";
+                "traefik.http.routers.tools.tls.certresolver" = "namecheap";
+                "traefik.http.routers.tools.service" = "tools";
+                "traefik.http.services.tools.loadbalancer.server.scheme" =
+                  "http";
+                "traefik.http.services.tools.loadbalancer.server.port" = "80";
+                #"traefik.http.routers.tools.middlewares" = "authelia@docker";
+              };
             };
           };
         };
