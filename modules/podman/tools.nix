@@ -1,7 +1,10 @@
 { config, lib, pkgs, ... }:
 
-let cfg = config.services.pods.tools;
+let
+  cfg = config.services.pods.tools;
+  homepageCfg = config.services.pods.homepage;
 in {
+  imports = [ ./homepage.nix ];
   options.services.pods.tools = {
     enable = lib.mkEnableOption "Tools pod (homepage dashboard and utilities)";
 
@@ -64,7 +67,17 @@ in {
 
               environments = { HOMEPAGE_ALLOWED_HOSTS = "*"; };
 
-              volumes = [ "/data/homepage/config:/app/config" ];
+              volumes = [
+                "${homepageCfg.settingsFile}:/app/config/settings.yaml:ro"
+                "${homepageCfg.servicesFile}:/app/config/services.yaml:ro"
+                "${homepageCfg.bookmarksFile}:/app/config/bookmarks.yaml:ro"
+                "${homepageCfg.widgetsFile}:/app/config/widgets.yaml:ro"
+                "${homepageCfg.dockerFile}:/app/config/docker.yaml:ro"
+                "${homepageCfg.kubernetesFile}:/app/config/kubernetes.yaml:ro"
+                "${homepageCfg.proxmoxFile}:/app/config/proxmox.yaml:ro"
+                "${homepageCfg.customCssFile}:/app/config/custom.css:ro"
+                "${homepageCfg.customJsFile}:/app/config/custom.js:ro"
+              ];
 
               healthCmd =
                 "wget --no-verbose --tries=1 --spider http://tools:3000/api/healthcheck || exit 1";
@@ -73,9 +86,5 @@ in {
         };
     };
 
-    systemd.tmpfiles.rules = lib.mkIf cfg.homepage.enable [
-      "d /data/homepage 0755 poddy poddy - -"
-      "d /data/homepage/config 0755 poddy poddy - -"
-    ];
   };
 }
