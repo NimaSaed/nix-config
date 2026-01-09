@@ -22,6 +22,11 @@ in {
       allowedTCPPorts = [ 80 443 ];
     };
 
+    systemd.tmpfiles.rules = [
+      "d /data/traefik 0755 poddy poddy - -"
+      "f /data/traefik/acme.json 0600 poddy poddy - -"
+    ];
+
     home-manager.users.poddy = { pkgs, config, ... }: {
       virtualisation.quadlet = let
         secretsPath = nixosConfig.sops.templates."traefik-secrets".path;

@@ -114,11 +114,6 @@
     "d /data 0755 root root - -"
     # Nima's personal data directory
     "d /data/nima 0755 nima users - -"
-    # Traefik storage directory on ZFS datapool
-    "d /data/traefik 0755 poddy poddy - -"
-    "f /data/traefik/acme.json 0600 poddy poddy - -"
-    # Media storage for Jellyfin
-    "d /data/media 0755 poddy poddy - -"
   ];
 
   # ============================================================================

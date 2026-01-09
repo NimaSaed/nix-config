@@ -27,6 +27,7 @@ in {
     }];
 
     systemd.tmpfiles.rules = [
+      "d ${mediaRoot} 0755 poddy poddy - -"
       "d ${jellyfinDataRoot} 0750 poddy poddy - -"
       "d ${jellyfinDataRoot}/config 0750 poddy poddy - -"
       "d ${jellyfinDataRoot}/cache 0750 poddy poddy - -"
