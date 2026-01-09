@@ -78,7 +78,7 @@ in {
                 "${mediaRoot}:/media:ro"
               ];
 
-              addDevice = [ "/dev/dri:/dev/dri" ];
+              podmanArgs = [ "--device=/dev/dri:/dev/dri" ];
             };
           };
         };
