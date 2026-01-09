@@ -20,6 +20,7 @@
       useAcmeStaging = true; # Use Let's Encrypt staging (avoid rate limits)
     };
     tools.enable = true; # Homepage dashboard and utilities
+    media.enable = true; # Jellyfin media server
   };
 
   # ============================================================================

@@ -7,8 +7,12 @@ let
   poddyDataRoot = "/data/poddy";
   anyPodEnabled = cfg._enabledPods != [ ];
 in {
-  imports =
-    [ inputs.quadlet-nix.nixosModules.quadlet ./reverse-proxy.nix ./tools.nix ];
+  imports = [
+    inputs.quadlet-nix.nixosModules.quadlet
+    ./reverse-proxy.nix
+    ./tools.nix
+    ./media.nix
+  ];
 
   options.services.pods = {
     _enabledPods = lib.mkOption {
