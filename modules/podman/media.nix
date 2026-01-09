@@ -78,7 +78,7 @@ in {
                 "${mediaRoot}:/media:ro"
               ];
 
-              addDevices = [ "/dev/dri:/dev/dri" ];
+              addDevice = [ "/dev/dri:/dev/dri" ];
             };
           };
         };
