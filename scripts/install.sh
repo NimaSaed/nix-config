@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: ./install.sh [remote-host] [1password-item] [flake-target]
+# Usage: ./install.sh <remote-host>
 
-REMOTE_HOST="${1:-root@chestnut.nmsd.xyz}"
-OP_ITEM="${2:-Chestnut SOPS Age}"
+REMOTE_HOST="${1:?Usage: $0 <remote-host>}"
 
 # Extract hostname from REMOTE_HOST (e.g., root@chestnut.nmsd.xyz -> chestnut)
 HOST_PART="${REMOTE_HOST#*@}"
-FLAKE_TARGET="${3:-${HOST_PART%%.*}}"
+HOSTNAME="${HOST_PART%%.*}"
+
+# Derive 1Password item name from hostname (e.g., chestnut -> Chestnut SOPS Age)
+HOSTNAME_CAPITALIZED="$(echo "${HOSTNAME:0:1}" | tr '[:lower:]' '[:upper:]')${HOSTNAME:1}"
+OP_ITEM="${HOSTNAME_CAPITALIZED} SOPS Age"
+
+FLAKE_TARGET="$HOSTNAME"
 
 # Create temporary directory for extra files
 temp=$(mktemp -d)
