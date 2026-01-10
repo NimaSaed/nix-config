@@ -180,7 +180,7 @@
       # =========================================================================
       colmena = {
         meta = {
-          nixpkgs = import nixpkgs { system = "x86_64-linux"; };
+          nixpkgs = nixpkgs.legacyPackages.x86_64-linux;
           specialArgs = { inherit inputs outputs; };
         };
 
