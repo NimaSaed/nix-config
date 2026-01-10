@@ -12,15 +12,14 @@
   # Podman Pods - Enable container services for this host
   # ============================================================================
   # Pod modules are defined in modules/podman/ with enable options
-  # Uncomment when ready to migrate services from chestnut:
-  # services.pods = {
-  #   reverse-proxy = {
-  #     enable = true;
-  #     useAcmeStaging = true;
-  #   };
-  #   tools.enable = true;
-  #   media.enable = true;
-  # };
+  services.pods = {
+    reverse-proxy = {
+      enable = true;
+      useAcmeStaging = true;
+    };
+    tools.enable = true;
+    media.enable = true;
+  };
 
   # ============================================================================
   # Boot Configuration

@@ -11,19 +11,6 @@
   ];
 
   # ============================================================================
-  # Podman Pods - Enable container services for this host
-  # ============================================================================
-  # Pod modules are defined in modules/podman/ with enable options
-  services.pods = {
-    reverse-proxy = {
-      enable = true;
-      useAcmeStaging = true; # Use Let's Encrypt staging (avoid rate limits)
-    };
-    tools.enable = true; # Homepage dashboard and utilities
-    media.enable = true; # Jellyfin media server
-  };
-
-  # ============================================================================
   # Boot Configuration
   # ============================================================================
 
