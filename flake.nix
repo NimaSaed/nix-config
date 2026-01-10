@@ -67,6 +67,17 @@
         ./modules/podman
       ];
 
+      # Shared modules for nutcracker host - used by both nixosConfigurations and colmena
+      nutcrackerModules = [
+        ./hosts/nutcracker
+        inputs.disko.nixosModules.disko
+        inputs.sops-nix.nixosModules.sops
+        home-manager.nixosModules.home-manager
+        ./hosts/common/home-manager.nix
+        { home-manager.users.nima = import ./home/nima/nutcracker.nix; }
+        ./modules/podman
+      ];
+
     in {
       # -------------------------------------------------------------------------
       # Formatter - Format Nix files with `nix fmt`
@@ -74,15 +85,6 @@
       formatter = {
         x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt-classic;
         aarch64-darwin = nixpkgs.legacyPackages.aarch64-darwin.nixfmt-classic;
-      };
-
-      # -------------------------------------------------------------------------
-      # Reusable NixOS Modules - Can be imported by other flakes
-      # -------------------------------------------------------------------------
-      nixosModules = {
-        default = ./hosts/common/home-manager.nix;
-        home-manager = ./hosts/common/home-manager.nix;
-        podman = ./modules/podman;
       };
 
       # -------------------------------------------------------------------------
@@ -141,6 +143,15 @@
           modules = chestnutModules;
           specialArgs = { inherit inputs outputs; };
         };
+
+        # Nutcracker - Service runner (processes data from chestnut)
+        # Build: nixos-rebuild build --flake .#nutcracker
+        # Switch: nixos-rebuild switch --flake .#nutcracker
+        nutcracker = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = nutcrackerModules;
+          specialArgs = { inherit inputs outputs; };
+        };
       };
 
       # =========================================================================
@@ -184,6 +195,19 @@
             tags = [ "production" "storage" ];
           };
           imports = chestnutModules;
+        };
+
+        # Nutcracker - Service runner (processes data from chestnut)
+        # Address: nutcracker.nmsd.xyz
+        # Features: Podman services (future migration from chestnut)
+        nutcracker = {
+          deployment = {
+            targetHost = "nutcracker.nmsd.xyz";
+            targetUser = "root";
+            buildOnTarget = true; # Build on server to avoid large transfers
+            tags = [ "production" "services" ];
+          };
+          imports = nutcrackerModules;
         };
       };
     };

@@ -7,6 +7,9 @@ keys:
   # Chestnut server - age key
   - &chestnut age10htej2jts7xx8hhcaz4fh9r96czhg7dfznlldlrzj08vpfjcv4js4d3hp5
 
+  # Nutcracker server - age key
+  - &nutcracker age1uag9znk7atpgx8mjdyvczj4fy203gg9le82u9ljx7hp9cwgunsgslz2t3u
+
 creation_rules:
   # Chestnut server secrets
   - path_regex: hosts/chestnut/secrets\.yaml$
@@ -14,3 +17,9 @@ creation_rules:
       - age:
           - *personal
           - *chestnut
+
+  - path_regex: hosts/nutcracker/secrets\.yaml$
+    key_groups:
+      - age:
+          - *personal
+          - *nutcracker
