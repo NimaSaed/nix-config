@@ -132,22 +132,6 @@
 
     # Use dedicated age key for decryption
     age.keyFile = "/var/lib/sops-nix/key.txt";
-
-    # Define secrets that will be available to services
-    secrets = {
-      namecheap_email = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      namecheap_api_user = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      namecheap_api_key = {
-        owner = "poddy";
-        group = "poddy";
-      };
-    };
   };
 
   system.stateVersion = "25.05";

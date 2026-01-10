@@ -18,9 +18,23 @@ in {
   config = lib.mkIf cfg.enable {
     services.pods._enabledPods = [ "reverse-proxy" ];
 
-    networking.firewall = {
-      allowedTCPPorts = [ 80 443 ];
+    # Declare secrets this module needs
+    sops.secrets = {
+      "reverse-proxy/namecheap_email" = {
+        owner = "poddy";
+        group = "poddy";
+      };
+      "reverse-proxy/namecheap_api_user" = {
+        owner = "poddy";
+        group = "poddy";
+      };
+      "reverse-proxy/namecheap_api_key" = {
+        owner = "poddy";
+        group = "poddy";
+      };
     };
+
+    networking.firewall = { allowedTCPPorts = [ 80 443 ]; };
 
     systemd.tmpfiles.rules = [
       "d /data/traefik 0755 poddy poddy - -"
@@ -39,12 +53,7 @@ in {
         pods.reverse_proxy = {
           podConfig = {
             networks = [ networks.reverse_proxy.ref ];
-            publishPorts = [
-              "80:80"
-              "443:443"
-              "8080:8080"
-              "636:636"
-            ];
+            publishPorts = [ "80:80" "443:443" "8080:8080" "636:636" ];
           };
         };
 
@@ -119,9 +128,15 @@ in {
 
     sops.templates."traefik-secrets" = {
       content = ''
-        TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_EMAIL=${config.sops.placeholder.namecheap_email}
-        NAMECHEAP_API_USER=${config.sops.placeholder.namecheap_api_user}
-        NAMECHEAP_API_KEY=${config.sops.placeholder.namecheap_api_key}
+        TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_EMAIL=${
+          config.sops.placeholder."reverse-proxy/namecheap_email"
+        }
+        NAMECHEAP_API_USER=${
+          config.sops.placeholder."reverse-proxy/namecheap_api_user"
+        }
+        NAMECHEAP_API_KEY=${
+          config.sops.placeholder."reverse-proxy/namecheap_api_key"
+        }
       '';
       owner = "poddy";
       group = "poddy";
