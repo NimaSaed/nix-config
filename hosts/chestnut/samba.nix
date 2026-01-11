@@ -110,7 +110,10 @@ in {
         # Only allow samby user to connect
         "valid users" = "samby";
 
-        # File creation masks - new files/dirs inherit parent permissions
+        # Force all file operations to use samby group
+        "force group" = "samby";
+
+        # File creation masks
         "create mask" = "0664";
         "directory mask" = "0775";
         "inherit permissions" = "yes";

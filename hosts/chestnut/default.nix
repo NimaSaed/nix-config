@@ -97,9 +97,10 @@
   };
 
   # Create /data directory structure
-  # /data must be owned by root to allow subdirectories with different owners
+  # /data owned by root:nas with setgid (2775) so Samba can write via nas group
+  # Subdirectories can have different owners
   systemd.tmpfiles.rules = [
-    "d /data 0755 root root - -"
+    "d /data 2775 root samby - -"
     # Nima's personal data directory
     "d /data/nima 0755 nima users - -"
   ];
