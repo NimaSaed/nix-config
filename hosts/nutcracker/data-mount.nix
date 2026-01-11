@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 
 # CIFS mount configuration for /data from chestnut
-# Uses systemd automount for reliability and sops-nix for credentials
+# Uses direct mount (not automount) so tmpfiles can create directories
 #
 # SECRETS REQUIRED in secrets.yaml:
 #   smb_credentials: |
@@ -35,51 +35,45 @@ in {
     mode = "0400";
   };
 
-  # CIFS mount with systemd automount
-  # Mount is triggered on first access, preventing boot hangs if server unavailable
+  # CIFS mount - direct mount at boot (after network is up)
+  # Using direct mount instead of automount so systemd-tmpfiles can create
+  # directories under /data without being blocked by autofs detection
   fileSystems."${mountPoint}" = {
     device = "//${sambaServer}/${shareName}";
     fsType = "cifs";
-    options = let
-      # Automount options - prevents hanging on network issues
-      # Source: https://wiki.nixos.org/wiki/Samba
-      automount_opts = lib.concatStringsSep "," [
-        "x-systemd.automount"
-        "noauto"
-        "x-systemd.idle-timeout=60"
-        "x-systemd.device-timeout=5s"
-        "x-systemd.mount-timeout=5s"
-      ];
+    options = [
+      # Network mount options
+      "_netdev" # Mount after network is up
+      "x-systemd.device-timeout=30s"
+      "x-systemd.mount-timeout=30s"
+      # Note: NOT using "nofail" - boot should fail if mount fails
+      # because podman services require /data to function
 
       # Security options for SMB3
-      security_opts = lib.concatStringsSep "," [
-        "vers=3.1.1" # SMB3.1.1 protocol (matches server)
-        "seal" # Enable SMB3 encryption
-      ];
+      "vers=3.1.1" # SMB3.1.1 protocol (matches server)
+      "seal" # Enable SMB3 encryption
 
       # Ownership mapping - files appear as poddy user locally
-      ownership_opts = lib.concatStringsSep "," [
-        "uid=${toString poddyUid}"
-        "gid=${toString poddyGid}"
-        "file_mode=0664"
-        "dir_mode=0775"
-      ];
+      "uid=${toString poddyUid}"
+      "gid=${toString poddyGid}"
+      "file_mode=0664"
+      "dir_mode=0775"
 
-      # Performance and reliability options
-      perf_opts = lib.concatStringsSep "," [
-        "cache=strict"
-        "_netdev" # Network filesystem - mount after network is up
-      ];
+      # Performance options
+      "cache=strict"
 
-    in [
-      automount_opts
-      security_opts
-      ownership_opts
-      perf_opts
+      # Credentials
       "credentials=${config.sops.secrets.smb_credentials.path}"
     ];
   };
 
   # Ensure the mount point directory exists
   systemd.tmpfiles.rules = [ "d ${mountPoint} 0755 root root - -" ];
+
+  # Make tmpfiles-setup wait for the CIFS mount
+  # This ensures directories under /data can be created
+  systemd.services.systemd-tmpfiles-setup = {
+    after = [ "data.mount" ];
+    requires = [ "data.mount" ];
+  };
 }
