@@ -40,6 +40,11 @@
   networking.hostName = "nutcracker";
   networking.networkmanager.enable = true;
 
+  # Enable systemd-resolved for reliable DNS at boot
+  # Required for CIFS mount to resolve chestnut.nmsd.xyz before mounting /data
+  services.resolved.enable = true;
+  networking.networkmanager.dns = "systemd-resolved";
+
   # Enable network-online.target at boot for podman user containers
   # Without this, podman-user-wait-network-online.service times out (90s)
   # during nixos-rebuild switch, causing slow sysinit-reactivation.target

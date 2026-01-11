@@ -15,8 +15,8 @@
 # - https://github.com/Mic92/sops-nix
 
 let
-  # Chestnut server address - use IP or hostname (must be resolvable)
-  sambaServer = "chestnut";
+  # Chestnut server address - use FQDN for reliable DNS resolution at boot
+  sambaServer = "chestnut.nmsd.xyz";
   shareName = "data";
   mountPoint = "/data";
 
@@ -44,6 +44,7 @@ in {
     options = [
       # Network mount options
       "_netdev" # Mount after network is up
+      "x-systemd.after=systemd-resolved.service" # Wait for DNS to be ready
       "x-systemd.device-timeout=30s"
       "x-systemd.mount-timeout=30s"
       # Note: NOT using "nofail" - boot should fail if mount fails
