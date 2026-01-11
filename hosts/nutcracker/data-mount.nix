@@ -68,13 +68,22 @@ in {
     ];
   };
 
-  # Ensure the mount point directory exists
+  # Ensure the mount point directory exists (before mount)
   systemd.tmpfiles.rules = [ "d ${mountPoint} 0755 root root - -" ];
 
-  # Make tmpfiles-setup wait for the CIFS mount
-  # This ensures directories under /data can be created
-  systemd.services.systemd-tmpfiles-setup = {
+  # Create directories under /data AFTER the CIFS mount is ready
+  # systemd-tmpfiles-setup runs during sysinit.target (before network mounts)
+  # so we need a separate service to create /data/* directories after mount
+  systemd.services.data-dirs = {
+    description = "Create directories on ${mountPoint} mount";
     after = [ "data.mount" ];
     requires = [ "data.mount" ];
+    before = [ "home-manager-poddy.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.systemd}/bin/systemd-tmpfiles --create --prefix=${mountPoint}";
+    };
   };
 }
