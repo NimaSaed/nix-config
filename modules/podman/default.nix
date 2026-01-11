@@ -4,6 +4,9 @@ let
   cfg = config.services.pods;
   poddyUid = 1001;
   poddyUidStr = toString poddyUid;
+  # Local storage for Podman state (images, DB) - must be local for SQLite locking
+  poddyLocalRoot = "/var/lib/poddy";
+  # Network storage for volumes (app data) - can be on CIFS share
   poddyDataRoot = "/data/poddy";
   anyPodEnabled = cfg._enabledPods != [ ];
 in {
@@ -68,7 +71,7 @@ in {
         [storage]
         driver = "overlay"
         runroot = "/run/user/${poddyUidStr}/containers"
-        graphroot = "${poddyDataRoot}/containers/storage"
+        graphroot = "${poddyLocalRoot}/containers/storage"
 
         [storage.options]
         mount_program = "${pkgs.fuse-overlayfs}/bin/fuse-overlayfs"
@@ -85,9 +88,13 @@ in {
     };
 
     systemd.tmpfiles.rules = [
+      # Local storage for Podman state (images, SQLite DB) - must be local disk
+      "d ${poddyLocalRoot} 0750 poddy poddy - -"
+      "d ${poddyLocalRoot}/containers 0750 poddy poddy - -"
+      "d ${poddyLocalRoot}/containers/storage 0750 poddy poddy - -"
+      # Network storage for volumes (app data) - on CIFS share
       "d ${poddyDataRoot} 0750 poddy poddy - -"
       "d ${poddyDataRoot}/containers 0750 poddy poddy - -"
-      "d ${poddyDataRoot}/containers/storage 0750 poddy poddy - -"
       "d ${poddyDataRoot}/containers/volumes 0750 poddy poddy - -"
     ];
   };
