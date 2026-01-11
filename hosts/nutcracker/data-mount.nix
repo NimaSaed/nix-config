@@ -62,6 +62,7 @@ in {
 
       # Performance options
       "cache=strict"
+      "nobrl" # Disable byte-range locking (required for SQLite on CIFS)
 
       # Credentials
       "credentials=${config.sops.secrets.smb_credentials.path}"
