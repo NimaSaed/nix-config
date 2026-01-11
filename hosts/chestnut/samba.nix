@@ -11,22 +11,19 @@
 
 let
   samba = config.services.samba.package;
-  sambyUid = 1002;
 in {
-  # Create samby user for Samba authentication (follows poddy pattern)
+  # Create samby user for Samba authentication
   users.users.samby = {
     isNormalUser = true;
     description = "Samba share user";
     home = "/home/samby";
     createHome = true;
     group = "samby";
-    uid = sambyUid;
-    linger = true;
+    uid = 1002;
     shell = "${pkgs.shadow}/bin/nologin";
-    autoSubUidGidRange = true;
   };
 
-  users.groups.samby = { };
+  users.groups.samby = { gid = 1002; };
 
   # Decrypt the Samba password from sops
   sops.secrets.samba_password = {
