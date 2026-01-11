@@ -4,6 +4,7 @@
   imports = [
     ./disko.nix
     ./hardware-configuration.nix
+    ./data-mount.nix
     ../common/core
     ../common/users/nima
   ];
