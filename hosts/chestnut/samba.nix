@@ -9,8 +9,7 @@
 # The samba-user-setup service automatically configures the Samba user
 # using the password from sops secrets - no manual smbpasswd needed.
 
-let
-  samba = config.services.samba.package;
+let samba = config.services.samba.package;
 in {
   # Create samby user for Samba authentication
   users.users.samby = {

@@ -12,10 +12,11 @@
   };
 
   # Nutcracker-specific packages
-  home.packages = with pkgs; [
-    # Add nutcracker-specific tools here
-    tmux
-  ];
+  home.packages = with pkgs;
+    [
+      # Add nutcracker-specific tools here
+      tmux
+    ];
 
   # Nutcracker-specific program configurations
   programs = {

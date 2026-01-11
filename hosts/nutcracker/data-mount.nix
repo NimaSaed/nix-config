@@ -84,7 +84,8 @@ in {
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStart = "${pkgs.systemd}/bin/systemd-tmpfiles --create --prefix=${mountPoint}";
+      ExecStart =
+        "${pkgs.systemd}/bin/systemd-tmpfiles --create --prefix=${mountPoint}";
     };
   };
 }
