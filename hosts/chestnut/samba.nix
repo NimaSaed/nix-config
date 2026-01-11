@@ -9,8 +9,25 @@
 # The samba-user-setup service automatically configures the Samba user
 # using the password from sops secrets - no manual smbpasswd needed.
 
-let samba = config.services.samba.package;
+let
+  samba = config.services.samba.package;
+  sambyUid = 1002;
 in {
+  # Create samby user for Samba authentication (follows poddy pattern)
+  users.users.samby = {
+    isNormalUser = true;
+    description = "Samba share user";
+    home = "/home/samby";
+    createHome = true;
+    group = "samby";
+    uid = sambyUid;
+    linger = true;
+    shell = "${pkgs.shadow}/bin/nologin";
+    autoSubUidGidRange = true;
+  };
+
+  users.groups.samby = { };
+
   # Decrypt the Samba password from sops
   sops.secrets.samba_password = {
     owner = "root";
@@ -90,8 +107,8 @@ in {
         "read only" = "no";
         "guest ok" = "no";
 
-        # Only allow poddy user to connect
-        "valid users" = "poddy";
+        # Only allow samby user to connect
+        "valid users" = "samby";
 
         # File creation masks - new files/dirs inherit parent permissions
         "create mask" = "0664";
@@ -117,7 +134,7 @@ in {
   # This runs after samba-smbd starts and reads the password from sops
   # Reference: https://discourse.nixos.org/t/nixos-configuration-for-samba/17079
   systemd.services.samba-user-setup = {
-    description = "Set up Samba user password for poddy";
+    description = "Set up Samba user password for samby";
     after = [ "samba-smbd.service" ];
     requires = [ "samba-smbd.service" ];
     wantedBy = [ "multi-user.target" ];
@@ -131,7 +148,7 @@ in {
     # smbpasswd -a adds user if not exists, updates password if exists
     script = ''
       PASSWORD=$(cat ${config.sops.secrets.samba_password.path} | tr -d '\n')
-      (echo "$PASSWORD"; echo "$PASSWORD") | ${samba}/bin/smbpasswd -s -a poddy
+      (echo "$PASSWORD"; echo "$PASSWORD") | ${samba}/bin/smbpasswd -s -a samby
     '';
   };
 }

@@ -5,10 +5,10 @@
 #
 # SECRETS REQUIRED in secrets.yaml:
 #   smb_credentials: |
-#     username=poddy
+#     username=samby
 #     password=your-secure-password-here
 #
-# The password must match what you set with `smbpasswd -a poddy` on chestnut
+# The password must match the samba_password secret on chestnut
 #
 # References:
 # - https://wiki.nixos.org/wiki/Samba
