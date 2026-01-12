@@ -21,7 +21,7 @@
     tools.enable = true;
     media.enable = true;
     auth = {
-      enable = true;
+      enable = false;
       authelia.enable = true;
       lldap.enable = true;
     };
