@@ -101,8 +101,6 @@
   # Subdirectories can have different owners
   systemd.tmpfiles.rules = [
     "d /data 2775 root samby - -"
-    # Nima's personal data directory
-    "d /data/nima 0755 nima users - -"
   ];
 
   # ============================================================================
