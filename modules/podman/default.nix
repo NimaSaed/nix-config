@@ -15,6 +15,7 @@ in {
     ./reverse-proxy.nix
     ./tools.nix
     ./media.nix
+    ./auth.nix
   ];
 
   options.services.pods = {
