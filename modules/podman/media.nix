@@ -1,9 +1,6 @@
 { config, lib, pkgs, ... }:
 
-let
-  cfg = config.services.pods.media;
-  jellyfinDataRoot = "/data/jellyfin";
-  mediaRoot = "/data/media";
+let cfg = config.services.pods.media;
 in {
   options.services.pods.media = {
     enable = lib.mkEnableOption "Media pod (Jellyfin and related services)";
@@ -26,17 +23,13 @@ in {
         "services.pods.media requires services.pods.reverse-proxy to be enabled (for the reverse_proxy network)";
     }];
 
-    systemd.tmpfiles.rules = [
-      "d ${mediaRoot} 0755 poddy poddy - -"
-      "d ${jellyfinDataRoot} 0750 poddy poddy - -"
-      "d ${jellyfinDataRoot}/config 0750 poddy poddy - -"
-      "d ${jellyfinDataRoot}/cache 0750 poddy poddy - -"
-    ];
-
     home-manager.users.poddy = { pkgs, config, ... }: {
       virtualisation.quadlet =
-        let inherit (config.virtualisation.quadlet) networks pods;
+        let inherit (config.virtualisation.quadlet) networks pods volumes;
         in {
+          volumes.jellyfin_config = { volumeConfig = { }; };
+          volumes.jellyfin_cache = { volumeConfig = { }; };
+          volumes.media = { volumeConfig = { }; };
           pods.media = {
             podConfig = {
               networks = [ networks.reverse_proxy.ref ];
@@ -74,9 +67,9 @@ in {
               };
 
               volumes = [
-                "${jellyfinDataRoot}/cache:/cache"
-                "${jellyfinDataRoot}/config:/config"
-                "${mediaRoot}:/media:ro"
+                "${volumes.jellyfin_cache.ref}:/cache"
+                "${volumes.jellyfin_config.ref}:/config"
+                "${volumes.media.ref}:/media:ro"
               ];
 
               podmanArgs = [ "--device=/dev/dri:/dev/dri" ];
