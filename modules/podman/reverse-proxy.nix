@@ -36,16 +36,12 @@ in {
 
     networking.firewall = { allowedTCPPorts = [ 80 443 ]; };
 
-    systemd.tmpfiles.rules = [
-      "d /data/traefik 0755 poddy poddy - -"
-      "f /data/traefik/acme.json 0600 poddy poddy - -"
-    ];
-
     home-manager.users.poddy = { pkgs, config, ... }: {
       virtualisation.quadlet = let
         secretsPath = nixosConfig.sops.templates."traefik-secrets".path;
-        inherit (config.virtualisation.quadlet) networks pods;
+        inherit (config.virtualisation.quadlet) networks pods volumes;
       in {
+        volumes.traefik = { volumeConfig = { }; };
         networks.reverse_proxy = {
           networkConfig = { name = "reverse_proxy"; };
         };
@@ -87,7 +83,7 @@ in {
             # %t = XDG_RUNTIME_DIR
             volumes = [
               "%t/podman/podman.sock:/var/run/docker.sock:ro"
-              "/data/traefik/acme.json:/acme.json"
+              "${volumes.traefik.ref}:/acme.json"
             ];
 
             environmentFiles = [ secretsPath ];
