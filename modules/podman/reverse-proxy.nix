@@ -77,7 +77,7 @@ in {
               "traefik.http.routers.traefik.entrypoints=websecure"
               "traefik.http.routers.traefik.tls=true"
               "traefik.http.routers.traefik.tls.certresolver=namecheap"
-              "traefik.http.routers.traefik.middlewares=authelia@docker"
+              #"traefik.http.routers.traefik.middlewares=authelia@docker"
               "traefik.http.routers.traefik.service=api@internal"
             ];
 
