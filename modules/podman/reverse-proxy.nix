@@ -83,7 +83,7 @@ in {
             # %t = XDG_RUNTIME_DIR
             volumes = [
               "%t/podman/podman.sock:/var/run/docker.sock:ro"
-              "${volumes.traefik.ref}:/acme.json"
+              "${volumes.traefik.ref}:/data"
             ];
 
             environmentFiles = [ secretsPath ];
@@ -109,7 +109,7 @@ in {
               TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_RESOLVERS =
                 "1.1.1.1:53,198.54.117.10:53,198.54.117.11:53";
               TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_STORAGE =
-                "/acme.json";
+                "/data/acme.json";
               TRAEFIK_SERVERSTRANSPORT_INSECURESKIPVERIFY = "true";
             } // lib.optionalAttrs cfg.useAcmeStaging {
               TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_CASERVER =
