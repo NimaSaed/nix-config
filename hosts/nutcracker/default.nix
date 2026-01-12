@@ -20,11 +20,11 @@
     };
     tools.enable = true;
     media.enable = true;
-    auth = {
-      enable = false;
-      authelia.enable = true;
-      lldap.enable = true;
-    };
+    #auth = {
+    #  enable = true;
+    #  authelia.enable = true;
+    #  lldap.enable = true;
+    #};
   };
 
   # ============================================================================
