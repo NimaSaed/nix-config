@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   imports = [
@@ -80,7 +85,9 @@
   # ============================================================================
 
   # Enable the OpenSSH daemon
-  services.openssh = { enable = true; };
+  services.openssh = {
+    enable = true;
+  };
 
   # ============================================================================
   # User Configuration
@@ -89,11 +96,9 @@
   # Configure root user for emergency mode access
   users.users.root = {
     # Set root password (same as nima's) for emergency mode access
-    initialHashedPassword =
-      "$y$j9T$VIgEJ4u79wZRwEny9XepM1$1sYHPUO7bIl5PQtSYE.Ptra8zIFBQyh1AlxKmfAkFg/";
+    initialHashedPassword = "$y$j9T$VIgEJ4u79wZRwEny9XepM1$1sYHPUO7bIl5PQtSYE.Ptra8zIFBQyh1AlxKmfAkFg/";
     # Allow root SSH access with public key
-    openssh.authorizedKeys.keys =
-      lib.splitString "\n" (builtins.readFile ../../home/nima/ssh.pub);
+    openssh.authorizedKeys.keys = lib.splitString "\n" (builtins.readFile ../../home/nima/ssh.pub);
   };
 
   # Create /data directory structure
@@ -121,5 +126,5 @@
     age.keyFile = "/var/lib/sops-nix/key.txt";
   };
 
-  system.stateVersion = "25.05";
+  system.stateVersion = "26.05";
 }

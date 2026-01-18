@@ -1,4 +1,10 @@
-{ config, lib, pkgs, inputs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  inputs,
+  ...
+}:
 
 let
   cfg = config.services.pods;
@@ -9,7 +15,8 @@ let
   # Network storage for volumes (app data) - can be on CIFS share
   poddyDataRoot = "/data/poddy";
   anyPodEnabled = cfg._enabledPods != [ ];
-in {
+in
+{
   imports = [
     inputs.quadlet-nix.nixosModules.quadlet
     ./reverse-proxy.nix
@@ -42,7 +49,9 @@ in {
     };
 
     # Allow rootless Podman to bind to ports 80+
-    boot.kernel.sysctl = { "net.ipv4.ip_unprivileged_port_start" = 80; };
+    boot.kernel.sysctl = {
+      "net.ipv4.ip_unprivileged_port_start" = 80;
+    };
 
     users.users.poddy = {
       isNormalUser = true;
@@ -59,34 +68,36 @@ in {
 
     users.groups.poddy = { };
 
-    home-manager.users.poddy = { pkgs, config, ... }: {
-      imports = [ inputs.quadlet-nix.homeManagerModules.quadlet ];
-      home.stateVersion = "25.05";
+    home-manager.users.poddy =
+      { pkgs, config, ... }:
+      {
+        imports = [ inputs.quadlet-nix.homeManagerModules.quadlet ];
+        home.stateVersion = "26.05";
 
-      virtualisation.quadlet.autoUpdate = {
-        enable = true;
-        calendar = "*-*-* 00:00:00";
+        virtualisation.quadlet.autoUpdate = {
+          enable = true;
+          calendar = "*-*-* 00:00:00";
+        };
+
+        xdg.configFile."containers/storage.conf".text = ''
+          [storage]
+          driver = "overlay"
+          runroot = "/run/user/${poddyUidStr}/containers"
+          graphroot = "${poddyLocalRoot}/containers/storage"
+
+          [storage.options]
+          mount_program = "${pkgs.fuse-overlayfs}/bin/fuse-overlayfs"
+        '';
+
+        xdg.configFile."containers/containers.conf".text = ''
+          [engine]
+          volume_path = "${poddyDataRoot}/containers/volumes"
+          num_locks = 2048
+
+          [network]
+          network_backend = "netavark"
+        '';
       };
-
-      xdg.configFile."containers/storage.conf".text = ''
-        [storage]
-        driver = "overlay"
-        runroot = "/run/user/${poddyUidStr}/containers"
-        graphroot = "${poddyLocalRoot}/containers/storage"
-
-        [storage.options]
-        mount_program = "${pkgs.fuse-overlayfs}/bin/fuse-overlayfs"
-      '';
-
-      xdg.configFile."containers/containers.conf".text = ''
-        [engine]
-        volume_path = "${poddyDataRoot}/containers/volumes"
-        num_locks = 2048
-
-        [network]
-        network_backend = "netavark"
-      '';
-    };
 
     systemd.tmpfiles.rules = [
       # Local storage for Podman state (images, SQLite DB) - must be local disk

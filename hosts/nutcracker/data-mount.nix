@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 # CIFS mount configuration for /data from chestnut
 # Uses direct mount (not automount) so tmpfiles can create directories
@@ -23,7 +28,8 @@ let
   # User/group IDs for mounted files (poddy runs containers)
   poddyUid = 1001;
   poddyGid = 1001;
-in {
+in
+{
   # Required for mount.cifs
   environment.systemPackages = [ pkgs.cifs-utils ];
 
@@ -84,8 +90,7 @@ in {
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStart =
-        "${pkgs.systemd}/bin/systemd-tmpfiles --create --prefix=${mountPoint}";
+      ExecStart = "${pkgs.systemd}/bin/systemd-tmpfiles --create --prefix=${mountPoint}";
     };
   };
 }

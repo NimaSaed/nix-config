@@ -14,6 +14,9 @@
     icons = "auto";
 
     # Extra options for eza
-    extraOptions = [ "--group-directories-first" "--header" ];
+    extraOptions = [
+      "--group-directories-first"
+      "--header"
+    ];
   };
 }

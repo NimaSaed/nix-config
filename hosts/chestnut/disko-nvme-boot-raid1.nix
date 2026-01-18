@@ -1,4 +1,5 @@
-{ lib, ... }: {
+{ lib, ... }:
+{
   disko.devices = {
     disk = {
       nvme0 = {
@@ -81,7 +82,10 @@
           subvolumes = {
             "rootfs" = {
               mountpoint = "/";
-              mountOptions = [ "compress=zstd" "noatime" ];
+              mountOptions = [
+                "compress=zstd"
+                "noatime"
+              ];
             };
             "home" = {
               mountpoint = "/home";
@@ -89,7 +93,10 @@
             };
             "nix" = {
               mountpoint = "/nix";
-              mountOptions = [ "compress=zstd" "noatime" ];
+              mountOptions = [
+                "compress=zstd"
+                "noatime"
+              ];
             };
           };
         };

@@ -1,30 +1,65 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   # Import shared core configurations
   imports = [ ./common/core ];
 
-  # Home Manager settings
+  # ===========================================================================
+  # Home Manager Settings
+  # ===========================================================================
   home = {
     username = "nima";
-    homeDirectory = "/Users/nima";
-    stateVersion = "25.05";
+    # mkForce needed because home-manager's nixos/common.nix sets a default based on
+    # users.users.<name>.home which doesn't exist on Darwin
+    homeDirectory = lib.mkForce "/Users/nima";
+    stateVersion = "26.05";
   };
 
-  # macOS-specific packages
-  home.packages = with pkgs;
-    [
-      # Add macOS-specific tools here
-    ];
+  # ===========================================================================
+  # macOS-Specific Packages
+  # ===========================================================================
+  # Note: Common packages (git, vim, jq, yq, bat, fzf, ripgrep, fd, etc.)
+  # are already included via ./common/core/packages.nix
+  home.packages = with pkgs; [
+    # Development Tools
+    nodejs_22 # Node.js runtime
+    claude-code # Anthropic's CLI tool
+    opencode # Code editor
+    openfga # Authorization framework
+    openfga-cli # OpenFGA CLI
+    pandoc # Document converter
+    mkdocs # Documentation generator
+    semgrep # Code security scanning
+    openscad # 3D CAD software
+    gnused # GNU sed (macOS sed is BSD)
 
-  # macOS-specific program configurations
+    # Desktop Applications
+    alacritty # Terminal emulator
+    aerospace # Window manager for macOS
+    brave # Web browser
+    monitorcontrol # External monitor controls
+    zoom-us # Video conferencing
+    _1password-cli # 1Password CLI (GUI installed via nix-darwin)
+  ];
+
+  # ===========================================================================
+  # Program Configurations
+  # ===========================================================================
   programs = {
     # Enable home-manager
     home-manager.enable = true;
   };
 
-  # macOS-specific environment variables
+  # ===========================================================================
+  # Environment Variables
+  # ===========================================================================
   home.sessionVariables = {
-    # Add any macOS-specific environment variables
+    # Ensure Homebrew paths are available
+    HOMEBREW_PREFIX = "/opt/homebrew";
   };
 }

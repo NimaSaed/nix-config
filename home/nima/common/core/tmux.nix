@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   programs.tmux = {
@@ -41,13 +46,18 @@
       bind-key -T copy-mode-vi 'v' send -X begin-selection
 
       # Platform-specific clipboard integration
-      ${if pkgs.stdenv.isDarwin then ''
-        # macOS - use pbcopy
-        bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
-      '' else ''
-        # Linux - use xclip
-        bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel 'xclip -in -selection clipboard'
-      ''}
+      ${
+        if pkgs.stdenv.isDarwin then
+          ''
+            # macOS - use pbcopy
+            bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
+          ''
+        else
+          ''
+            # Linux - use xclip
+            bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel 'xclip -in -selection clipboard'
+          ''
+      }
 
       # =========================================================================
       # Pane Styling

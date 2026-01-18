@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   programs.bash = {
@@ -57,8 +62,7 @@
       barch = "docker run --rm -it blackarch bash";
       dockerbash = "docker run --rm -it --entrypoint=/bin/bash";
       dockershell = "docker run --rm -it --entrypoint=/bin/sh";
-      nginxservehere = ''
-        docker run --rm -it -p 80:80 -p 443:443 -v "$(pwd):/srv/data" nimasaed/nginxserve'';
+      nginxservehere = ''docker run --rm -it -p 80:80 -p 443:443 -v "$(pwd):/srv/data" nimasaed/nginxserve'';
 
       # Edit configs
       vbrc = "vim ~/.bashrc";
@@ -352,33 +356,33 @@
             }
 
             # YouTube transcript helper
-            yt() {
-                if [ "$#" -eq 0 ] || [ "$#" -gt 2 ]; then
-                    echo "Usage: yt [-t | --timestamps] youtube-link"
-                    echo "Use the '-t' flag to get the transcript with timestamps."
-                    return 1
-                fi
+            #yt() {
+            #    if [ "$#" -eq 0 ] || [ "$#" -gt 2 ]; then
+            #        echo "Usage: yt [-t | --timestamps] youtube-link"
+            #        echo "Use the '-t' flag to get the transcript with timestamps."
+            #        return 1
+            #    fi
 
-                transcript_flag="--transcript"
-                if [ "$1" = "-t" ] || [ "$1" = "--timestamps" ]; then
-                    transcript_flag="--transcript-with-timestamps"
-                    shift
-                fi
-                local video_link="$1"
-                fabric-ai -y "$video_link" $transcript_flag
-            }
+            #    transcript_flag="--transcript"
+            #    if [ "$1" = "-t" ] || [ "$1" = "--timestamps" ]; then
+            #        transcript_flag="--transcript-with-timestamps"
+            #        shift
+            #    fi
+            #    local video_link="$1"
+            #    fabric-ai -y "$video_link" $transcript_flag
+            #}
 
             # =======================================================================
             # Fabric AI Pattern Aliases
             # =======================================================================
-            if [ -d "$HOME/.config/fabric/patterns" ]; then
-                for pattern_file in $HOME/.config/fabric/patterns/*; do
-                    if [ -f "$pattern_file" ]; then
-                        pattern_name=$(basename "$pattern_file")
-                        alias $pattern_name="fabric-ai --pattern $pattern_name"
-                    fi
-                done
-            fi
+            #if [ -d "$HOME/.config/fabric/patterns" ]; then
+            #    for pattern_file in $HOME/.config/fabric/patterns/*; do
+            #        if [ -f "$pattern_file" ]; then
+            #            pattern_name=$(basename "$pattern_file")
+            #            alias $pattern_name="fabric-ai --pattern $pattern_name"
+            #        fi
+            #    done
+            #fi
 
             # =======================================================================
             # Custom Prompt (PS1) - Replaces Starship
@@ -400,9 +404,9 @@
             # =======================================================================
             # Tmux Auto-Start (Optional - comment out if not desired)
             # =======================================================================
-            # if [ -z "$TMUX" ]; then
-            #     tmux new -t Main
-            # fi
+            if [ -z "$TMUX" ]; then
+                tmux new -t Main
+            fi
 
             # =======================================================================
             # MSF (Metasploit) Docker Aliases

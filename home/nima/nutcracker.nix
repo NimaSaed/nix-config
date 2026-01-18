@@ -8,15 +8,14 @@
   home = {
     username = "nima";
     homeDirectory = "/home/nima";
-    stateVersion = "25.05";
+    stateVersion = "26.05";
   };
 
   # Nutcracker-specific packages
-  home.packages = with pkgs;
-    [
-      # Add nutcracker-specific tools here
-      tmux
-    ];
+  home.packages = with pkgs; [
+    # Add nutcracker-specific tools here
+    tmux
+  ];
 
   # Nutcracker-specific program configurations
   programs = {

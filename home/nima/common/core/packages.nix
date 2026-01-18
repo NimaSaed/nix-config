@@ -1,7 +1,8 @@
 { config, pkgs, ... }:
 
 {
-  home.packages = with pkgs;
+  home.packages =
+    with pkgs;
     [
       # System utilities
       htop
@@ -36,7 +37,7 @@
       git
 
       # Nix tools
-      nixfmt-classic
+      nixfmt
       nil # Nix LSP
 
       # Bash configuration dependencies
@@ -45,10 +46,13 @@
       awscli2 # AWS CLI v2 for AWS functions
 
       # macOS-specific (conditionally included)
-    ] ++ (if pkgs.stdenv.isDarwin then
-      [
-        reattach-to-user-namespace # For tmux clipboard on macOS
-      ]
-    else
-      [ ]);
+    ]
+    ++ (
+      if pkgs.stdenv.isDarwin then
+        [
+          reattach-to-user-namespace # For tmux clipboard on macOS
+        ]
+      else
+        [ ]
+    );
 }

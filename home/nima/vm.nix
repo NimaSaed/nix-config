@@ -8,14 +8,13 @@
   home = {
     username = "nima";
     homeDirectory = "/home/nima";
-    stateVersion = "25.05";
+    stateVersion = "26.05";
   };
 
   # VM-specific packages
-  home.packages = with pkgs;
-    [
-      # Add VM-specific tools here
-    ];
+  home.packages = with pkgs; [
+    # Add VM-specific tools here
+  ];
 
   # VM-specific program configurations
   programs = {

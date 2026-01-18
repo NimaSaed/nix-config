@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 # Samba server configuration for sharing /data to nutcracker
 # Security: SMB3 only, encryption required, signing mandatory
@@ -9,8 +14,10 @@
 # The samba-user-setup service automatically configures the Samba user
 # using the password from sops secrets - no manual smbpasswd needed.
 
-let samba = config.services.samba.package;
-in {
+let
+  samba = config.services.samba.package;
+in
+{
   # Create samby user for Samba authentication
   users.users.samby = {
     isNormalUser = true;
@@ -22,7 +29,9 @@ in {
     shell = "${pkgs.shadow}/bin/nologin";
   };
 
-  users.groups.samby = { gid = 1002; };
+  users.groups.samby = {
+    gid = 1002;
+  };
 
   # Decrypt the Samba password from sops
   sops.secrets.samba_password = {
@@ -64,8 +73,7 @@ in {
 
         # Network access control - restrict to private networks
         # Adjust these to match your specific network
-        "hosts allow" =
-          "192.168.0.0/16 10.0.0.0/8 172.16.0.0/12 127.0.0.1 localhost";
+        "hosts allow" = "192.168.0.0/16 10.0.0.0/8 172.16.0.0/12 127.0.0.1 localhost";
         "hosts deny" = "0.0.0.0/0";
 
         # Disable insecure features

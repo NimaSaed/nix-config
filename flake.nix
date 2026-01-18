@@ -13,9 +13,9 @@
     home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    # nix-darwin - macOS system configuration management
+    # nix-darwin - macOS system configuration management (unstable/master)
     darwin = {
-      url = "github:lnl7/nix-darwin";
+      url = "github:lnl7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -45,14 +45,30 @@
 
     # quadlet-nix - Declarative Podman Quadlet configuration for NixOS
     # Enables managing rootless containers via systemd with proper permissions
-    quadlet-nix = { url = "github:SEIAROTg/quadlet-nix"; };
+    quadlet-nix = {
+      url = "github:SEIAROTg/quadlet-nix";
+    };
+
+    # nix-homebrew - Declarative Homebrew management for macOS
+    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
   };
 
   # ============================================================================
   # Flake Outputs - What this flake provides
   # ============================================================================
-  outputs = { self, disko, nixpkgs, home-manager, darwin, nixos-generators
-    , sops-nix, quadlet-nix, ... }@inputs:
+  outputs =
+    {
+      self,
+      disko,
+      nixpkgs,
+      home-manager,
+      darwin,
+      nixos-generators,
+      sops-nix,
+      quadlet-nix,
+      nix-homebrew,
+      ...
+    }@inputs:
     let
       inherit (self) outputs;
 
@@ -78,13 +94,14 @@
         ./modules/podman
       ];
 
-    in {
+    in
+    {
       # -------------------------------------------------------------------------
       # Formatter - Format Nix files with `nix fmt`
       # -------------------------------------------------------------------------
       formatter = {
-        x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt-classic;
-        aarch64-darwin = nixpkgs.legacyPackages.aarch64-darwin.nixfmt-classic;
+        x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt;
+        aarch64-darwin = nixpkgs.legacyPackages.aarch64-darwin.nixfmt;
       };
 
       # -------------------------------------------------------------------------
@@ -167,7 +184,19 @@
             ./hosts/mac
             home-manager.darwinModules.home-manager
             ./hosts/common/home-manager.nix
-            { home-manager.users.nima = import ./home/nima/mac.nix; }
+            {
+              home-manager.users.nima = import ./home/nima/mac.nix;
+            }
+            # Homebrew management
+            nix-homebrew.darwinModules.nix-homebrew
+            {
+              nix-homebrew = {
+                enable = true;
+                enableRosetta = true; # Apple Silicon Rosetta support
+                user = "nima";
+                autoMigrate = true;
+              };
+            }
           ];
           specialArgs = { inherit inputs outputs; };
         };
@@ -192,7 +221,10 @@
             targetHost = "chestnut.nmsd.xyz";
             targetUser = "root";
             buildOnTarget = true; # Build on server to avoid large transfers
-            tags = [ "production" "storage" ];
+            tags = [
+              "production"
+              "storage"
+            ];
           };
           imports = chestnutModules;
         };
@@ -205,7 +237,10 @@
             targetHost = "nutcracker.nmsd.xyz";
             targetUser = "root";
             buildOnTarget = true; # Build on server to avoid large transfers
-            tags = [ "production" "services" ];
+            tags = [
+              "production"
+              "services"
+            ];
           };
           imports = nutcrackerModules;
         };
