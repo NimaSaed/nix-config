@@ -7,8 +7,7 @@
 
 {
   imports = [
-    #./disko.nix
-    ./disko-nvme-boot-raid1.nix
+    ./disko-nvme-zfs-rpool.nix
     ./disko-zfs-datapool.nix
     ./hardware-configuration.nix
     ./samba.nix
@@ -20,9 +19,10 @@
   # Boot Configuration
   # ============================================================================
 
-  # Use GRUB bootloader with RAID support
+  # Use GRUB bootloader with ZFS support
   boot.loader.grub = {
     enable = true;
+    zfsSupport = true;
     efiSupport = true;
     efiInstallAsRemovable = true;
     mirroredBoots = [
@@ -30,15 +30,36 @@
         devices = [ "nodev" ];
         path = "/boot";
       }
+      {
+        devices = [ "nodev" ];
+        path = "/boot-backup";
+      }
     ];
   };
 
   # Enable ZFS support
   boot.supportedFilesystems = [ "zfs" ];
   boot.zfs.forceImportRoot = false;
-  # Note: ZFS pools and scrubbing can be configured here if needed
-  boot.zfs.extraPools = [ "datapool" ];
-  services.zfs.autoScrub.enable = true;
+  boot.zfs.extraPools = [ "datapool" ]; # rpool imports via fstab
+
+  # ZFS maintenance services
+  services.zfs.autoScrub = {
+    enable = true;
+    interval = "weekly";
+  };
+
+  # ZFS TRIM for NVMe SSDs (periodic trim via systemd timer)
+  services.zfs.trim.enable = true;
+
+  # ZFS auto-snapshots for data protection
+  services.zfs.autoSnapshot = {
+    enable = true;
+    frequent = 4; # Every 15 min, keep 4 (1 hour)
+    hourly = 24; # Keep 24 hourly
+    daily = 7; # Keep 7 daily
+    weekly = 4; # Keep 4 weekly
+    monthly = 12; # Keep 12 monthly
+  };
 
   # Enable zram swap for better memory management
   zramSwap.enable = true;
@@ -88,6 +109,51 @@
   services.openssh = {
     enable = true;
   };
+
+  # ============================================================================
+  # ESP Sync - Keep backup ESP in sync with primary
+  # ============================================================================
+
+  # Sync /boot to /boot-backup after boot and when /boot changes
+  systemd.services.esp-sync = {
+    description = "Sync primary ESP to backup ESP";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "local-fs.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+
+    script = ''
+      if mountpoint -q /boot && mountpoint -q /boot-backup; then
+        ${pkgs.rsync}/bin/rsync -av --delete --exclude='lost+found' /boot/ /boot-backup/
+        echo "ESP sync completed"
+      else
+        echo "Warning: ESPs not mounted, skipping sync"
+      fi
+    '';
+
+    path = [ pkgs.util-linux ];
+  };
+
+  # Watch /boot for changes and trigger sync
+  systemd.paths.esp-sync-watch = {
+    description = "Watch /boot for changes";
+    wantedBy = [ "multi-user.target" ];
+
+    pathConfig = {
+      PathModified = "/boot";
+      Unit = "esp-sync.service";
+    };
+  };
+
+  # Also sync during NixOS activation (nixos-rebuild switch)
+  system.activationScripts.esp-sync = lib.stringAfter [ "etc" ] ''
+    if mountpoint -q /boot && mountpoint -q /boot-backup; then
+      ${pkgs.rsync}/bin/rsync -av --delete --exclude='lost+found' /boot/ /boot-backup/ || true
+    fi
+  '';
 
   # ============================================================================
   # User Configuration

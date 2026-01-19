@@ -23,8 +23,8 @@
   boot.extraModulePackages = [ ];
 
   # Filesystems are managed by disko configurations:
-  # - disko-nvme-boot-raid1.nix (boot partition with RAID1)
-  # - disko-zfs-datapool.nix (ZFS data pool)
+  # - disko-nvme-zfs-rpool.nix (ZFS root on NVMe mirror)
+  # - disko-zfs-datapool.nix (ZFS data on SATA mirror)
 
   # Network configuration
   networking.useDHCP = lib.mkDefault true;
@@ -33,6 +33,5 @@
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 
-  # Enable software RAID support
-  boot.swraid.enable = true;
+  # Note: mdadm/swraid not needed - using ZFS mirrors
 }
