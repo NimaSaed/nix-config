@@ -33,10 +33,10 @@
     openfga # Authorization framework
     openfga-cli # OpenFGA CLI
     pandoc # Document converter
-    mkdocs # Documentation generator
+    #mkdocs # Documentation generator
     (python3.withPackages (
       ps: with ps; [
-        material
+        mkdocs-material
         pymdown-extensions
         # add other extensions here
       ]
