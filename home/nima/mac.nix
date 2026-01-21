@@ -34,6 +34,13 @@
     openfga-cli # OpenFGA CLI
     pandoc # Document converter
     mkdocs # Documentation generator
+    (python3.withPackages (
+      ps: with ps; [
+        material
+        pymdown-extensions
+        # add other extensions here
+      ]
+    ))
     semgrep # Code security scanning
     openscad # 3D CAD software
     gnused # GNU sed (macOS sed is BSD)
