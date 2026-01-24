@@ -7,7 +7,10 @@
 
 {
   # Import shared core configurations
-  imports = [ ./common/core ];
+  imports = [
+    ./common/core
+    ./common/optional/alacritty.nix
+  ];
 
   # ===========================================================================
   # Home Manager Settings
@@ -45,8 +48,7 @@
     openscad # 3D CAD software
     gnused # GNU sed (macOS sed is BSD)
 
-    # Desktop Applications
-    alacritty # Terminal emulator
+    # Desktop Applications (alacritty configured via programs.alacritty)
     aerospace # Window manager for macOS
     brave # Web browser
     monitorcontrol # External monitor controls
