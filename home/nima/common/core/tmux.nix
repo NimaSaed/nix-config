@@ -19,7 +19,7 @@
     keyMode = "vi";
 
     # Mouse support
-    mouse = true;
+    mouse = false;
 
     # Increase history limit significantly
     historyLimit = 10000000;
