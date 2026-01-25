@@ -32,12 +32,9 @@
       bind # Additional DNS tools
 
       # Development tools
-      vim
-      neovim
       git
 
       # Nix tools
-      nixfmt
       nil # Nix LSP
 
       # Bash configuration dependencies

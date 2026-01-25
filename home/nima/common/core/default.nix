@@ -11,5 +11,6 @@
     ./eza.nix
     ./zoxide.nix
     ./packages.nix
+    ./vim.nix
   ];
 }

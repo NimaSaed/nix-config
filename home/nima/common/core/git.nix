@@ -10,7 +10,6 @@
       };
       init.defaultBranch = "main";
       pull.rebase = false;
-      core.editor = "vim";
       alias = {
         st = "status";
         co = "checkout";
