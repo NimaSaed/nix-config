@@ -124,5 +124,5 @@
     age.keyFile = "/var/lib/sops-nix/key.txt";
   };
 
-  system.stateVersion = "26.05";
+  system.stateVersion = "25.11";
 }

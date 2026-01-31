@@ -8,7 +8,7 @@
   home = {
     username = "nima";
     homeDirectory = "/home/nima";
-    stateVersion = "26.05";
+    stateVersion = "25.11";
   };
 
   # Chestnut-specific packages

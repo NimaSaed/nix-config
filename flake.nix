@@ -5,17 +5,21 @@
   # Flake Inputs - External dependencies and their sources
   # ============================================================================
   inputs = {
-    # Nixpkgs - The main package repository (unstable branch)
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    # Nixpkgs - The main package repository (stable 25.11 branch)
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+
+    # Nixpkgs Unstable
+    # Access via pkgs.unstable.<package>
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     # Home Manager - Declarative user environment management
     # Follows nixpkgs version to ensure compatibility
-    home-manager.url = "github:nix-community/home-manager/master";
+    home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    # nix-darwin - macOS system configuration management (unstable/master)
+    # nix-darwin - macOS system configuration management (stable 25.11)
     darwin = {
-      url = "github:lnl7/nix-darwin/master";
+      url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -61,6 +65,7 @@
       self,
       disko,
       nixpkgs,
+      nixpkgs-unstable,
       home-manager,
       darwin,
       nixos-generators,
@@ -71,6 +76,18 @@
     }@inputs:
     let
       inherit (self) outputs;
+
+      # Shared overlay module that makes unstable packages available as pkgs.unstable.<pkg>
+      unstableOverlayModule = { pkgs, ... }: {
+        nixpkgs.overlays = [
+          (final: prev: {
+            unstable = import nixpkgs-unstable {
+              system = prev.system;
+              config.allowUnfree = true;
+            };
+          })
+        ];
+      };
 
       # Shared modules for chestnut host - used by both nixosConfigurations and colmena
       chestnutModules = [
@@ -181,6 +198,7 @@
         mac = darwin.lib.darwinSystem {
           system = "aarch64-darwin"; # Apple Silicon (M1/M2/M3)
           modules = [
+            unstableOverlayModule
             ./hosts/mac
             home-manager.darwinModules.home-manager
             ./hosts/common/home-manager.nix

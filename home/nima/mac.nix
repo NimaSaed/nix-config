@@ -20,7 +20,7 @@
     # mkForce needed because home-manager's nixos/common.nix sets a default based on
     # users.users.<name>.home which doesn't exist on Darwin
     homeDirectory = lib.mkForce "/Users/nima";
-    stateVersion = "26.05";
+    stateVersion = "25.11";
   };
 
   # ===========================================================================
@@ -31,8 +31,8 @@
   home.packages = with pkgs; [
     # Development Tools
     nodejs_22 # Node.js runtime
-    claude-code # Anthropic's CLI tool
-    opencode # Code editor
+    unstable.claude-code # Anthropic's CLI tool
+    unstable.opencode # Code editor
     openfga # Authorization framework
     openfga-cli # OpenFGA CLI
     pandoc # Document converter

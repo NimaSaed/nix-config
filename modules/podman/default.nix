@@ -72,7 +72,7 @@ in
       { pkgs, config, ... }:
       {
         imports = [ inputs.quadlet-nix.homeManagerModules.quadlet ];
-        home.stateVersion = "26.05";
+        home.stateVersion = "25.11";
 
         virtualisation.quadlet.autoUpdate = {
           enable = true;
