@@ -132,6 +132,7 @@
       # Shell Configuration
       # =========================================================================
       set-option -g default-shell ${pkgs.bash}/bin/bash
+      set-option -g default-command ${pkgs.bash}/bin/bash
     '';
   };
 }
