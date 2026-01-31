@@ -13,7 +13,7 @@ let
   # Local storage for Podman state (images, DB) - must be local for SQLite locking
   poddyLocalRoot = "/var/lib/poddy";
   # Network storage for volumes (app data) - can be on CIFS share
-  poddyDataRoot = "/data/poddy";
+  poddyDataRoot = "/data/containers";
   anyPodEnabled = cfg._enabledPods != [ ];
 in
 {
@@ -91,7 +91,7 @@ in
 
         xdg.configFile."containers/containers.conf".text = ''
           [engine]
-          volume_path = "${poddyDataRoot}/containers/volumes"
+          volume_path = "${poddyDataRoot}/volumes"
           num_locks = 2048
 
           [network]
@@ -106,8 +106,8 @@ in
       "d ${poddyLocalRoot}/containers/storage 0750 poddy poddy - -"
       # Network storage for volumes (app data) - on CIFS share
       "d ${poddyDataRoot} 0750 poddy poddy - -"
-      "d ${poddyDataRoot}/containers 0750 poddy poddy - -"
-      "d ${poddyDataRoot}/containers/volumes 0750 poddy poddy - -"
+      "d ${poddyDataRoot} 0750 poddy poddy - -"
+      "d ${poddyDataRoot}/volumes 0750 poddy poddy - -"
     ];
   };
 }
