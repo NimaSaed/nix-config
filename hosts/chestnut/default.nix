@@ -63,7 +63,23 @@
 
   # Enable zram swap for better memory management
   zramSwap.enable = true;
-  zramSwap.memoryPercent = 50;
+  zramSwap.memoryPercent = 25;
+
+  # ============================================================================
+  # Nix Build Settings - Prevent OOM during colmena deploy
+  # ============================================================================
+
+  # Limit parallel builds to reduce peak memory usage during deployment
+  nix.settings = {
+    max-jobs = 2; # Max 2 parallel build jobs (default: auto = all cores)
+    cores = 2; # Each job uses max 2 cores
+  };
+
+  # Cap nix-daemon memory so builds fail gracefully instead of OOM-killing the system
+  systemd.services.nix-daemon.serviceConfig = {
+    MemoryHigh = "16G"; # Throttle builds at 16GB (slows down, doesn't kill)
+    MemoryMax = "20G"; # Hard cap at 20GB (build fails, system survives)
+  };
 
   # ============================================================================
   # Networking
