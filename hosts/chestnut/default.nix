@@ -38,7 +38,7 @@
     #  authelia.enable = true;
     #  lldap.enable = true;
     #};
-  };
+  #};
 
   # ============================================================================
   # Boot Configuration

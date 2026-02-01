@@ -40,7 +40,7 @@ echo "$KEY_VALUE" > "$temp/var/lib/sops-nix/key.txt"
 chmod 600 "$temp/var/lib/sops-nix/key.txt"
 
 echo "Installing NixOS to $REMOTE_HOST with SOPS key..."
-nix run github:numtide/nixos-anywhere -- \
+nix run github:nix-community/nixos-anywhere/1.13.0 -- \
     --build-on-remote \
     --extra-files "$temp" \
     --flake ".#$FLAKE_TARGET" \
