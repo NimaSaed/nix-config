@@ -1,6 +1,10 @@
 { config, pkgs, ... }:
 
 {
+  home.activation.createVimUndoDir = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    run mkdir -p "${config.xdg.stateHome}/vim/undo"
+  '';
+
   programs.vim = {
     enable = true;
     defaultEditor = true;
@@ -28,6 +32,14 @@
       tabstop = 2;
       shiftwidth = 2;
       expandtab = true;
+
+      # Persistent undo - store undo files in a dedicated directory
+      undofile = true;
+      undodir = [ "${config.xdg.stateHome}/vim/undo//" ];
+
+      # Smart case-sensitive search
+      ignorecase = true;
+      smartcase = true;
     };
 
     extraConfig = ''
@@ -53,13 +65,6 @@
 
       " Enhanced command-line completion menu
       set wildmenu
-
-      " Smart case-sensitive search
-      set ignorecase
-      set smartcase
-
-      " Persistent undo across sessions
-      set undofile
 
       " Set clipboard to be shared
       set clipboard=unnamed
