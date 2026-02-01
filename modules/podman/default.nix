@@ -105,9 +105,8 @@ in
       "d ${poddyLocalRoot}/containers 0750 poddy poddy - -"
       "d ${poddyLocalRoot}/containers/storage 0750 poddy poddy - -"
       # Network storage for volumes (app data) - on CIFS share
-      "d ${poddyDataRoot} 0750 poddy poddy - -"
-      "d ${poddyDataRoot} 0750 poddy poddy - -"
-      "d ${poddyDataRoot}/volumes 0750 poddy poddy - -"
+      "d ${poddyDataRoot} 0755 poddy poddy - -"
+      "d ${poddyDataRoot}/volumes 0755 poddy poddy - -"
     ];
   };
 }
