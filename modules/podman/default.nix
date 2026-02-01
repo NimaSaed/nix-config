@@ -84,9 +84,6 @@ in
           driver = "overlay"
           runroot = "/run/user/${poddyUidStr}/containers"
           graphroot = "${poddyLocalRoot}/containers/storage"
-
-          [storage.options]
-          mount_program = "${pkgs.fuse-overlayfs}/bin/fuse-overlayfs"
         '';
 
         xdg.configFile."containers/containers.conf".text = ''
