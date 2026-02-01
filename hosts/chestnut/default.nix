@@ -26,12 +26,12 @@
     };
     tools = {
       enable = true;
-      homepage = true;
-      itTools = false;
+      homepage.enable = true;
+      itTools.enable = false;
     };
     media = {
       enable = true;
-      jellyfin = true;
+      jellyfin.enable = true;
     };
     #auth = {
     #  enable = true;
