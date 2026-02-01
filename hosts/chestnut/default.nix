@@ -67,13 +67,12 @@
   boot.supportedFilesystems = [ "zfs" ];
   boot.zfs.forceImportRoot = false;
   boot.zfs.extraPools = [ "datapool" ]; # rpool imports via fstab
-  boot.zfs.package = pkgs.zfs_unstable; # ZFS 2.4.0 - fixes mutex corruption crash (openzfs/zfs#17744)
 
   # Limit ZFS ARC to 8GB - prevent OOM during Colmena builds
   # Default is 50% of RAM (16GB on 32GB system), which starves nix-daemon
-  boot.kernelParams = [
-    "zfs.zfs_arc_max=8589934592"
-  ];
+  #boot.kernelParams = [
+  #  "zfs.zfs_arc_max=8589934592"
+  #];
 
   # ZFS maintenance services
   services.zfs.autoScrub = {
@@ -103,16 +102,16 @@
   # ============================================================================
 
   # Limit parallel builds to reduce peak memory usage during deployment
-  nix.settings = {
-    max-jobs = 2; # Max 2 parallel build jobs (default: auto = all cores)
-    cores = 2; # Each job uses max 2 cores
-  };
+  #nix.settings = {
+  #  max-jobs = 2; # Max 2 parallel build jobs (default: auto = all cores)
+  #  cores = 2; # Each job uses max 2 cores
+  #};
 
   # Cap nix-daemon memory so builds fail gracefully instead of OOM-killing the system
-  systemd.services.nix-daemon.serviceConfig = {
-    MemoryHigh = "16G"; # Throttle builds at 16GB (slows down, doesn't kill)
-    MemoryMax = "20G"; # Hard cap at 20GB (build fails, system survives)
-  };
+  #systemd.services.nix-daemon.serviceConfig = {
+  #  MemoryHigh = "16G"; # Throttle builds at 16GB (slows down, doesn't kill)
+  #  MemoryMax = "20G"; # Hard cap at 20GB (build fails, system survives)
+  #};
 
   # ============================================================================
   # Networking
