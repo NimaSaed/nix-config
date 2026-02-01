@@ -50,6 +50,7 @@
     zfsSupport = true;
     efiSupport = true;
     efiInstallAsRemovable = true;
+    copyKernels = true;
     mirroredBoots = [
       {
         devices = [ "nodev" ];
