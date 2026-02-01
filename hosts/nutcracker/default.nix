@@ -23,8 +23,15 @@
       enable = true;
       useAcmeStaging = true;
     };
-    tools.enable = true;
-    media.enable = true;
+    tools = {
+      enable = true;
+      homepage = true;
+      itTools = false;
+    };
+    media = {
+      enable = true;
+      jellyfin = true;
+    };
     #auth = {
     #  enable = true;
     #  authelia.enable = true;
