@@ -67,6 +67,7 @@
   boot.supportedFilesystems = [ "zfs" ];
   boot.zfs.forceImportRoot = false;
   boot.zfs.extraPools = [ "datapool" ]; # rpool imports via fstab
+  boot.zfs.package = pkgs.zfs_unstable; # ZFS 2.4.0 - fixes mutex corruption crash (openzfs/zfs#17744)
 
   # Limit ZFS ARC to 8GB - prevent OOM during Colmena builds
   # Default is 50% of RAM (16GB on 32GB system), which starves nix-daemon
