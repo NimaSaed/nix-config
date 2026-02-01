@@ -67,6 +67,12 @@
   boot.zfs.forceImportRoot = false;
   boot.zfs.extraPools = [ "datapool" ]; # rpool imports via fstab
 
+  # Limit ZFS ARC to 8GB - prevent OOM during Colmena builds
+  # Default is 50% of RAM (16GB on 32GB system), which starves nix-daemon
+  boot.kernelParams = [
+    "zfs.zfs_arc_max=8589934592"
+  ];
+
   # ZFS maintenance services
   services.zfs.autoScrub = {
     enable = true;

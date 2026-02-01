@@ -112,6 +112,7 @@
         # Root dataset options (inherited by children)
         # Based on NixOS wiki recommendations
         rootFsOptions = {
+          canmount = "off";
           compression = "zstd";
           mountpoint = "none";
           xattr = "sa";

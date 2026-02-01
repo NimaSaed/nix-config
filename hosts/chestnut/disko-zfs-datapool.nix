@@ -67,6 +67,7 @@
         # Root dataset options (inherited by children)
         # CRITICAL: xattr=sa and acltype=posixacl for Samba
         rootFsOptions = {
+          canmount = "off";
           compression = "zstd";
           atime = "off";
           xattr = "sa";
