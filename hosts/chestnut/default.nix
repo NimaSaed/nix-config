@@ -7,7 +7,7 @@
 
 {
   imports = [
-    ./disko-nvme-zfs-rpool.nix
+    ./disko-nvme-btrfs.nix
     ./disko-zfs-datapool.nix
     ./hardware-configuration.nix
     ./samba.nix
@@ -44,29 +44,16 @@
   # Boot Configuration
   # ============================================================================
 
-  # Use GRUB bootloader with ZFS support
-  boot.loader.grub = {
+  # Use systemd-boot (EFI only — no BIOS boot partition needed)
+  boot.loader.systemd-boot = {
     enable = true;
-    zfsSupport = true;
-    efiSupport = true;
-    efiInstallAsRemovable = true;
-    copyKernels = true;
-    mirroredBoots = [
-      {
-        devices = [ "nodev" ];
-        path = "/boot";
-      }
-      {
-        devices = [ "nodev" ];
-        path = "/boot-backup";
-      }
-    ];
+    consoleMode = "max";
   };
+  boot.loader.efi.canTouchEfiVariables = true;
 
-  # Enable ZFS support
+  # ZFS support for datapool (SATA HDDs)
   boot.supportedFilesystems = [ "zfs" ];
-  boot.zfs.forceImportRoot = false;
-  boot.zfs.extraPools = [ "datapool" ]; # rpool imports via fstab
+  boot.zfs.extraPools = [ "datapool" ];
 
   # Limit ZFS ARC to 8GB - prevent OOM during Colmena builds
   # Default is 50% of RAM (16GB on 32GB system), which starves nix-daemon
@@ -80,10 +67,7 @@
     interval = "weekly";
   };
 
-  # ZFS TRIM for NVMe SSDs (periodic trim via systemd timer)
-  services.zfs.trim.enable = true;
-
-  # ZFS auto-snapshots for data protection
+  # ZFS auto-snapshots for datapool protection
   services.zfs.autoSnapshot = {
     enable = true;
     frequent = 4; # Every 15 min, keep 4 (1 hour)
@@ -92,6 +76,16 @@
     weekly = 4; # Keep 4 weekly
     monthly = 12; # Keep 12 monthly
   };
+
+  # Btrfs scrub for RAID1 data integrity
+  services.btrfs.autoScrub = {
+    enable = true;
+    interval = "weekly";
+    fileSystems = [ "/" ];
+  };
+
+  # Periodic TRIM for NVMe SSDs (reclaim unused blocks)
+  services.fstrim.enable = true;
 
   # Enable zram swap for better memory management
   zramSwap.enable = true;
