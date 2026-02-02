@@ -15,6 +15,7 @@
     ../common/users/nima
   ];
 
+  documentation.nixos.enable = false;
   # ============================================================================
   # Podman Pods - Enable container services for this host
   # ============================================================================
