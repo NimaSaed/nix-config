@@ -71,7 +71,7 @@ in
 
               containerConfig = {
                 # Pinned to v1.7.0 - v1.8.0 has SyntaxError bug on icon requests
-                image = "ghcr.io/gethomepage/homepage:v1.7.0";
+                image = "ghcr.io/gethomepage/homepage:v1.9.0";
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
 
