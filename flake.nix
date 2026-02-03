@@ -78,16 +78,18 @@
       inherit (self) outputs;
 
       # Shared overlay module that makes unstable packages available as pkgs.unstable.<pkg>
-      unstableOverlayModule = { pkgs, ... }: {
-        nixpkgs.overlays = [
-          (final: prev: {
-            unstable = import nixpkgs-unstable {
-              system = prev.system;
-              config.allowUnfree = true;
-            };
-          })
-        ];
-      };
+      unstableOverlayModule =
+        { pkgs, ... }:
+        {
+          nixpkgs.overlays = [
+            (final: prev: {
+              unstable = import nixpkgs-unstable {
+                system = prev.system;
+                config.allowUnfree = true;
+              };
+            })
+          ];
+        };
 
       # Shared modules for chestnut host - used by both nixosConfigurations and colmena
       chestnutModules = [

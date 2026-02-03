@@ -1,6 +1,12 @@
 # Minimal NixOS Installer ISO Configuration
 # This creates a bootable ISO with SSH access for remote deployment
-{ config, pkgs, lib, modulesPath, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  modulesPath,
+  ...
+}:
 
 {
   # nixos-generators automatically imports the appropriate base configuration
@@ -22,8 +28,7 @@
   users.users.root = {
     # Set a hashed password for emergency console access
     # Generate with: nix-shell -p mkpasswd --run 'mkpasswd -m yescrypt "yourpassword"'
-    initialHashedPassword = lib.mkForce
-      "$y$j9T$6.ikh29FQbxd5LnlwGk6V/$49/QaAmG9ZbqrmLJRTOdOGpWL7xZPqHJvUlgHY9PV38";
+    initialHashedPassword = lib.mkForce "$y$j9T$6.ikh29FQbxd5LnlwGk6V/$49/QaAmG9ZbqrmLJRTOdOGpWL7xZPqHJvUlgHY9PV38";
 
     openssh.authorizedKeys.keys = [
       # My SSH public key from home/nima/ssh.pub

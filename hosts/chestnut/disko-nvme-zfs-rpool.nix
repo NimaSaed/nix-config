@@ -38,7 +38,10 @@
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot";
-                mountOptions = [ "umask=0077" "nofail" ];
+                mountOptions = [
+                  "umask=0077"
+                  "nofail"
+                ];
               };
             };
             # ZFS partition for rpool mirror
@@ -78,7 +81,10 @@
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot-backup";
-                mountOptions = [ "umask=0077" "nofail" ];
+                mountOptions = [
+                  "umask=0077"
+                  "nofail"
+                ];
               };
             };
             # ZFS partition for rpool mirror

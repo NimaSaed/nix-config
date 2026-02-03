@@ -36,7 +36,10 @@
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot";
-                mountOptions = [ "umask=0077" "nofail" ];
+                mountOptions = [
+                  "umask=0077"
+                  "nofail"
+                ];
               };
             };
             # Btrfs RAID1 member (raw partition, no content here)
@@ -66,7 +69,10 @@
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot-backup";
-                mountOptions = [ "umask=0077" "nofail" ];
+                mountOptions = [
+                  "umask=0077"
+                  "nofail"
+                ];
               };
             };
             # Btrfs RAID1 - creates the array across both drives
@@ -84,19 +90,32 @@
                 subvolumes = {
                   "@root" = {
                     mountpoint = "/";
-                    mountOptions = [ "compress=zstd" "ssd" ];
+                    mountOptions = [
+                      "compress=zstd"
+                      "ssd"
+                    ];
                   };
                   "@nix" = {
                     mountpoint = "/nix";
-                    mountOptions = [ "compress=zstd" "noatime" "ssd" ];
+                    mountOptions = [
+                      "compress=zstd"
+                      "noatime"
+                      "ssd"
+                    ];
                   };
                   "@var" = {
                     mountpoint = "/var";
-                    mountOptions = [ "compress=zstd" "ssd" ];
+                    mountOptions = [
+                      "compress=zstd"
+                      "ssd"
+                    ];
                   };
                   "@home" = {
                     mountpoint = "/home";
-                    mountOptions = [ "compress=zstd" "ssd" ];
+                    mountOptions = [
+                      "compress=zstd"
+                      "ssd"
+                    ];
                   };
                 };
               };
