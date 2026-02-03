@@ -158,7 +158,7 @@ in
               };
 
               containerConfig = {
-                image = "amir20/dozzle:latest";
+                image = "docker.io/amir20/dozzle:latest";
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
 
