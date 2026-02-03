@@ -29,6 +29,14 @@ in
         description = "Enable IT Tools container in the tools pod";
       };
     };
+
+    dozzle = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable Dozzle log viewer container in the tools pod";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -133,6 +141,44 @@ in
                   "traefik.http.services.tools.loadbalancer.server.port" = "80";
                   #"traefik.http.routers.tools.middlewares" = "authelia@docker";
                 };
+              };
+            };
+
+            containers.dozzle = lib.mkIf cfg.dozzle.enable {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "Dozzle log viewer container";
+                After = [ "tools-pod.service" ];
+              };
+
+              containerConfig = {
+                image = "amir20/dozzle:latest";
+                pod = pods.tools.ref;
+                autoUpdate = "registry";
+
+                labels = {
+                  "traefik.enable" = "true";
+                  "traefik.http.routers.dozzle.rule" = "Host(`dozzel.nmsd.xyz`)";
+                  "traefik.http.routers.dozzle.entrypoints" = "websecure";
+                  "traefik.http.routers.dozzle.tls.certresolver" = "namecheap";
+                  "traefik.http.routers.dozzle.service" = "dozzle";
+                  "traefik.http.services.dozzle.loadbalancer.server.scheme" = "http";
+                  "traefik.http.services.dozzle.loadbalancer.server.port" = "8080";
+                };
+
+                environments = {
+                  DOZZLE_NO_ANALYTICS = "true";
+                };
+
+                volumes = [
+                  "%t/podman/podman.sock:/var/run/docker.sock:ro"
+                ];
               };
             };
           };
