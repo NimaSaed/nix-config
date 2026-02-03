@@ -45,6 +45,8 @@
   # Boot Configuration
   # ============================================================================
 
+  boot.kernelPackages = pkgs.linuxPackages_6_6;
+
   # Use systemd-boot (EFI only — no BIOS boot partition needed)
   boot.loader.systemd-boot = {
     enable = true;
