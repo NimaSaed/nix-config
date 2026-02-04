@@ -149,6 +149,7 @@ in
                   AUTHELIA_NOTIFIER_SMTP_DISABLE_REQUIRE_TLS = "false";
                   AUTHELIA_AUTHENTICATION_BACKEND_LDAP_IMPLEMENTATION = "lldap";
                   AUTHELIA_AUTHENTICATION_BACKEND_LDAP_ADDRESS = "ldaps://lldap1.nmsd.xyz:636";
+                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_TLS_SKIP_VERIFY = "true";
                   AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN = "dc=nmsd,dc=xyz";
                   AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER = "uid=admin,ou=people,dc=nmsd,dc=xyz";
                 };
