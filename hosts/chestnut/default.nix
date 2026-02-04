@@ -35,11 +35,11 @@
       enable = true;
       jellyfin.enable = true;
     };
-    #auth = {
-    #  enable = true;
-    #  authelia.enable = true;
-    #  lldap.enable = true;
-    #};
+    auth = {
+      enable = true;
+      authelia.enable = true;
+      lldap.enable = true;
+    };
   };
 
   # ============================================================================
