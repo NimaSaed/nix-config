@@ -129,12 +129,14 @@
     # Finder configuration
     finder = {
       FXPreferredViewStyle = "clmv"; # Column view
+      AppleShowAllExtensions = false;
       FXEnableExtensionChangeWarning = false;
       QuitMenuItem = true;
     };
 
     # Global system preferences
     NSGlobalDomain = {
+      AppleShowAllExtensions = false;
       AppleICUForce24HourTime = true; # 24-hour time format
       AppleInterfaceStyle = "Dark"; # Dark mode
       InitialKeyRepeat = 15;

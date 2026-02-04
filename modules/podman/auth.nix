@@ -186,7 +186,7 @@ in
                   "traefik.http.routers.lldap.service" = "lldap";
                   "traefik.http.services.lldap.loadbalancer.server.scheme" = "http";
                   "traefik.http.services.lldap.loadbalancer.server.port" = "17170";
-                  "traefik.http.routers.lldap.middlewares" = "authelia@docker";
+                  #"traefik.http.routers.lldap.middlewares" = "authelia@docker";
                   # TCP router for LDAPS
                   "traefik.tcp.routers.lldap.rule" = "HostSNI(`*`)";
                   "traefik.tcp.routers.lldap.entrypoints" = "lldapsecure";
