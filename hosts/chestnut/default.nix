@@ -28,7 +28,8 @@
     tools = {
       enable = true;
       homepage.enable = true;
-      itTools.enable = false;
+      itTools.enable = true;
+      dozzle.enable = true;
     };
     media = {
       enable = true;

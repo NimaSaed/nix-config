@@ -164,7 +164,7 @@ in
 
                 labels = {
                   "traefik.enable" = "true";
-                  "traefik.http.routers.dozzle.rule" = "Host(`dozzel.nmsd.xyz`)";
+                  "traefik.http.routers.dozzle.rule" = "Host(`dozzle.nmsd.xyz`)";
                   "traefik.http.routers.dozzle.entrypoints" = "websecure";
                   "traefik.http.routers.dozzle.tls.certresolver" = "namecheap";
                   "traefik.http.routers.dozzle.service" = "dozzle";
