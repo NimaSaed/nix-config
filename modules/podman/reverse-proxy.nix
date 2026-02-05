@@ -7,6 +7,7 @@
 
 let
   cfg = config.services.pods.reverse-proxy;
+  domain = config.services.pods.domain;
   # Capture NixOS config for use inside Home Manager where 'config' refers to HM config
   nixosConfig = config;
 in
@@ -96,7 +97,7 @@ in
                 labels = [
                   "io.containers.autoupdate=registry"
                   "traefik.enable=true"
-                  "traefik.http.routers.traefik.rule=Host(`traefik1.nmsd.xyz`)"
+                  "traefik.http.routers.traefik.rule=Host(`traefik1.${domain}`)"
                   "traefik.http.routers.traefik.entrypoints=websecure"
                   "traefik.http.routers.traefik.tls=true"
                   "traefik.http.routers.traefik.tls.certresolver=namecheap"

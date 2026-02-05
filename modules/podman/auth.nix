@@ -8,6 +8,10 @@
 let
   cfg = config.services.pods.auth;
   nixosConfig = config;
+  domain = config.services.pods.domain;
+  # Convert "example.com" to "dc=example,dc=com" for LDAP Base DN
+  domainToBaseDN = d: lib.concatStringsSep "," (map (part: "dc=${part}") (lib.splitString "." d));
+  baseDN = domainToBaseDN domain;
 in
 {
   options.services.pods.auth = {
@@ -119,7 +123,7 @@ in
 
                 labels = {
                   "traefik.enable" = "true";
-                  "traefik.http.routers.authelia.rule" = "Host(`auth1.nmsd.xyz`)";
+                  "traefik.http.routers.authelia.rule" = "Host(`auth1.${domain}`)";
                   "traefik.http.routers.authelia.entrypoints" = "websecure";
                   "traefik.http.routers.authelia.tls.certresolver" = "namecheap";
                   "traefik.http.routers.authelia.service" = "authelia";
@@ -136,7 +140,7 @@ in
                   TZ = "Europe/Amsterdam";
                   AUTHELIA_SERVER_ADDRESS = "tcp://:9091";
                   AUTHELIA_LOG_LEVEL = "debug";
-                  AUTHELIA_TOTP_ISSUER = "auth1.nmsd.xyz";
+                  AUTHELIA_TOTP_ISSUER = "auth1.${domain}";
                   AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY = "deny";
                   AUTHELIA_REGULATION_MAX_RETRIES = "3";
                   AUTHELIA_REGULATION_FIND_TIME = "2 minutes";
@@ -145,13 +149,13 @@ in
                   AUTHELIA_NOTIFIER_DISABLE_STARTUP_CHECK = "false";
                   AUTHELIA_NOTIFIER_SMTP_ADDRESS = "submission://smtp.mail.me.com:587";
                   AUTHELIA_NOTIFIER_SMTP_USERNAME = "nima.saed@me.com";
-                  AUTHELIA_NOTIFIER_SMTP_SENDER = "Authelia <info@nmsd.xyz>";
+                  AUTHELIA_NOTIFIER_SMTP_SENDER = "Authelia <info@${domain}>";
                   AUTHELIA_NOTIFIER_SMTP_DISABLE_REQUIRE_TLS = "false";
                   AUTHELIA_AUTHENTICATION_BACKEND_LDAP_IMPLEMENTATION = "lldap";
-                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_ADDRESS = "ldaps://lldap1.nmsd.xyz:636";
+                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_ADDRESS = "ldaps://lldap1.${domain}:636";
                   AUTHELIA_AUTHENTICATION_BACKEND_LDAP_TLS_SKIP_VERIFY = "true";
-                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN = "dc=nmsd,dc=xyz";
-                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER = "uid=admin,ou=people,dc=nmsd,dc=xyz";
+                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN = baseDN;
+                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER = "uid=admin,ou=people,${baseDN}";
                 };
 
                 environmentFiles = [ secretsPath ];
@@ -181,7 +185,7 @@ in
                 labels = {
                   "traefik.enable" = "true";
                   # HTTP router for web UI
-                  "traefik.http.routers.lldap.rule" = "Host(`lldap1.nmsd.xyz`)";
+                  "traefik.http.routers.lldap.rule" = "Host(`lldap1.${domain}`)";
                   "traefik.http.routers.lldap.entrypoints" = "websecure";
                   "traefik.http.routers.lldap.tls.certresolver" = "namecheap";
                   "traefik.http.routers.lldap.service" = "lldap";
@@ -192,14 +196,14 @@ in
                   "traefik.tcp.routers.lldap.rule" = "HostSNI(`*`)";
                   "traefik.tcp.routers.lldap.entrypoints" = "lldapsecure";
                   "traefik.tcp.routers.lldap.tls" = "true";
-                  "traefik.tcp.routers.ldap.tls.domains[0].main" = "lldap1.nmsd.xyz";
+                  "traefik.tcp.routers.ldap.tls.domains[0].main" = "lldap1.${domain}";
                   "traefik.tcp.routers.lldap.tls.certresolver" = "namecheap";
                   "traefik.tcp.services.lldap.loadbalancer.server.port" = "3890";
                 };
 
                 environments = {
                   TZ = "Europe/Amsterdam";
-                  LLDAP_LDAP_BASE_DN = "dc=nmsd,dc=xyz";
+                  LLDAP_LDAP_BASE_DN = baseDN;
                 };
 
                 environmentFiles = [ secretsPath ];

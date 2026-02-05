@@ -8,6 +8,7 @@
 let
   cfg = config.services.pods.tools;
   homepageCfg = config.services.pods.homepage;
+  domain = config.services.pods.domain;
 in
 {
   imports = [ ./homepage.nix ];
@@ -85,7 +86,7 @@ in
 
                 labels = {
                   "traefik.enable" = "true";
-                  "traefik.http.routers.homepage.rule" = "Host(`home1.nmsd.xyz`)";
+                  "traefik.http.routers.homepage.rule" = "Host(`home1.${domain}`)";
                   "traefik.http.routers.homepage.entrypoints" = "websecure";
                   "traefik.http.routers.homepage.tls.certresolver" = "namecheap";
                   "traefik.http.routers.homepage.service" = "homepage";
@@ -133,7 +134,7 @@ in
 
                 labels = {
                   "traefik.enable" = "true";
-                  "traefik.http.routers.tools.rule" = "Host(`tools1.nmsd.xyz`)";
+                  "traefik.http.routers.tools.rule" = "Host(`tools1.${domain}`)";
                   "traefik.http.routers.tools.entrypoints" = "websecure";
                   "traefik.http.routers.tools.tls.certresolver" = "namecheap";
                   "traefik.http.routers.tools.service" = "tools";
@@ -164,7 +165,7 @@ in
 
                 labels = {
                   "traefik.enable" = "true";
-                  "traefik.http.routers.dozzle.rule" = "Host(`dozzle.nmsd.xyz`)";
+                  "traefik.http.routers.dozzle.rule" = "Host(`dozzle.${domain}`)";
                   "traefik.http.routers.dozzle.entrypoints" = "websecure";
                   "traefik.http.routers.dozzle.tls.certresolver" = "namecheap";
                   "traefik.http.routers.dozzle.service" = "dozzle";

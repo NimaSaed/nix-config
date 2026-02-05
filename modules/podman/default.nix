@@ -26,6 +26,13 @@ in
   ];
 
   options.services.pods = {
+    domain = lib.mkOption {
+      type = lib.types.str;
+      default = "example.com";
+      example = "mydomain.org";
+      description = "Base domain for all pod services (e.g., example.com)";
+    };
+
     _enabledPods = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];

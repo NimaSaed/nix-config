@@ -7,6 +7,7 @@
 
 let
   cfg = config.services.pods.media;
+  domain = config.services.pods.domain;
 in
 {
   options.services.pods.media = {
@@ -75,7 +76,7 @@ in
 
                 labels = {
                   "traefik.enable" = "true";
-                  "traefik.http.routers.media.rule" = "Host(`media1.nmsd.xyz`)";
+                  "traefik.http.routers.media.rule" = "Host(`media1.${domain}`)";
                   "traefik.http.routers.media.entrypoints" = "websecure";
                   "traefik.http.routers.media.tls.certresolver" = "namecheap";
                   "traefik.http.routers.media.service" = "media";

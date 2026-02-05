@@ -21,6 +21,7 @@
   # ============================================================================
   # Pod modules are defined in modules/podman/ with enable options
   services.pods = {
+    domain = "nmsd.xyz";
     reverse-proxy = {
       enable = true;
       useAcmeStaging = true;

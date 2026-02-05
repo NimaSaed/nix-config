@@ -1,7 +1,8 @@
-{ lib, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   yaml = pkgs.formats.yaml { };
+  domain = config.services.pods.domain;
 in
 {
   options.services.pods.homepage = {
@@ -45,45 +46,45 @@ in
             {
               Jellyfin = {
                 icon = "sh-jellyfin";
-                href = "https://media.nmsd.xyz/sso/OID/start/authelia";
+                href = "https://media.${domain}/sso/OID/start/authelia";
                 description = "Movies, TV shows and Music";
               };
             }
             {
               Nextcloud = {
                 icon = "sh-nextcloud";
-                href = "https://cloud.nmsd.xyz/";
+                href = "https://cloud.${domain}/";
                 description = "iCloud replacement";
               };
             }
             {
               lldap = {
                 icon = "sh-lldap-light";
-                href = "https://lldap.nmsd.xyz/";
+                href = "https://lldap.${domain}/";
               };
             }
             {
               "Server 1" = {
                 icon = "sh-fedora";
-                href = "https://srv1.nmsd.xyz/";
+                href = "https://srv1.${domain}/";
               };
             }
             {
               Scrypted = {
                 icon = "sh-scrypted";
-                href = "https://scrypted.nmsd.xyz/";
+                href = "https://scrypted.${domain}/";
               };
             }
             {
               "IT Tools" = {
                 icon = "it-tools";
-                href = "https://tools.nmsd.xyz/";
+                href = "https://tools.${domain}/";
               };
             }
             {
               Authelia = {
                 icon = "sh-authelia";
-                href = "https://auth.nmsd.xyz/";
+                href = "https://auth.${domain}/";
               };
             }
             {
@@ -95,37 +96,37 @@ in
             {
               Traefik = {
                 icon = "sh-traefik";
-                href = "https://traefik.nmsd.xyz/";
+                href = "https://traefik.${domain}/";
               };
             }
             {
               Jellyseerr = {
                 icon = "sh-jellyseerr";
-                href = "https://jellyseerr.nmsd.xyz";
+                href = "https://jellyseerr.${domain}";
               };
             }
             {
               Sonarr = {
                 icon = "sh-sonarr";
-                href = "https://sonarr.nmsd.xyz/";
+                href = "https://sonarr.${domain}/";
               };
             }
             {
               Radarr = {
                 icon = "sh-radarr";
-                href = "https://radarr.nmsd.xyz/";
+                href = "https://radarr.${domain}/";
               };
             }
             {
               Nzbget = {
                 icon = "sh-nzbget";
-                href = "https://nzbget.nmsd.xyz/";
+                href = "https://nzbget.${domain}/";
               };
             }
             {
               "Change Detection" = {
                 icon = "sh-changedetection";
-                href = "https://changedetection.nmsd.xyz/";
+                href = "https://changedetection.${domain}/";
               };
             }
           ];
