@@ -16,6 +16,8 @@ let
   baseDN = domainToBaseDN domain;
 in
 {
+  imports = [ ./configs/authelia.nix ];
+
   options.services.pods.auth = {
     enable = lib.mkEnableOption "Auth pod (Authelia and LLDAP)";
 
@@ -58,7 +60,7 @@ in
 
     # Declare secrets this module needs
     sops.secrets = {
-      "authelia/icloud_smtp_password" = {
+      "authelia/smtp_password" = {
         owner = "poddy";
         group = "poddy";
       };
@@ -75,6 +77,30 @@ in
         group = "poddy";
       };
       "authelia/authelia_oidc_hmac_secret" = {
+        owner = "poddy";
+        group = "poddy";
+      };
+      "authelia/oidc_jwks_private_key" = {
+        owner = "poddy";
+        group = "poddy";
+      };
+      "authelia/oidc_jwks_certificate_chain" = {
+        owner = "poddy";
+        group = "poddy";
+      };
+      "authelia/oidc_client_secret_nextcloud" = {
+        owner = "poddy";
+        group = "poddy";
+      };
+      "authelia/oidc_client_secret_jellyfin" = {
+        owner = "poddy";
+        group = "poddy";
+      };
+      "authelia/smtp_address" = {
+        owner = "poddy";
+        group = "poddy";
+      };
+      "authelia/smtp_username" = {
         owner = "poddy";
         group = "poddy";
       };
@@ -148,31 +174,24 @@ in
                   };
                 };
 
+                # All non-secret config is in the generated configuration.yml (configs/authelia.nix).
+                # Only TZ (Docker-level) and JWKS references remain as env vars.
                 environments = {
                   TZ = "Europe/Amsterdam";
-                  AUTHELIA_SERVER_ADDRESS = "tcp://:9091";
-                  AUTHELIA_LOG_LEVEL = "debug";
-                  AUTHELIA_TOTP_ISSUER = "${cfg.authelia.subdomain}.${domain}";
-                  AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY = "deny";
-                  AUTHELIA_REGULATION_MAX_RETRIES = "3";
-                  AUTHELIA_REGULATION_FIND_TIME = "2 minutes";
-                  AUTHELIA_REGULATION_BAN_TIME = "5 minutes";
-                  AUTHELIA_STORAGE_LOCAL_PATH = "/config/db.sqlite3";
-                  AUTHELIA_NOTIFIER_DISABLE_STARTUP_CHECK = "false";
-                  AUTHELIA_NOTIFIER_SMTP_ADDRESS = "submission://smtp.mail.me.com:587";
-                  AUTHELIA_NOTIFIER_SMTP_USERNAME = "nima.saed@me.com";
-                  AUTHELIA_NOTIFIER_SMTP_SENDER = "Authelia <info@${domain}>";
-                  AUTHELIA_NOTIFIER_SMTP_DISABLE_REQUIRE_TLS = "false";
-                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_IMPLEMENTATION = "lldap";
-                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_ADDRESS = "ldaps://${cfg.lldap.subdomain}.${domain}:636";
-                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_TLS_SKIP_VERIFY = "true";
-                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN = baseDN;
-                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER = "uid=admin,ou=people,${baseDN}";
+                  # JWKS key/cert are multiline PEM — mounted as sops secret files
+                  AUTHELIA_IDENTITY_PROVIDERS_OIDC_JWKS_0_KEY_ID = "authelia_key";
+                  AUTHELIA_IDENTITY_PROVIDERS_OIDC_JWKS_0_KEY_FILE = "/secrets/oidc_jwks_key";
+                  AUTHELIA_IDENTITY_PROVIDERS_OIDC_JWKS_0_CERTIFICATE_CHAIN_FILE = "/secrets/oidc_jwks_cert";
                 };
 
                 environmentFiles = [ secretsPath ];
 
-                volumes = [ "${volumes.authelia.ref}:/config" ];
+                volumes = [
+                  "${volumes.authelia.ref}:/config"
+                  "${nixosConfig.services.pods.auth.authelia.configFile}:/config/configuration.yml:ro"
+                  "${nixosConfig.sops.secrets."authelia/oidc_jwks_private_key".path}:/secrets/oidc_jwks_key:ro"
+                  "${nixosConfig.sops.secrets."authelia/oidc_jwks_certificate_chain".path}:/secrets/oidc_jwks_cert:ro"
+                ];
               };
             };
 
@@ -225,7 +244,9 @@ in
 
     sops.templates."auth-secrets" = {
       content = ''
-        AUTHELIA_NOTIFIER_SMTP_PASSWORD=${config.sops.placeholder."authelia/icloud_smtp_password"}
+        AUTHELIA_NOTIFIER_SMTP_PASSWORD=${config.sops.placeholder."authelia/smtp_password"}
+        AUTHELIA_NOTIFIER_SMTP_ADDRESS=${config.sops.placeholder."authelia/smtp_address"}
+        AUTHELIA_NOTIFIER_SMTP_USERNAME=${config.sops.placeholder."authelia/smtp_username"}
         AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET=${
           config.sops.placeholder."authelia/authelia_jwt_secret"
         }
@@ -235,6 +256,12 @@ in
         }
         AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET=${
           config.sops.placeholder."authelia/authelia_oidc_hmac_secret"
+        }
+        AUTHELIA_IDENTITY_PROVIDERS_OIDC_CLIENTS_0_CLIENT_SECRET=${
+          config.sops.placeholder."authelia/oidc_client_secret_nextcloud"
+        }
+        AUTHELIA_IDENTITY_PROVIDERS_OIDC_CLIENTS_1_CLIENT_SECRET=${
+          config.sops.placeholder."authelia/oidc_client_secret_jellyfin"
         }
         AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD=${config.sops.placeholder."ldap/lldap_ldap_user_pass"}
         LLDAP_LDAP_USER_PASS=${config.sops.placeholder."ldap/lldap_ldap_user_pass"}
