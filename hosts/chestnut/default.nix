@@ -29,18 +29,33 @@
     };
     tools = {
       enable = true;
-      homepage.enable = true;
-      itTools.enable = true;
+      homepage = {
+        enable = true;
+        subdomain = "home1";
+      };
+      itTools = {
+        enable = true;
+        subdomain = "tools1";
+      };
       dozzle.enable = true;
     };
     media = {
       enable = true;
-      jellyfin.enable = true;
+      jellyfin = {
+        enable = true;
+        subdomain = "media1";
+      };
     };
     auth = {
       enable = true;
-      authelia.enable = true;
-      lldap.enable = true;
+      authelia = {
+        enable = true;
+        subdomain = "auth1";
+      };
+      lldap = {
+        enable = true;
+        subdomain = "lldap1";
+      };
     };
   };
 
