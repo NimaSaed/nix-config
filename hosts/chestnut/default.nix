@@ -24,6 +24,7 @@
     domain = "nmsd.xyz";
     reverse-proxy = {
       enable = true;
+      subdomain = "traefik1";
       useAcmeStaging = true;
     };
     tools = {
