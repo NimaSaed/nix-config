@@ -15,6 +15,43 @@ let
   # Network storage for volumes (app data) - can be on CIFS share
   poddyDataRoot = "/data/containers";
   anyPodEnabled = cfg._enabledPods != [ ];
+
+  # Helper function to generate consistent Traefik labels for containers
+  mkTraefikLabels =
+    {
+      name,
+      port,
+      subdomain ? name,
+      scheme ? "http",
+      middlewares ? false,
+      # Function that receives `name` and returns extra labels attrset
+      # Usage: extraLabels = name: { "traefik.tcp.routers.${name}.rule" = "..."; }
+      # Default: (_: { }) = function that ignores arg and returns empty attrset
+      extraLabels ? (_: { }),
+    }:
+    let
+      resolvedMiddleware =
+        if middlewares == true then
+          "authelia@docker"
+        else if middlewares == false then
+          null
+        else
+          middlewares;
+    in
+    {
+      "traefik.enable" = "true";
+      "traefik.http.routers.${name}.rule" = "Host(`${subdomain}.${cfg.domain}`)";
+      "traefik.http.routers.${name}.entrypoints" = "websecure";
+      "traefik.http.routers.${name}.tls" = "true";
+      "traefik.http.routers.${name}.tls.certresolver" = "namecheap";
+      "traefik.http.routers.${name}.service" = name;
+      "traefik.http.services.${name}.loadbalancer.server.scheme" = scheme;
+      "traefik.http.services.${name}.loadbalancer.server.port" = toString port;
+    }
+    // lib.optionalAttrs (resolvedMiddleware != null) {
+      "traefik.http.routers.${name}.middlewares" = resolvedMiddleware;
+    }
+    // (extraLabels name);
 in
 {
   imports = [
@@ -31,6 +68,13 @@ in
       default = "example.com";
       example = "mydomain.org";
       description = "Base domain for all pod services (e.g., example.com)";
+    };
+
+    mkTraefikLabels = lib.mkOption {
+      type = lib.types.functionTo lib.types.attrs;
+      default = mkTraefikLabels;
+      internal = true;
+      description = "Helper function to generate Traefik labels for containers";
     };
 
     _enabledPods = lib.mkOption {

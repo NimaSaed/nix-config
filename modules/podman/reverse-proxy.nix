@@ -7,13 +7,20 @@
 
 let
   cfg = config.services.pods.reverse-proxy;
+  # Alternative: inherit (config.services.pods) domain mkTraefikLabels;
   domain = config.services.pods.domain;
+  mkTraefikLabels = config.services.pods.mkTraefikLabels;
   # Capture NixOS config for use inside Home Manager where 'config' refers to HM config
   nixosConfig = config;
 in
 {
   options.services.pods.reverse-proxy = {
     enable = lib.mkEnableOption "Traefik reverse proxy pod";
+    subdomain = lib.mkOption {
+      type = lib.types.str;
+      default = "traefik";
+      description = "Subdomain for Traefik dashboard";
+    };
     useAcmeStaging = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -93,17 +100,18 @@ in
               containerConfig = {
                 image = "docker.io/library/traefik:latest";
                 pod = pods.reverse_proxy.ref;
+                autoUpdate = "registry";
 
-                labels = [
-                  "io.containers.autoupdate=registry"
-                  "traefik.enable=true"
-                  "traefik.http.routers.traefik.rule=Host(`traefik1.${domain}`)"
-                  "traefik.http.routers.traefik.entrypoints=websecure"
-                  "traefik.http.routers.traefik.tls=true"
-                  "traefik.http.routers.traefik.tls.certresolver=namecheap"
-                  #"traefik.http.routers.traefik.middlewares=authelia@docker"
-                  "traefik.http.routers.traefik.service=api@internal"
-                ];
+                labels = mkTraefikLabels {
+                  name = "traefik";
+                  port = 8080;
+                  subdomain = cfg.subdomain;
+                  # middlewares = true;  # Uncomment to enable Authelia protection
+                  extraLabels = name: {
+                    # Override service to use Traefik's internal dashboard API
+                    "traefik.http.routers.${name}.service" = "api@internal";
+                  };
+                };
 
                 # %t = XDG_RUNTIME_DIR
                 volumes = [

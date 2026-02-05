@@ -7,7 +7,9 @@
 
 let
   cfg = config.services.pods.media;
+  # Alternative: inherit (config.services.pods) domain mkTraefikLabels;
   domain = config.services.pods.domain;
+  mkTraefikLabels = config.services.pods.mkTraefikLabels;
 in
 {
   options.services.pods.media = {
@@ -18,6 +20,11 @@ in
         type = lib.types.bool;
         default = true;
         description = "Enable Jellyfin media server container in the media pod";
+      };
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "jellyfin";
+        description = "Subdomain for Jellyfin (e.g., jellyfin -> jellyfin.domain)";
       };
     };
   };
@@ -74,14 +81,10 @@ in
                 pod = pods.media.ref;
                 autoUpdate = "registry";
 
-                labels = {
-                  "traefik.enable" = "true";
-                  "traefik.http.routers.media.rule" = "Host(`media1.${domain}`)";
-                  "traefik.http.routers.media.entrypoints" = "websecure";
-                  "traefik.http.routers.media.tls.certresolver" = "namecheap";
-                  "traefik.http.routers.media.service" = "media";
-                  "traefik.http.services.media.loadbalancer.server.scheme" = "http";
-                  "traefik.http.services.media.loadbalancer.server.port" = "8096";
+                labels = mkTraefikLabels {
+                  name = "jellyfin";
+                  port = 8096;
+                  subdomain = cfg.jellyfin.subdomain;
                 };
 
                 volumes = [

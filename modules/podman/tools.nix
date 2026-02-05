@@ -8,7 +8,9 @@
 let
   cfg = config.services.pods.tools;
   homepageCfg = config.services.pods.homepage;
+  # Alternative: inherit (config.services.pods) domain mkTraefikLabels;
   domain = config.services.pods.domain;
+  mkTraefikLabels = config.services.pods.mkTraefikLabels;
 in
 {
   imports = [ ./homepage.nix ];
@@ -21,6 +23,11 @@ in
         default = true;
         description = "Enable Homepage dashboard container in the tools pod";
       };
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "homepage";
+        description = "Subdomain for Homepage dashboard";
+      };
     };
 
     itTools = {
@@ -29,6 +36,11 @@ in
         default = true;
         description = "Enable IT Tools container in the tools pod";
       };
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "it-tools";
+        description = "Subdomain for IT Tools";
+      };
     };
 
     dozzle = {
@@ -36,6 +48,11 @@ in
         type = lib.types.bool;
         default = true;
         description = "Enable Dozzle log viewer container in the tools pod";
+      };
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "dozzle";
+        description = "Subdomain for Dozzle log viewer";
       };
     };
   };
@@ -84,14 +101,10 @@ in
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
 
-                labels = {
-                  "traefik.enable" = "true";
-                  "traefik.http.routers.homepage.rule" = "Host(`home1.${domain}`)";
-                  "traefik.http.routers.homepage.entrypoints" = "websecure";
-                  "traefik.http.routers.homepage.tls.certresolver" = "namecheap";
-                  "traefik.http.routers.homepage.service" = "homepage";
-                  "traefik.http.services.homepage.loadbalancer.server.scheme" = "http";
-                  "traefik.http.services.homepage.loadbalancer.server.port" = "3000";
+                labels = mkTraefikLabels {
+                  name = "homepage";
+                  port = 3000;
+                  subdomain = cfg.homepage.subdomain;
                 };
 
                 environments = {
@@ -132,15 +145,11 @@ in
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
 
-                labels = {
-                  "traefik.enable" = "true";
-                  "traefik.http.routers.tools.rule" = "Host(`tools1.${domain}`)";
-                  "traefik.http.routers.tools.entrypoints" = "websecure";
-                  "traefik.http.routers.tools.tls.certresolver" = "namecheap";
-                  "traefik.http.routers.tools.service" = "tools";
-                  "traefik.http.services.tools.loadbalancer.server.scheme" = "http";
-                  "traefik.http.services.tools.loadbalancer.server.port" = "80";
-                  #"traefik.http.routers.tools.middlewares" = "authelia@docker";
+                labels = mkTraefikLabels {
+                  name = "it-tools";
+                  port = 80;
+                  subdomain = cfg.itTools.subdomain;
+                  # middlewares = true;  # Uncomment to enable Authelia protection
                 };
               };
             };
@@ -163,14 +172,10 @@ in
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
 
-                labels = {
-                  "traefik.enable" = "true";
-                  "traefik.http.routers.dozzle.rule" = "Host(`dozzle.${domain}`)";
-                  "traefik.http.routers.dozzle.entrypoints" = "websecure";
-                  "traefik.http.routers.dozzle.tls.certresolver" = "namecheap";
-                  "traefik.http.routers.dozzle.service" = "dozzle";
-                  "traefik.http.services.dozzle.loadbalancer.server.scheme" = "http";
-                  "traefik.http.services.dozzle.loadbalancer.server.port" = "8080";
+                labels = mkTraefikLabels {
+                  name = "dozzle";
+                  port = 8080;
+                  subdomain = cfg.dozzle.subdomain;
                 };
 
                 environments = {

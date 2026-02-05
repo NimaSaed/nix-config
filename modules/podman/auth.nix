@@ -8,7 +8,9 @@
 let
   cfg = config.services.pods.auth;
   nixosConfig = config;
+  # Alternative: inherit (config.services.pods) domain mkTraefikLabels;
   domain = config.services.pods.domain;
+  mkTraefikLabels = config.services.pods.mkTraefikLabels;
   # Convert "example.com" to "dc=example,dc=com" for LDAP Base DN
   domainToBaseDN = d: lib.concatStringsSep "," (map (part: "dc=${part}") (lib.splitString "." d));
   baseDN = domainToBaseDN domain;
@@ -23,6 +25,11 @@ in
         default = true;
         description = "Enable Authelia authentication server in the auth pod";
       };
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "authelia";
+        description = "Subdomain for Authelia authentication server";
+      };
     };
 
     lldap = {
@@ -30,6 +37,11 @@ in
         type = lib.types.bool;
         default = true;
         description = "Enable LLDAP directory server in the auth pod";
+      };
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "lldap";
+        description = "Subdomain for LLDAP directory server";
       };
     };
   };
@@ -121,26 +133,26 @@ in
                 pod = pods.auth.ref;
                 autoUpdate = "registry";
 
-                labels = {
-                  "traefik.enable" = "true";
-                  "traefik.http.routers.authelia.rule" = "Host(`auth1.${domain}`)";
-                  "traefik.http.routers.authelia.entrypoints" = "websecure";
-                  "traefik.http.routers.authelia.tls.certresolver" = "namecheap";
-                  "traefik.http.routers.authelia.service" = "authelia";
-                  "traefik.http.services.authelia.loadbalancer.server.scheme" = "http";
-                  "traefik.http.services.authelia.loadbalancer.server.port" = "9091";
-                  "traefik.http.middlewares.authelia.forwardauth.address" =
-                    "http://host.docker.internal:9091/api/authz/forward-auth";
-                  "traefik.http.middlewares.authelia.forwardauth.trustforwardheader" = "true";
-                  "traefik.http.middlewares.authelia.forwardauth.authresponseheaders" =
-                    "remote-user,remote-groups,remote-email,remote-name";
+                labels = mkTraefikLabels {
+                  name = "authelia";
+                  port = 9091;
+                  subdomain = cfg.authelia.subdomain;
+                  extraLabels = _: {
+                    # ForwardAuth middleware definition (used by other services via middlewares = true)
+                    # Note: middleware name stays "authelia" regardless of container name
+                    "traefik.http.middlewares.authelia.forwardauth.address" =
+                      "http://host.docker.internal:9091/api/authz/forward-auth";
+                    "traefik.http.middlewares.authelia.forwardauth.trustforwardheader" = "true";
+                    "traefik.http.middlewares.authelia.forwardauth.authresponseheaders" =
+                      "remote-user,remote-groups,remote-email,remote-name";
+                  };
                 };
 
                 environments = {
                   TZ = "Europe/Amsterdam";
                   AUTHELIA_SERVER_ADDRESS = "tcp://:9091";
                   AUTHELIA_LOG_LEVEL = "debug";
-                  AUTHELIA_TOTP_ISSUER = "auth1.${domain}";
+                  AUTHELIA_TOTP_ISSUER = "${cfg.authelia.subdomain}.${domain}";
                   AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY = "deny";
                   AUTHELIA_REGULATION_MAX_RETRIES = "3";
                   AUTHELIA_REGULATION_FIND_TIME = "2 minutes";
@@ -152,7 +164,7 @@ in
                   AUTHELIA_NOTIFIER_SMTP_SENDER = "Authelia <info@${domain}>";
                   AUTHELIA_NOTIFIER_SMTP_DISABLE_REQUIRE_TLS = "false";
                   AUTHELIA_AUTHENTICATION_BACKEND_LDAP_IMPLEMENTATION = "lldap";
-                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_ADDRESS = "ldaps://lldap1.${domain}:636";
+                  AUTHELIA_AUTHENTICATION_BACKEND_LDAP_ADDRESS = "ldaps://${cfg.lldap.subdomain}.${domain}:636";
                   AUTHELIA_AUTHENTICATION_BACKEND_LDAP_TLS_SKIP_VERIFY = "true";
                   AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN = baseDN;
                   AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER = "uid=admin,ou=people,${baseDN}";
@@ -182,23 +194,20 @@ in
                 pod = pods.auth.ref;
                 autoUpdate = "registry";
 
-                labels = {
-                  "traefik.enable" = "true";
-                  # HTTP router for web UI
-                  "traefik.http.routers.lldap.rule" = "Host(`lldap1.${domain}`)";
-                  "traefik.http.routers.lldap.entrypoints" = "websecure";
-                  "traefik.http.routers.lldap.tls.certresolver" = "namecheap";
-                  "traefik.http.routers.lldap.service" = "lldap";
-                  "traefik.http.services.lldap.loadbalancer.server.scheme" = "http";
-                  "traefik.http.services.lldap.loadbalancer.server.port" = "17170";
-                  #"traefik.http.routers.lldap.middlewares" = "authelia@docker";
-                  # TCP router for LDAPS
-                  "traefik.tcp.routers.lldap.rule" = "HostSNI(`*`)";
-                  "traefik.tcp.routers.lldap.entrypoints" = "lldapsecure";
-                  "traefik.tcp.routers.lldap.tls" = "true";
-                  "traefik.tcp.routers.ldap.tls.domains[0].main" = "lldap1.${domain}";
-                  "traefik.tcp.routers.lldap.tls.certresolver" = "namecheap";
-                  "traefik.tcp.services.lldap.loadbalancer.server.port" = "3890";
+                labels = mkTraefikLabels {
+                  name = "lldap";
+                  port = 17170;
+                  subdomain = cfg.lldap.subdomain;
+                  # middlewares = true;  # Uncomment to enable Authelia protection
+                  extraLabels = name: {
+                    # TCP router for LDAPS
+                    "traefik.tcp.routers.${name}.rule" = "HostSNI(`*`)";
+                    "traefik.tcp.routers.${name}.entrypoints" = "lldapsecure";
+                    "traefik.tcp.routers.${name}.tls" = "true";
+                    "traefik.tcp.routers.${name}.tls.domains[0].main" = "${cfg.lldap.subdomain}.${domain}";
+                    "traefik.tcp.routers.${name}.tls.certresolver" = "namecheap";
+                    "traefik.tcp.services.${name}.loadbalancer.server.port" = "3890";
+                  };
                 };
 
                 environments = {
