@@ -13,7 +13,7 @@ let
   mkTraefikLabels = config.services.pods.mkTraefikLabels;
 in
 {
-  imports = [ ./homepage.nix ];
+  imports = [ ./configs/homepage.nix ];
   options.services.pods.tools = {
     enable = lib.mkEnableOption "Tools pod (homepage dashboard and utilities)";
 
