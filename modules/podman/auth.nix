@@ -174,14 +174,11 @@ in
                   };
                 };
 
-                # All non-secret config is in the generated configuration.yml (configs/authelia.nix).
-                # Only TZ (Docker-level) and JWKS references remain as env vars.
                 environments = {
                   TZ = "Europe/Amsterdam";
-                  # JWKS key/cert are multiline PEM — mounted as sops secret files
-                  AUTHELIA_IDENTITY_PROVIDERS_OIDC_JWKS_0_KEY_ID = "authelia_key";
-                  AUTHELIA_IDENTITY_PROVIDERS_OIDC_JWKS_0_KEY_FILE = "/secrets/oidc_jwks_key";
-                  AUTHELIA_IDENTITY_PROVIDERS_OIDC_JWKS_0_CERTIFICATE_CHAIN_FILE = "/secrets/oidc_jwks_cert";
+                  # Enable Authelia's template engine so {{ }} expressions in the
+                  # config file (./config/authelia.nix) are processed at startup (reads secrets from mounted files)
+                  X_AUTHELIA_CONFIG_FILTERS = "template";
                 };
 
                 environmentFiles = [ secretsPath ];
@@ -191,6 +188,8 @@ in
                   "${nixosConfig.services.pods.auth.authelia.configFile}:/config/configuration.yml:ro"
                   "${nixosConfig.sops.secrets."authelia/oidc_jwks_private_key".path}:/secrets/oidc_jwks_key:ro"
                   "${nixosConfig.sops.secrets."authelia/oidc_jwks_certificate_chain".path}:/secrets/oidc_jwks_cert:ro"
+                  "${nixosConfig.sops.secrets."authelia/oidc_client_secret_nextcloud".path}:/secrets/nextcloud_client_secret:ro"
+                  "${nixosConfig.sops.secrets."authelia/oidc_client_secret_jellyfin".path}:/secrets/jellyfin_client_secret:ro"
                 ];
               };
             };
@@ -256,12 +255,6 @@ in
         }
         AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET=${
           config.sops.placeholder."authelia/authelia_oidc_hmac_secret"
-        }
-        AUTHELIA_IDENTITY_PROVIDERS_OIDC_CLIENTS_0_CLIENT_SECRET=${
-          config.sops.placeholder."authelia/oidc_client_secret_nextcloud"
-        }
-        AUTHELIA_IDENTITY_PROVIDERS_OIDC_CLIENTS_1_CLIENT_SECRET=${
-          config.sops.placeholder."authelia/oidc_client_secret_jellyfin"
         }
         AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD=${config.sops.placeholder."ldap/lldap_ldap_user_pass"}
         LLDAP_LDAP_USER_PASS=${config.sops.placeholder."ldap/lldap_ldap_user_pass"}
