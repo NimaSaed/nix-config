@@ -16,7 +16,10 @@ let
   baseDN = domainToBaseDN domain;
 in
 {
-  imports = [ ./configs/authelia.nix ];
+  imports = [
+    ./configs/authelia.nix
+    ./configs/lldap.nix
+  ];
 
   options.services.pods.auth = {
     enable = lib.mkEnableOption "Auth pod (Authelia and LLDAP)";
@@ -231,12 +234,14 @@ in
                 environments = {
                   TZ = "Europe/Amsterdam";
                   LLDAP_LDAP_BASE_DN = baseDN;
-                  LLDAP_DATABASE_URL= "sqlite:///data/users.db?mode=rwc";
                 };
 
                 environmentFiles = [ secretsPath ];
 
-                volumes = [ "${volumes.lldap.ref}:/data" ];
+                volumes = [
+                  "${volumes.lldap.ref}:/data"
+                  "${nixosConfig.services.pods.auth.lldap.configFile}:/data/lldap_config.toml:ro"
+                ];
               };
             };
           };
