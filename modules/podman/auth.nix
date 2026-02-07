@@ -231,6 +231,7 @@ in
                 environments = {
                   TZ = "Europe/Amsterdam";
                   LLDAP_LDAP_BASE_DN = baseDN;
+                  LLDAP_DATABASE_URL= "sqlite:///data/users.db?mode=rwc";
                 };
 
                 environmentFiles = [ secretsPath ];
