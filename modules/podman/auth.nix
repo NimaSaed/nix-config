@@ -181,6 +181,7 @@ in
                   TZ = "Europe/Amsterdam";
                   # Enable Authelia's template engine so {{ }} expressions in the
                   # config file (./config/authelia.nix) are processed at startup (reads secrets from mounted files)
+                  X_AUTHELIA_CONFIG = "/etc/authelia/configuration.yml";
                   X_AUTHELIA_CONFIG_FILTERS = "template";
                 };
 
@@ -188,7 +189,7 @@ in
 
                 volumes = [
                   "${volumes.authelia.ref}:/config"
-                  "${nixosConfig.services.pods.auth.authelia.configFile}:/config/configuration.yml:ro"
+                  "${nixosConfig.services.pods.auth.authelia.configFile}:/etc/authelia/configuration.yml:ro"
                   "${nixosConfig.sops.secrets."authelia/oidc_jwks_private_key".path}:/secrets/oidc_jwks_key:ro"
                   "${nixosConfig.sops.secrets."authelia/oidc_jwks_certificate_chain".path}:/secrets/oidc_jwks_cert:ro"
                   "${nixosConfig.sops.secrets."authelia/oidc_client_secret_nextcloud".path}:/secrets/nextcloud_client_secret:ro"
