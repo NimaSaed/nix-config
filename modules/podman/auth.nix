@@ -234,13 +234,14 @@ in
                 environments = {
                   TZ = "Europe/Amsterdam";
                   LLDAP_LDAP_BASE_DN = baseDN;
+                  LLDAP_CONFIG_FILE = "/etc/lldap/lldap_config.toml";
                 };
 
                 environmentFiles = [ secretsPath ];
 
                 volumes = [
                   "${volumes.lldap.ref}:/data"
-                  "${nixosConfig.services.pods.auth.lldap.configFile}:/data/lldap_config.toml:ro"
+                  "${nixosConfig.services.pods.auth.lldap.configFile}:/etc/lldap/lldap_config.toml:ro"
                 ];
               };
             };
