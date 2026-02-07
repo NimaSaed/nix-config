@@ -78,7 +78,6 @@ in
             pods.tools = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
-                publishPorts = [ "3000:3000" ];
               };
             };
 

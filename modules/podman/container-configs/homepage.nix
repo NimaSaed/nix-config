@@ -8,6 +8,10 @@
 let
   yaml = pkgs.formats.yaml { };
   domain = config.services.pods.domain;
+  authCfg = config.services.pods.auth;
+  toolsCfg = config.services.pods.tools;
+  mediaCfg = config.services.pods.media;
+  rpCfg = config.services.pods.reverse-proxy;
 in
 {
   options.services.pods.homepage = {
@@ -51,7 +55,7 @@ in
             {
               Jellyfin = {
                 icon = "sh-jellyfin";
-                href = "https://media.${domain}/sso/OID/start/authelia";
+                href = "https://${mediaCfg.jellyfin.subdomain}.${domain}/sso/OID/start/authelia";
                 description = "Movies, TV shows and Music";
               };
             }
@@ -65,7 +69,7 @@ in
             {
               lldap = {
                 icon = "sh-lldap-light";
-                href = "https://lldap.${domain}/";
+                href = "https://${authCfg.lldap.subdomain}.${domain}/";
               };
             }
             {
@@ -83,13 +87,13 @@ in
             {
               "IT Tools" = {
                 icon = "it-tools";
-                href = "https://tools.${domain}/";
+                href = "https://${toolsCfg.itTools.subdomain}.${domain}/";
               };
             }
             {
               Authelia = {
                 icon = "sh-authelia";
-                href = "https://auth.${domain}/";
+                href = "https://${authCfg.authelia.subdomain}.${domain}/";
               };
             }
             {
@@ -101,7 +105,7 @@ in
             {
               Traefik = {
                 icon = "sh-traefik";
-                href = "https://traefik.${domain}/";
+                href = "https://${rpCfg.subdomain}.${domain}/";
               };
             }
             {

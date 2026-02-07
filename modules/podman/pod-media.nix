@@ -59,7 +59,6 @@ in
             pods.media = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
-                publishPorts = [ "8096:8096" ];
               };
             };
 
