@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   toml = pkgs.formats.toml { };
@@ -12,7 +17,6 @@ in
       ## automatically on startup. However, the seed will have the
       ## default value even though you set it in a variable, and
       ## there will be a warning in the logs, which drives me crazy.
-
 
       ## Database URL.
       ## This encodes the type of database (SQlite, MySQL, or PostgreSQL),

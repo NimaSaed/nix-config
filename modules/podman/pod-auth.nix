@@ -17,8 +17,8 @@ let
 in
 {
   imports = [
-    ./configs/authelia.nix
-    ./configs/lldap.nix
+    ./container-configs/authelia.nix
+    ./container-configs/lldap.nix
   ];
 
   options.services.pods.auth = {
@@ -192,8 +192,12 @@ in
                   "${nixosConfig.services.pods.auth.authelia.configFile}:/etc/authelia/configuration.yml:ro"
                   "${nixosConfig.sops.secrets."authelia/oidc_jwks_private_key".path}:/secrets/oidc_jwks_key:ro"
                   "${nixosConfig.sops.secrets."authelia/oidc_jwks_certificate_chain".path}:/secrets/oidc_jwks_cert:ro"
-                  "${nixosConfig.sops.secrets."authelia/oidc_client_secret_nextcloud".path}:/secrets/nextcloud_client_secret:ro"
-                  "${nixosConfig.sops.secrets."authelia/oidc_client_secret_jellyfin".path}:/secrets/jellyfin_client_secret:ro"
+                  "${
+                    nixosConfig.sops.secrets."authelia/oidc_client_secret_nextcloud".path
+                  }:/secrets/nextcloud_client_secret:ro"
+                  "${
+                    nixosConfig.sops.secrets."authelia/oidc_client_secret_jellyfin".path
+                  }:/secrets/jellyfin_client_secret:ro"
                 ];
               };
             };

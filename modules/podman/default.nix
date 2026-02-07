@@ -56,10 +56,10 @@ in
 {
   imports = [
     inputs.quadlet-nix.nixosModules.quadlet
-    ./reverse-proxy.nix
-    ./tools.nix
-    ./media.nix
-    ./auth.nix
+    ./pod-reverse-proxy.nix
+    ./pod-tools.nix
+    ./pod-media.nix
+    ./pod-auth.nix
   ];
 
   options.services.pods = {

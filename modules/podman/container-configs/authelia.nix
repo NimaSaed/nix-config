@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   domain = config.services.pods.domain;
@@ -8,8 +13,7 @@ let
   rpCfg = config.services.pods.reverse-proxy;
 
   # Convert "example.com" to "dc=example,dc=com" for LDAP Base DN
-  domainToBaseDN =
-    d: lib.concatStringsSep "," (map (part: "dc=${part}") (lib.splitString "." d));
+  domainToBaseDN = d: lib.concatStringsSep "," (map (part: "dc=${part}") (lib.splitString "." d));
   baseDN = domainToBaseDN domain;
 in
 {
