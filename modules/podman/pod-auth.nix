@@ -140,7 +140,7 @@ in
             pods.auth = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
-                publishPorts = [ "9091:9091" ];
+                #publishPorts = [ "9091:9091" ];
               };
             };
 
