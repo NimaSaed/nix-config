@@ -231,10 +231,11 @@ in
                   };
                 };
 
+                exec = "run --config-file /etc/lldap/lldap_config.toml";
+
                 environments = {
                   TZ = "Europe/Amsterdam";
                   LLDAP_LDAP_BASE_DN = baseDN;
-                  LLDAP_CONFIG_FILE = "/etc/lldap/lldap_config.toml";
                 };
 
                 environmentFiles = [ secretsPath ];
