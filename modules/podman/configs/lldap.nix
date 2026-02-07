@@ -24,6 +24,10 @@ in
       ## Override with: LLDAP_DATABASE_URL
       database_url = "sqlite:///data/users.db?mode=rwc";
 
+      ## Set to empty string to silence the warning when key_seed is
+      ## provided via env var (otherwise lldap warns about ignoring key_file).
+      key_file = "";
+
       # =====================================================================
       # All other lldap_config.toml options (override via LLDAP_* env vars):
       # =====================================================================
