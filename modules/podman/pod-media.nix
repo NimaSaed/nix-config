@@ -11,6 +11,10 @@ let
   inherit (config.services.pods) domain mkTraefikLabels;
 in
 {
+  imports = [
+    ./container-configs/nzbget.nix
+  ];
+
   options.services.pods.media = {
     enable = lib.mkEnableOption "Media pod (Jellyfin and related services)";
 
@@ -275,6 +279,7 @@ in
 
                 volumes = [
                   "${volumes.nzbget.ref}:/config"
+                  "${nixosConfig.services.pods.media.nzbget.configFile}:/config/nzbget.conf:ro"
                   "/data/media:/media:rw"
                 ];
 
@@ -319,9 +324,12 @@ in
           };
       };
 
-    # NZBGet secrets - password for web UI authentication
+    # NZBGet secrets - password for web UI and news server credentials
     sops.secrets = lib.genAttrs [
       "nzbget_password"
+      "nzbget_server_host"
+      "nzbget_server_username"
+      "nzbget_server_password"
     ] (_: {
       owner = "poddy";
       group = "poddy";
@@ -330,6 +338,9 @@ in
     sops.templates."nzbget-secrets" = {
       content = ''
         NZBGET_PASS=${config.sops.placeholder."nzbget_password"}
+        SERVER1_HOST=${config.sops.placeholder."nzbget_server_host"}
+        SERVER1_USERNAME=${config.sops.placeholder."nzbget_server_username"}
+        SERVER1_PASSWORD=${config.sops.placeholder."nzbget_server_password"}
       '';
       owner = "poddy";
       group = "poddy";
