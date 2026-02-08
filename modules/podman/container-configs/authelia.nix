@@ -73,7 +73,7 @@ in
         disable_startup_check: false
         smtp:
           # address and username provided via env vars from sops template
-          sender: "Authelia <info@${domain}>"
+          sender: "Authelia <authelia@${domain}>"
           disable_require_tls: false
 
       # Using LLDAP for authentication (not local file/SQLite user DB).
@@ -84,7 +84,7 @@ in
       authentication_backend:
         ldap:
           implementation: lldap
-          address: "ldaps://${authCfg.lldap.subdomain}.${domain}:636"
+          address: "ldaps://auth:636"
           tls:
             skip_verify: true
           base_dn: "${baseDN}"

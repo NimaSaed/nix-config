@@ -94,7 +94,7 @@ in
                   name = "traefik";
                   port = 8080;
                   subdomain = cfg.subdomain;
-                  # middlewares = true;  # Uncomment to enable Authelia protection
+                  middlewares = true;
                   extraLabels = name: {
                     # Override service to use Traefik's internal dashboard API
                     "traefik.http.routers.${name}.service" = "api@internal";
