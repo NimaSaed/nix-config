@@ -11,6 +11,7 @@ let
   toolsCfg = config.services.pods.tools;
   mediaCfg = config.services.pods.media;
   rpCfg = config.services.pods.reverse-proxy;
+  shCfg = config.services.pods.smart-home;
   baseDN = authCfg._baseDN;
 in
 {
@@ -47,7 +48,7 @@ in
           - domain:
               - "${rpCfg.subdomain}.${domain}"
               - "${authCfg.lldap.subdomain}.${domain}"
-              - "scrypted.${domain}"
+              - "${shCfg.scrypted.subdomain}.${domain}"
             policy: two_factor
 
       session:
