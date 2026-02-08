@@ -134,14 +134,14 @@ in
             #   }
             # ])
             #
-            # (lib.optionals mediaCfg.sonarr.enable [
-            #   {
-            #     Sonarr = {
-            #       icon = "sh-sonarr";
-            #       href = "https://${mediaCfg.sonarr.subdomain}.${domain}/";
-            #     };
-            #   }
-            # ])
+            (lib.optionals mediaCfg.sonarr.enable [
+              {
+                Sonarr = {
+                  icon = "sh-sonarr";
+                  href = "https://${mediaCfg.sonarr.subdomain}.${domain}/";
+                };
+              }
+            ])
             #
             # (lib.optionals mediaCfg.radarr.enable [
             #   {

@@ -44,6 +44,10 @@
         enable = true;
         subdomain = "media1";
       };
+      sonarr = {
+        enable = true;
+        subdomain = "sonarr1";
+      };
     };
     auth = {
       authelia = {
