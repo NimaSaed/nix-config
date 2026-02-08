@@ -104,6 +104,15 @@ in
               }
             ])
 
+            (lib.optionals toolsCfg.dozzle.enable [
+              {
+                Dozzle = {
+                  icon = "sh-dozzle";
+                  href = "https://${toolsCfg.dozzle.subdomain}.${domain}/";
+                };
+              }
+            ])
+
             # Future Managed Containers - commented out until pod modules exist
             # TODO: Uncomment when respective pod modules are created
             # (lib.optionals cloudCfg.nextcloud.enable [

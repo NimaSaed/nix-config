@@ -18,7 +18,7 @@ in
     homepage = {
       enable = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = false;
         description = "Enable Homepage dashboard container in the tools pod";
       };
       subdomain = lib.mkOption {
@@ -31,7 +31,7 @@ in
     itTools = {
       enable = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = false;
         description = "Enable IT Tools container in the tools pod";
       };
       subdomain = lib.mkOption {
@@ -44,7 +44,7 @@ in
     dozzle = {
       enable = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = false;
         description = "Enable Dozzle log viewer container in the tools pod";
       };
       subdomain = lib.mkOption {

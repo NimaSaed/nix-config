@@ -16,7 +16,7 @@ in
     scrypted = {
       enable = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = false;
         description = "Enable Scrypted smart home/NVR container in the smart home pod";
       };
       subdomain = lib.mkOption {

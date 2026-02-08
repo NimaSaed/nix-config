@@ -16,7 +16,7 @@ in
     jellyfin = {
       enable = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = false;
         description = "Enable Jellyfin media server container in the media pod";
       };
       subdomain = lib.mkOption {

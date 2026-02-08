@@ -46,7 +46,6 @@
       };
     };
     auth = {
-      enable = true;
       authelia = {
         subdomain = "auth1";
       };

@@ -20,8 +20,6 @@ in
   ];
 
   options.services.pods.auth = {
-    enable = lib.mkEnableOption "Auth pod (Authelia and LLDAP)";
-
     _baseDN = lib.mkOption {
       type = lib.types.str;
       internal = true;
@@ -46,7 +44,7 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = {
     services.pods._enabledPods = [ "auth" ];
 
     assertions = [
