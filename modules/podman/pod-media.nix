@@ -72,7 +72,7 @@ in
             };
             volumes.sonarr = {
               volumeConfig = { };
-            }
+            };
             pods.media = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
@@ -147,7 +147,6 @@ in
                   "${volumes.media.ref}:/media:rw"
                 ];
 
-                podmanArgs = [ "--device=/dev/dri:/dev/dri" ];
               };
             };
           };
