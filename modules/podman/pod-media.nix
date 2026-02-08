@@ -66,8 +66,8 @@ in
             };
             volumes.media = {
               volumeConfig = {
-                Type = "bind";
-                Device = "/data/media";
+                type = "bind";
+                device = "/data/media";
               };
             };
             volumes.sonarr = {
