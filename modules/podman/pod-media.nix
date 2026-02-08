@@ -64,12 +64,7 @@ in
             volumes.jellyfin_cache = {
               volumeConfig = { };
             };
-            volumes.media = {
-              volumeConfig = {
-                type = "bind";
-                device = "/data/media";
-              };
-            };
+
             volumes.sonarr = {
               volumeConfig = { };
             };
@@ -106,7 +101,7 @@ in
                 volumes = [
                   "${volumes.jellyfin_cache.ref}:/cache"
                   "${volumes.jellyfin_config.ref}:/config"
-                  "${volumes.media.ref}:/media:ro"
+                  "/data/media:/media:ro"
                 ];
 
                 devices = [ "/dev/dri:/dev/dri" ];
@@ -145,7 +140,7 @@ in
 
                 volumes = [
                   "${volumes.sonarr.ref}:/config"
-                  "${volumes.media.ref}:/media:rw"
+                  "/data/media:/media:rw"
                 ];
 
               };
