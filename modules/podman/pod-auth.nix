@@ -132,7 +132,7 @@ in
                     # ForwardAuth middleware definition (used by other services via middlewares = true)
                     # Note: middleware name stays "authelia" regardless of container name
                     "traefik.http.middlewares.authelia.forwardauth.address" =
-                      "http://host.docker.internal:9091/api/authz/forward-auth";
+                      "http://auth:9091/api/authz/forward-auth";
                     "traefik.http.middlewares.authelia.forwardauth.trustforwardheader" = "true";
                     "traefik.http.middlewares.authelia.forwardauth.authresponseheaders" =
                       "remote-user,remote-groups,remote-email,remote-name";
