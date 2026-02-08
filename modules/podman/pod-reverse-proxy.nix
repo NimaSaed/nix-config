@@ -12,7 +12,6 @@ let
 in
 {
   options.services.pods.reverse-proxy = {
-    enable = lib.mkEnableOption "Traefik reverse proxy pod";
     subdomain = lib.mkOption {
       type = lib.types.str;
       default = "traefik";
@@ -25,7 +24,7 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = {
     services.pods._enabledPods = [ "reverse-proxy" ];
 
     # Declare secrets this module needs

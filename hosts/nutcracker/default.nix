@@ -15,31 +15,6 @@
   ];
 
   # ============================================================================
-  # Podman Pods - Enable container services for this host
-  # ============================================================================
-  # Pod modules are defined in modules/podman/ with enable options
-  services.pods = {
-    reverse-proxy = {
-      enable = true;
-      useAcmeStaging = true;
-    };
-    tools = {
-      enable = true;
-      homepage.enable = true;
-      itTools.enable = false;
-    };
-    media = {
-      enable = true;
-      jellyfin.enable = true;
-    };
-    #auth = {
-    #  enable = true;
-    #  authelia.enable = true;
-    #  lldap.enable = true;
-    #};
-  };
-
-  # ============================================================================
   # Boot Configuration
   # ============================================================================
 

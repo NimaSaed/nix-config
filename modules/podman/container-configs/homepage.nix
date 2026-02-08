@@ -52,93 +52,124 @@ in
       type = lib.types.package;
       default = yaml.generate "services.yaml" [
         {
-          Services = [
-            {
-              Jellyfin = {
-                icon = "sh-jellyfin";
-                href = "https://${mediaCfg.jellyfin.subdomain}.${domain}/sso/OID/start/authelia";
-                description = "Movies, TV shows and Music";
-              };
-            }
-            {
-              Nextcloud = {
-                icon = "sh-nextcloud";
-                href = "https://cloud.${domain}/";
-                description = "iCloud replacement";
-              };
-            }
-            {
-              lldap = {
-                icon = "sh-lldap-light";
-                href = "https://${authCfg.lldap.subdomain}.${domain}/";
-              };
-            }
-            {
-              "Server 1" = {
-                icon = "sh-fedora";
-                href = "https://srv1.${domain}/";
-              };
-            }
-            {
-              Scrypted = {
-                icon = "sh-scrypted";
-                href = "https://${shCfg.scrypted.subdomain}.${domain}/";
-              };
-            }
-            {
-              "IT Tools" = {
-                icon = "it-tools";
-                href = "https://${toolsCfg.itTools.subdomain}.${domain}/";
-              };
-            }
-            {
-              Authelia = {
-                icon = "sh-authelia";
-                href = "https://${authCfg.authelia.subdomain}.${domain}/";
-              };
-            }
-            {
-              Unifi = {
-                icon = "sh-ubiquiti-unifi";
-                href = "https://unifi.ui.com/";
-              };
-            }
-            {
-              Traefik = {
-                icon = "sh-traefik";
-                href = "https://${rpCfg.subdomain}.${domain}/";
-              };
-            }
-            {
-              Jellyseerr = {
-                icon = "sh-jellyseerr";
-                href = "https://jellyseerr.${domain}";
-              };
-            }
-            {
-              Sonarr = {
-                icon = "sh-sonarr";
-                href = "https://sonarr.${domain}/";
-              };
-            }
-            {
-              Radarr = {
-                icon = "sh-radarr";
-                href = "https://radarr.${domain}/";
-              };
-            }
-            {
-              Nzbget = {
-                icon = "sh-nzbget";
-                href = "https://nzbget.${domain}/";
-              };
-            }
-            {
-              "Change Detection" = {
-                icon = "sh-changedetection";
-                href = "https://changedetection.${domain}/";
-              };
-            }
+          Services = lib.flatten [
+            # Core Infrastructure Services - always enabled
+            [
+              {
+                Traefik = {
+                  icon = "sh-traefik";
+                  href = "https://${rpCfg.subdomain}.${domain}/";
+                };
+              }
+              {
+                Authelia = {
+                  icon = "sh-authelia";
+                  href = "https://${authCfg.authelia.subdomain}.${domain}/";
+                };
+              }
+              {
+                lldap = {
+                  icon = "sh-lldap-light";
+                  href = "https://${authCfg.lldap.subdomain}.${domain}/";
+                };
+              }
+            ]
+
+            # Optional Managed Containers - conditional on enable flags
+            (lib.optionals mediaCfg.jellyfin.enable [
+              {
+                Jellyfin = {
+                  icon = "sh-jellyfin";
+                  href = "https://${mediaCfg.jellyfin.subdomain}.${domain}/sso/OID/start/authelia";
+                  description = "Movies, TV shows and Music";
+                };
+              }
+            ])
+
+            (lib.optionals shCfg.scrypted.enable [
+              {
+                Scrypted = {
+                  icon = "sh-scrypted";
+                  href = "https://${shCfg.scrypted.subdomain}.${domain}/";
+                };
+              }
+            ])
+
+            (lib.optionals toolsCfg.itTools.enable [
+              {
+                "IT Tools" = {
+                  icon = "it-tools";
+                  href = "https://${toolsCfg.itTools.subdomain}.${domain}/";
+                };
+              }
+            ])
+
+            # Future Managed Containers - commented out until pod modules exist
+            # TODO: Uncomment when respective pod modules are created
+            # (lib.optionals cloudCfg.nextcloud.enable [
+            #   {
+            #     Nextcloud = {
+            #       icon = "sh-nextcloud";
+            #       href = "https://${cloudCfg.nextcloud.subdomain}.${domain}/";
+            #       description = "iCloud replacement";
+            #     };
+            #   }
+            # ])
+            #
+            # (lib.optionals mediaCfg.jellyseerr.enable [
+            #   {
+            #     Jellyseerr = {
+            #       icon = "sh-jellyseerr";
+            #       href = "https://${mediaCfg.jellyseerr.subdomain}.${domain}";
+            #     };
+            #   }
+            # ])
+            #
+            # (lib.optionals mediaCfg.sonarr.enable [
+            #   {
+            #     Sonarr = {
+            #       icon = "sh-sonarr";
+            #       href = "https://${mediaCfg.sonarr.subdomain}.${domain}/";
+            #     };
+            #   }
+            # ])
+            #
+            # (lib.optionals mediaCfg.radarr.enable [
+            #   {
+            #     Radarr = {
+            #       icon = "sh-radarr";
+            #       href = "https://${mediaCfg.radarr.subdomain}.${domain}/";
+            #     };
+            #   }
+            # ])
+            #
+            # (lib.optionals mediaCfg.nzbget.enable [
+            #   {
+            #     Nzbget = {
+            #       icon = "sh-nzbget";
+            #       href = "https://${mediaCfg.nzbget.subdomain}.${domain}/";
+            #     };
+            #   }
+            # ])
+            #
+            # (lib.optionals toolsCfg.changeDetection.enable [
+            #   {
+            #     "Change Detection" = {
+            #       icon = "sh-changedetection";
+            #       href = "https://${toolsCfg.changeDetection.subdomain}.${domain}/";
+            #     };
+            #   }
+            # ])
+
+            # Truly External Services - always included
+            [
+              {
+                Unifi = {
+                  icon = "sh-ubiquiti-unifi";
+                  href = "https://unifi.ui.com/";
+                };
+              }
+            ]
           ];
         }
       ];

@@ -60,8 +60,8 @@ in
 
     assertions = [
       {
-        assertion = config.services.pods.reverse-proxy.enable;
-        message = "services.pods.tools requires services.pods.reverse-proxy to be enabled (for the reverse_proxy network)";
+        assertion = builtins.elem "reverse-proxy" config.services.pods._enabledPods;
+        message = "services.pods.tools requires Traefik (reverse-proxy) to be configured";
       }
     ];
 

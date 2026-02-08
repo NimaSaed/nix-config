@@ -23,7 +23,6 @@
   services.pods = {
     domain = "nmsd.xyz";
     reverse-proxy = {
-      enable = true;
       subdomain = "traefik1";
       useAcmeStaging = true;
     };
@@ -49,11 +48,9 @@
     auth = {
       enable = true;
       authelia = {
-        enable = true;
         subdomain = "auth1";
       };
       lldap = {
-        enable = true;
         subdomain = "lldap1";
       };
     };

@@ -30,11 +30,6 @@ in
     };
 
     authelia = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable Authelia authentication server in the auth pod";
-      };
       subdomain = lib.mkOption {
         type = lib.types.str;
         default = "authelia";
@@ -43,11 +38,6 @@ in
     };
 
     lldap = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable LLDAP directory server in the auth pod";
-      };
       subdomain = lib.mkOption {
         type = lib.types.str;
         default = "lldap";
@@ -61,8 +51,8 @@ in
 
     assertions = [
       {
-        assertion = config.services.pods.reverse-proxy.enable;
-        message = "services.pods.auth requires services.pods.reverse-proxy to be enabled (for the reverse_proxy network)";
+        assertion = builtins.elem "reverse-proxy" config.services.pods._enabledPods;
+        message = "services.pods.auth requires Traefik (reverse-proxy) to be configured";
       }
     ];
 
@@ -106,7 +96,7 @@ in
               };
             };
 
-            containers.authelia = lib.mkIf cfg.authelia.enable {
+            containers.authelia = {
               autoStart = true;
 
               serviceConfig = {
@@ -164,7 +154,7 @@ in
               };
             };
 
-            containers.lldap = lib.mkIf cfg.lldap.enable {
+            containers.lldap = {
               autoStart = true;
 
               serviceConfig = {
