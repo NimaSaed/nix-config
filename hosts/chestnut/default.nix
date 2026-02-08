@@ -24,18 +24,11 @@
     domain = "nmsd.xyz";
     reverse-proxy = {
       subdomain = "traefik1";
-      useAcmeStaging = true;
     };
     tools = {
       enable = true;
-      homepage = {
-        enable = true;
-        subdomain = "home1";
-      };
-      itTools = {
-        enable = true;
-        subdomain = "tools1";
-      };
+      homepage.enable = true;
+      itTools.enable = true;
       dozzle.enable = true;
     };
     media = {
@@ -47,14 +40,6 @@
       sonarr = {
         enable = true;
         subdomain = "sonarr1";
-      };
-    };
-    auth = {
-      authelia = {
-        subdomain = "auth1";
-      };
-      lldap = {
-        subdomain = "lldap1";
       };
     };
   };

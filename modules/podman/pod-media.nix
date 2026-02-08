@@ -109,7 +109,8 @@ in
                   "${volumes.media.ref}:/media:ro"
                 ];
 
-                podmanArgs = [ "--device=/dev/dri:/dev/dri" ];
+                devices = [ "/dev/dri:/dev/dri" ];
+                addGroups = [ "keep-groups" ];
               };
             };
             containers.sonarr = lib.mkIf cfg.sonarr.enable {

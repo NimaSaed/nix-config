@@ -34,5 +34,13 @@
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-media-driver # VAAPI driver for Intel Broadwell+ (iHD)
+      intel-compute-runtime # OpenCL for HDR tone-mapping
+    ];
+  };
+
   # Note: mdadm/swraid not needed - using ZFS mirrors
 }

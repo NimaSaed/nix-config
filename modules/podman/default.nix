@@ -9,6 +9,7 @@
 let
   cfg = config.services.pods;
   poddyUid = 1001;
+  poddyGid = 1001;
   poddyUidStr = toString poddyUid;
   # Local storage for Podman state (images, DB) - must be local for SQLite locking
   poddyLocalRoot = "/var/lib/poddy";
@@ -114,11 +115,11 @@ in
       uid = poddyUid;
       linger = true;
       shell = "${pkgs.shadow}/bin/nologin";
-      extraGroups = [ "podman" ];
+      extraGroups = [ "podman" "render" "video" ];
       autoSubUidGidRange = true;
     };
 
-    users.groups.poddy = { };
+    users.groups.poddy = { gid = poddyGid; };
 
     home-manager.users.poddy =
       { pkgs, config, ... }:
