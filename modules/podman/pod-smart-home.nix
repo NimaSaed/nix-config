@@ -79,6 +79,12 @@ in
                   scheme = "https";
                   subdomain = cfg.scrypted.subdomain;
                   middlewares = true;
+                  extraLabels = name: {
+                    "traefik.tcp.routers.${name}-homekit.entrypoints" = "scryptedhomekit";
+                    "traefik.tcp.routers.${name}-homekit.rule" = "HostSNI(`*`)";
+                    "traefik.tcp.routers.${name}-homekit.service" = "${name}-homekit";
+                    "traefik.tcp.services.${name}-homekit.loadbalancer.server.port" = "45888";
+                  };
                 };
 
                 volumes = [
