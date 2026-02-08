@@ -46,6 +46,13 @@
         subdomain = "media1";
       };
     };
+    smart-home = {
+      enable = true;
+      scrypted = {
+        enable = true;
+        subdomain = "scrypted1";
+      };
+    };
     auth = {
       enable = true;
       authelia = {

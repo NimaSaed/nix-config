@@ -60,6 +60,7 @@ in
     ./pod-tools.nix
     ./pod-media.nix
     ./pod-auth.nix
+    ./pod-smart-home.nix
   ];
 
   options.services.pods = {

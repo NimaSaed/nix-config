@@ -12,6 +12,7 @@ let
   toolsCfg = config.services.pods.tools;
   mediaCfg = config.services.pods.media;
   rpCfg = config.services.pods.reverse-proxy;
+  shCfg = config.services.pods.smart-home;
 in
 {
   options.services.pods.homepage = {
@@ -81,7 +82,7 @@ in
             {
               Scrypted = {
                 icon = "sh-scrypted";
-                href = "https://scrypted.${domain}/";
+                href = "https://${shCfg.scrypted.subdomain}.${domain}/";
               };
             }
             {
