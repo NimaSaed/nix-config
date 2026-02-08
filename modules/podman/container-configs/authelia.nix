@@ -84,7 +84,7 @@ in
       authentication_backend:
         ldap:
           implementation: lldap
-          address: "ldaps://auth:636"
+          address: "ldaps://auth:3890"
           tls:
             skip_verify: true
           base_dn: "${baseDN}"
