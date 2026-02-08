@@ -228,9 +228,11 @@
 
   # Create /data directory structure
   # /data owned by root:samby with setgid (2775) so Samba can write via samby group
-  # Subdirectories can have different owners
+  # Subdirectories can have different owners based on access requirements
   systemd.tmpfiles.rules = [
     "d /data 2775 root samby - -"
+    "d /data/media 2775 root poddy - -"       # Shared between nima and containers
+    "d /data/backups 2775 root samby - -"     # Samba-accessible backups
   ];
 
   # ============================================================================
