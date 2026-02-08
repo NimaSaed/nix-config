@@ -180,6 +180,7 @@ in
                   "/data/media:/media:rw"
                 ];
 
+                addGroups = [ "keep-groups" ];
               };
             };
 
@@ -218,6 +219,7 @@ in
                   "/data/media:/media:rw"
                 ];
 
+                addGroups = [ "keep-groups" ];
               };
             };
 
@@ -259,6 +261,7 @@ in
                   "/data/media:/media:rw"
                 ];
 
+                addGroups = [ "keep-groups" ];
               };
             };
           };
