@@ -8,9 +8,7 @@
 let
   cfg = config.services.pods.auth;
   nixosConfig = config;
-  # Alternative: inherit (config.services.pods) domain mkTraefikLabels;
-  domain = config.services.pods.domain;
-  mkTraefikLabels = config.services.pods.mkTraefikLabels;
+  inherit (config.services.pods) domain mkTraefikLabels;
   # Convert "example.com" to "dc=example,dc=com" for LDAP Base DN
   domainToBaseDN = d: lib.concatStringsSep "," (map (part: "dc=${part}") (lib.splitString "." d));
   baseDN = domainToBaseDN domain;
@@ -23,6 +21,13 @@ in
 
   options.services.pods.auth = {
     enable = lib.mkEnableOption "Auth pod (Authelia and LLDAP)";
+
+    _baseDN = lib.mkOption {
+      type = lib.types.str;
+      internal = true;
+      default = baseDN;
+      description = "LDAP Base DN derived from domain (e.g., dc=example,dc=com)";
+    };
 
     authelia = {
       enable = lib.mkOption {
@@ -62,64 +67,22 @@ in
     ];
 
     # Declare secrets this module needs
-    sops.secrets = {
-      "authelia/smtp_password" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "authelia/authelia_jwt_secret" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "authelia/authelia_session_secret" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "authelia/authelia_storage_encryption_key" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "authelia/authelia_oidc_hmac_secret" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "authelia/oidc_jwks_private_key" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "authelia/oidc_jwks_certificate_chain" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "authelia/oidc_client_secret_nextcloud" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "authelia/oidc_client_secret_jellyfin" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "authelia/smtp_address" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "authelia/smtp_username" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "ldap/lldap_ldap_user_pass" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "ldap/lldap_key_seed" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "ldap/lldap_jwt_secret" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-    };
+    sops.secrets = lib.genAttrs [
+      "authelia/smtp_password"
+      "authelia/authelia_jwt_secret"
+      "authelia/authelia_session_secret"
+      "authelia/authelia_storage_encryption_key"
+      "authelia/authelia_oidc_hmac_secret"
+      "authelia/oidc_jwks_private_key"
+      "authelia/oidc_jwks_certificate_chain"
+      "authelia/oidc_client_secret_nextcloud"
+      "authelia/oidc_client_secret_jellyfin"
+      "authelia/smtp_address"
+      "authelia/smtp_username"
+      "ldap/lldap_ldap_user_pass"
+      "ldap/lldap_key_seed"
+      "ldap/lldap_jwt_secret"
+    ] (_: { owner = "poddy"; group = "poddy"; });
 
     home-manager.users.poddy =
       { pkgs, config, ... }:
@@ -153,7 +116,7 @@ in
 
               unitConfig = {
                 Description = "Authelia authentication server container";
-                After = [ "auth-pod.service" ];
+                After = [ pods.auth.ref ];
               };
 
               containerConfig = {
@@ -211,7 +174,7 @@ in
 
               unitConfig = {
                 Description = "LLDAP directory server container";
-                After = [ "auth-pod.service" ];
+                After = [ pods.auth.ref ];
               };
 
               containerConfig = {

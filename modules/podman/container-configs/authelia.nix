@@ -6,15 +6,12 @@
 }:
 
 let
-  domain = config.services.pods.domain;
+  inherit (config.services.pods) domain;
   authCfg = config.services.pods.auth;
   toolsCfg = config.services.pods.tools;
   mediaCfg = config.services.pods.media;
   rpCfg = config.services.pods.reverse-proxy;
-
-  # Convert "example.com" to "dc=example,dc=com" for LDAP Base DN
-  domainToBaseDN = d: lib.concatStringsSep "," (map (part: "dc=${part}") (lib.splitString "." d));
-  baseDN = domainToBaseDN domain;
+  baseDN = authCfg._baseDN;
 in
 {
   options.services.pods.auth.authelia.configFile = lib.mkOption {

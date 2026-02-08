@@ -1,0 +1,28 @@
+# Nix build outputs (nix-build / nix build)
+result
+result-*
+
+# direnv
+.direnv
+
+# Vim swap files
+[._]*.s[a-v][a-z]
+!*.svg
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# Vim session
+Session.vim
+Sessionx.vim
+
+# Vim temporary
+.netrwhist
+*~
+
+# Vim tags
+tags
+
+# Vim persistent undo
+[._]*.un~

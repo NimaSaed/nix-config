@@ -7,10 +7,7 @@
 
 let
   cfg = config.services.pods.reverse-proxy;
-  # Alternative: inherit (config.services.pods) domain mkTraefikLabels;
-  domain = config.services.pods.domain;
-  mkTraefikLabels = config.services.pods.mkTraefikLabels;
-  # Capture NixOS config for use inside Home Manager where 'config' refers to HM config
+  inherit (config.services.pods) domain mkTraefikLabels;
   nixosConfig = config;
 in
 {
@@ -32,20 +29,11 @@ in
     services.pods._enabledPods = [ "reverse-proxy" ];
 
     # Declare secrets this module needs
-    sops.secrets = {
-      "reverse-proxy/namecheap_email" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "reverse-proxy/namecheap_api_user" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-      "reverse-proxy/namecheap_api_key" = {
-        owner = "poddy";
-        group = "poddy";
-      };
-    };
+    sops.secrets = lib.genAttrs [
+      "reverse-proxy/namecheap_email"
+      "reverse-proxy/namecheap_api_user"
+      "reverse-proxy/namecheap_api_key"
+    ] (_: { owner = "poddy"; group = "poddy"; });
 
     networking.firewall = {
       allowedTCPPorts = [
@@ -94,7 +82,7 @@ in
 
               unitConfig = {
                 Description = "Traefik reverse proxy container";
-                After = [ "reverse_proxy-pod.service" ];
+                After = [ pods.reverse_proxy.ref ];
               };
 
               containerConfig = {
@@ -122,7 +110,7 @@ in
                 environmentFiles = [ secretsPath ];
 
                 environments = {
-                  TRAEFIK_LOG_LEVEL = "DEBUG";
+                  TRAEFIK_LOG_LEVEL = "INFO";
                   TRAEFIK_PROVIDERS_DOCKER = "true";
                   TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT = "false";
                   TRAEFIK_API = "true";

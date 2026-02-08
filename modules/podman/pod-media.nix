@@ -7,9 +7,7 @@
 
 let
   cfg = config.services.pods.media;
-  # Alternative: inherit (config.services.pods) domain mkTraefikLabels;
-  domain = config.services.pods.domain;
-  mkTraefikLabels = config.services.pods.mkTraefikLabels;
+  inherit (config.services.pods) domain mkTraefikLabels;
 in
 {
   options.services.pods.media = {
@@ -72,7 +70,7 @@ in
 
               unitConfig = {
                 Description = "Jellyfin media server container";
-                After = [ "media-pod.service" ];
+                After = [ pods.media.ref ];
               };
 
               containerConfig = {

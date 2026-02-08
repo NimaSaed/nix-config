@@ -8,9 +8,7 @@
 let
   cfg = config.services.pods.tools;
   homepageCfg = config.services.pods.homepage;
-  # Alternative: inherit (config.services.pods) domain mkTraefikLabels;
-  domain = config.services.pods.domain;
-  mkTraefikLabels = config.services.pods.mkTraefikLabels;
+  inherit (config.services.pods) domain mkTraefikLabels;
 in
 {
   imports = [ ./container-configs/homepage.nix ];
@@ -91,12 +89,11 @@ in
 
               unitConfig = {
                 Description = "Homepage dashboard container";
-                After = [ "tools-pod.service" ];
+                After = [ pods.tools.ref ];
               };
 
               containerConfig = {
-                # Pinned to v1.7.0 - v1.8.0 has SyntaxError bug on icon requests
-                image = "ghcr.io/gethomepage/homepage:v1.9.0";
+                image = "ghcr.io/gethomepage/homepage:latest";
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
 
@@ -107,7 +104,7 @@ in
                 };
 
                 environments = {
-                  HOMEPAGE_ALLOWED_HOSTS = "*";
+                  HOMEPAGE_ALLOWED_HOSTS = "${cfg.homepage.subdomain}.${domain}";
                 };
 
                 volumes = [
@@ -136,7 +133,7 @@ in
 
               unitConfig = {
                 Description = "IT Tools container";
-                After = [ "tools-pod.service" ];
+                After = [ pods.tools.ref ];
               };
 
               containerConfig = {
@@ -163,7 +160,7 @@ in
 
               unitConfig = {
                 Description = "Dozzle log viewer container";
-                After = [ "tools-pod.service" ];
+                After = [ pods.tools.ref ];
               };
 
               containerConfig = {
