@@ -15,6 +15,7 @@ in
     extraGroups = ifTheyExist [
       "wheel"
       "networkmanager"
+      "samby"
     ];
 
     openssh.authorizedKeys.keys = lib.splitString "\n" (
