@@ -104,7 +104,7 @@ in
                 };
 
                 environments = {
-                  HOMEPAGE_ALLOWED_HOSTS = "${cfg.homepage.subdomain}.${domain}";
+                  HOMEPAGE_ALLOWED_HOSTS = "${cfg.homepage.subdomain}.${domain},tools:3000";
                 };
 
                 volumes = [
