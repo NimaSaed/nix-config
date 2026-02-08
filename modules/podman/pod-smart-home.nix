@@ -87,6 +87,10 @@ in
                   };
                 };
 
+                environments = {
+                  SCRYPTED_DEFAULT_AUTHENTICATION = "nima";
+                };
+
                 volumes = [
                   "${volumes.scrypted_data.ref}:/server/volume"
                 ];
