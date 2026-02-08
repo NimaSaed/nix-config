@@ -142,15 +142,15 @@ in
                 };
               }
             ])
-            #
-            # (lib.optionals mediaCfg.radarr.enable [
-            #   {
-            #     Radarr = {
-            #       icon = "sh-radarr";
-            #       href = "https://${mediaCfg.radarr.subdomain}.${domain}/";
-            #     };
-            #   }
-            # ])
+
+            (lib.optionals mediaCfg.radarr.enable [
+              {
+                Radarr = {
+                  icon = "sh-radarr";
+                  href = "https://${mediaCfg.radarr.subdomain}.${domain}/";
+                };
+              }
+            ])
             #
             # (lib.optionals mediaCfg.nzbget.enable [
             #   {

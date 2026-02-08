@@ -37,10 +37,8 @@
         enable = true;
         subdomain = "media1";
       };
-      sonarr = {
-        enable = true;
-        subdomain = "sonarr1";
-      };
+      sonarr.enable = true;
+      radarr.enable = true;
     };
   };
 

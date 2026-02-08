@@ -38,6 +38,19 @@ in
         description = "Subdomain for sonarr (e.g., sonarr -> sonarr.domain)";
       };
     };
+
+    radarr = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Enable radarr container in the media pod";
+      };
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "radarr";
+        description = "Subdomain for radarr (e.g., radarr -> radarr.domain)";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -68,6 +81,11 @@ in
             volumes.sonarr = {
               volumeConfig = { };
             };
+
+            volumes.radarr = {
+              volumeConfig = { };
+            };
+
             pods.media = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
@@ -140,6 +158,44 @@ in
 
                 volumes = [
                   "${volumes.sonarr.ref}:/config"
+                  "/data/media:/media:rw"
+                ];
+
+              };
+            };
+
+            containers.radarr = lib.mkIf cfg.radarr.enable {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "Radarr container";
+                After = [ pods.media.ref ];
+              };
+
+              containerConfig = {
+                image = "lscr.io/linuxserver/radarr:latest";
+                pod = pods.media.ref;
+                autoUpdate = "registry";
+
+                labels = mkTraefikLabels {
+                  name = "radarr";
+                  port = 7878;
+                  subdomain = cfg.radarr.subdomain;
+                };
+
+                environments = {
+                  TZ = "Europe/Amsterdam";
+                  PUID = "1001";
+                  PGID = "1001";
+                };
+
+                volumes = [
+                  "${volumes.radarr.ref}:/config"
                   "/data/media:/media:rw"
                 ];
 
