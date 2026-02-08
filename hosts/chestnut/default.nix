@@ -33,7 +33,10 @@
     };
     media = {
       enable = true;
-      jellyfin.enable = true;
+      jellyfin = {
+        enable = true;
+        subdomain = "media";
+      };
       sonarr.enable = true;
       radarr.enable = true;
       nzbget.enable = true;
