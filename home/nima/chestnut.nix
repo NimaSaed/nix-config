@@ -14,8 +14,9 @@
   # Chestnut-specific packages
   home.packages = with pkgs; [
     # Add chestnut-specific tools here
+    zip
+    unzip
     tmux
-    screen
   ];
 
   # Chestnut-specific program configurations
