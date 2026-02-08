@@ -65,6 +65,19 @@ in
         description = "Subdomain for nzbget (e.g., nzbget -> nzbget.domain)";
       };
     };
+
+    jellyseerr = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Enable jellyseerr container in the media pod";
+      };
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "jellyseerr";
+        description = "Subdomain for jellyseerr (e.g., jellyseerr -> jellyseerr.domain)";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -102,6 +115,10 @@ in
             };
 
             volumes.nzbget = {
+              volumeConfig = { };
+            };
+
+            volumes.jellyseerr = {
               volumeConfig = { };
             };
 
@@ -262,6 +279,41 @@ in
                 ];
 
                 addGroups = [ "keep-groups" ];
+              };
+            };
+
+            containers.jellyseerr = lib.mkIf cfg.jellyseerr.enable {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "Jellyseerr container";
+                After = [ pods.media.ref ];
+              };
+
+              containerConfig = {
+                image = "docker.io/fallenbagel/jellyseerr:latest";
+                pod = pods.media.ref;
+                autoUpdate = "registry";
+
+                labels = mkTraefikLabels {
+                  name = "jellyseerr";
+                  port = 5055;
+                  subdomain = cfg.jellyseerr.subdomain;
+                };
+
+                environments = {
+                  TZ = "Europe/Amsterdam";
+                  LOG_LEVEL = "debug";
+                };
+
+                volumes = [
+                  "${volumes.jellyseerr.ref}:/app/config"
+                ];
               };
             };
           };

@@ -40,6 +40,7 @@
       sonarr.enable = true;
       radarr.enable = true;
       nzbget.enable = true;
+      jellyseerr.enable = true;
     };
   };
 

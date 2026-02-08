@@ -125,15 +125,15 @@ in
             #   }
             # ])
             #
-            # (lib.optionals mediaCfg.jellyseerr.enable [
-            #   {
-            #     Jellyseerr = {
-            #       icon = "sh-jellyseerr";
-            #       href = "https://${mediaCfg.jellyseerr.subdomain}.${domain}";
-            #     };
-            #   }
-            # ])
-            #
+            (lib.optionals mediaCfg.jellyseerr.enable [
+              {
+                Jellyseerr = {
+                  icon = "sh-jellyseerr";
+                  href = "https://${mediaCfg.jellyseerr.subdomain}.${domain}";
+                };
+              }
+            ])
+
             (lib.optionals mediaCfg.sonarr.enable [
               {
                 Sonarr = {
