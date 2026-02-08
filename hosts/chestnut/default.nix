@@ -39,6 +39,7 @@
       };
       sonarr.enable = true;
       radarr.enable = true;
+      nzbget.enable = true;
     };
   };
 

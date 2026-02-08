@@ -151,15 +151,15 @@ in
                 };
               }
             ])
-            #
-            # (lib.optionals mediaCfg.nzbget.enable [
-            #   {
-            #     Nzbget = {
-            #       icon = "sh-nzbget";
-            #       href = "https://${mediaCfg.nzbget.subdomain}.${domain}/";
-            #     };
-            #   }
-            # ])
+
+            (lib.optionals mediaCfg.nzbget.enable [
+              {
+                Nzbget = {
+                  icon = "sh-nzbget";
+                  href = "https://${mediaCfg.nzbget.subdomain}.${domain}/";
+                };
+              }
+            ])
             #
             # (lib.optionals toolsCfg.changeDetection.enable [
             #   {

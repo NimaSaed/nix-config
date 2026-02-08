@@ -7,6 +7,7 @@
 
 let
   cfg = config.services.pods.media;
+  nixosConfig = config;
   inherit (config.services.pods) domain mkTraefikLabels;
 in
 {
@@ -51,6 +52,19 @@ in
         description = "Subdomain for radarr (e.g., radarr -> radarr.domain)";
       };
     };
+
+    nzbget = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Enable nzbget container in the media pod";
+      };
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "nzbget";
+        description = "Subdomain for nzbget (e.g., nzbget -> nzbget.domain)";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -68,6 +82,7 @@ in
       {
         virtualisation.quadlet =
           let
+            nzbgetSecretsPath = nixosConfig.sops.templates."nzbget-secrets".path;
             inherit (config.virtualisation.quadlet) networks pods volumes;
           in
           {
@@ -83,6 +98,10 @@ in
             };
 
             volumes.radarr = {
+              volumeConfig = { };
+            };
+
+            volumes.nzbget = {
               volumeConfig = { };
             };
 
@@ -201,7 +220,65 @@ in
 
               };
             };
+
+            containers.nzbget = lib.mkIf cfg.nzbget.enable {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "NZBGet container";
+                After = [ pods.media.ref ];
+              };
+
+              containerConfig = {
+                image = "lscr.io/linuxserver/nzbget:latest";
+                pod = pods.media.ref;
+                autoUpdate = "registry";
+
+                labels = mkTraefikLabels {
+                  name = "nzbget";
+                  port = 6789;
+                  subdomain = cfg.nzbget.subdomain;
+                };
+
+                environments = {
+                  TZ = "Europe/Amsterdam";
+                  PUID = "1001";
+                  PGID = "1001";
+                  NZBGET_USER = "nzbget";
+                };
+
+                environmentFiles = [ nzbgetSecretsPath ];
+
+                volumes = [
+                  "${volumes.nzbget.ref}:/config"
+                  "/data/media:/media:rw"
+                ];
+
+              };
+            };
           };
       };
+
+    # NZBGet secrets - password for web UI authentication
+    sops.secrets = lib.genAttrs [
+      "nzbget_password"
+    ] (_: {
+      owner = "poddy";
+      group = "poddy";
+    });
+
+    sops.templates."nzbget-secrets" = {
+      content = ''
+        NZBGET_PASS=${config.sops.placeholder."nzbget_password"}
+      '';
+      owner = "poddy";
+      group = "poddy";
+      mode = "0400";
+    };
   };
 }
