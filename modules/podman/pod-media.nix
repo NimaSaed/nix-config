@@ -104,7 +104,6 @@ in
             nzbgetInitScript = pkgs.writeShellScript "01-deploy-config" ''
               echo "[nix-init] Deploying declarative nzbget.conf..."
               cp /defaults/nzbget.conf /config/nzbget.conf
-              chown abc:abc /config/nzbget.conf
               chmod 644 /config/nzbget.conf
               echo "[nix-init] nzbget.conf deployed successfully"
             '';
@@ -200,8 +199,6 @@ in
 
                 environments = {
                   TZ = "Europe/Amsterdam";
-                  PUID = "1001";
-                  PGID = "1001";
                 };
 
                 volumes = [
@@ -237,8 +234,6 @@ in
 
                 environments = {
                   TZ = "Europe/Amsterdam";
-                  PUID = "1001";
-                  PGID = "1001";
                 };
 
                 volumes = [
@@ -274,8 +269,6 @@ in
 
                 environments = {
                   TZ = "Europe/Amsterdam";
-                  PUID = "1001";
-                  PGID = "1001";
                 };
 
                 environmentFiles = [ nzbgetSecretsPath ];
