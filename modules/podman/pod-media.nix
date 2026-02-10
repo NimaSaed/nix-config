@@ -201,7 +201,6 @@ in
                 environments = {
                   TZ = "Europe/Amsterdam";
                   PUID = "1001";
-                  PGID = "1001";
                 };
 
                 volumes = [
@@ -240,7 +239,6 @@ in
                 environments = {
                   TZ = "Europe/Amsterdam";
                   PUID = "1001";
-                  PGID = "1001";
                 };
 
                 volumes = [
@@ -279,7 +277,6 @@ in
                 environments = {
                   TZ = "Europe/Amsterdam";
                   PUID = "1001";
-                  PGID = "1001";
                 };
 
                 environmentFiles = [ nzbgetSecretsPath ];
