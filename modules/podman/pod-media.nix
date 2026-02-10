@@ -11,6 +11,10 @@ let
   inherit (config.services.pods) domain mkTraefikLabels;
 in
 {
+  imports = [
+    ./container-configs/nzbget.nix
+  ];
+
   options.services.pods.media = {
     enable = lib.mkEnableOption "Media pod (Jellyfin and related services)";
 
@@ -96,6 +100,14 @@ in
         virtualisation.quadlet =
           let
             nzbgetSecretsPath = nixosConfig.sops.templates."nzbget-secrets".path;
+            nzbgetConfigPath = nixosConfig.sops.templates."nzbget.conf".path;
+            nzbgetInitScript = pkgs.writeShellScript "01-deploy-config" ''
+              echo "[nix-init] Deploying declarative nzbget.conf..."
+              cp /defaults/nzbget.conf /config/nzbget.conf
+              chown abc:abc /config/nzbget.conf
+              chmod 644 /config/nzbget.conf
+              echo "[nix-init] nzbget.conf deployed successfully"
+            '';
             inherit (config.virtualisation.quadlet) networks pods volumes;
           in
           {
@@ -268,13 +280,14 @@ in
                   TZ = "Europe/Amsterdam";
                   PUID = "1001";
                   PGID = "1001";
-                  NZBGET_USER = "nzbget";
                 };
 
                 environmentFiles = [ nzbgetSecretsPath ];
 
                 volumes = [
                   "${volumes.nzbget.ref}:/config"
+                  "${nzbgetConfigPath}:/defaults/nzbget.conf:ro"
+                  "${nzbgetInitScript}:/custom-cont-init.d/01-deploy-config:ro"
                   "/data/media:/media:rw"
                 ];
 
@@ -321,10 +334,11 @@ in
 
     # NZBGet secrets - password for web UI and news server credentials
     sops.secrets = lib.genAttrs [
-      "nzbget_password"
-      "nzbget_server_host"
-      "nzbget_server_username"
-      "nzbget_server_password"
+      "nzbget/username"
+      "nzbget/password"
+      "nzbget/server_host"
+      "nzbget/server_username"
+      "nzbget/server_password"
     ] (_: {
       owner = "poddy";
       group = "poddy";
@@ -332,64 +346,16 @@ in
 
     sops.templates."nzbget-secrets" = {
       content = ''
-        # Authentication (linuxserver.io specific)
-        NZBGET_USER=nzbget
-        NZBGET_PASS=${config.sops.placeholder."nzbget_password"}
-
-        # News Server Configuration (NZBOP_ prefix for NZBGet options)
-        NZBOP_SERVER1_ACTIVE=yes
-        NZBOP_SERVER1_NAME=eweka
-        NZBOP_SERVER1_LEVEL=0
-        NZBOP_SERVER1_HOST=${config.sops.placeholder."nzbget_server_host"}
-        NZBOP_SERVER1_ENCRYPTION=yes
-        NZBOP_SERVER1_PORT=563
-        NZBOP_SERVER1_USERNAME=${config.sops.placeholder."nzbget_server_username"}
-        NZBOP_SERVER1_PASSWORD=${config.sops.placeholder."nzbget_server_password"}
-        NZBOP_SERVER1_CONNECTIONS=8
-        NZBOP_SERVER1_RETENTION=0
-
-        # Paths
-        NZBOP_MAINDIR=/config
-        NZBOP_DESTDIR=/media/downloads/completed
-        NZBOP_INTERDIR=/media/downloads/intermediate
-
-        # Control Settings
-        NZBOP_CONTROLIP=0.0.0.0
-        NZBOP_CONTROLPORT=6789
-        NZBOP_CONTROLUSERNAME=nzbget
-        NZBOP_CONTROLPASSWORD=
-        NZBOP_FORMAUTH=yes
-
-        # Performance
-        NZBOP_ARTICLECACHE=500
-        NZBOP_DIRECTWRITE=yes
-        NZBOP_WRITEBUFFER=1024
-
-        # Categories
-        NZBOP_CATEGORY1_NAME=Movies
-        NZBOP_CATEGORY1_DESTDIR=
-        NZBOP_CATEGORY2_NAME=Shows
-        NZBOP_CATEGORY2_DESTDIR=
-        NZBOP_CATEGORY3_NAME=Music
-        NZBOP_CATEGORY3_DESTDIR=
-        NZBOP_CATEGORY4_NAME=Software
-        NZBOP_CATEGORY4_DESTDIR=
-
-        # Download Queue Settings
-        NZBOP_ARTICLERETRIES=3
-        NZBOP_POSTSTRATEGY=balanced
-        NZBOP_KEEPHISTORY=30
-
-        # Check and Repair
-        NZBOP_PARCHECK=auto
-        NZBOP_PARREPAIR=yes
-        NZBOP_PARSCAN=extended
-        NZBOP_HEALTHCHECK=park
-
-        # Unpack
-        NZBOP_UNPACK=yes
-        NZBOP_UNPACKCLEANUPDISK=yes
+        NZBGET_USER=${config.sops.placeholder."nzbget/username"}
+        NZBGET_PASS=${config.sops.placeholder."nzbget/password"}
       '';
+      owner = "poddy";
+      group = "poddy";
+      mode = "0400";
+    };
+
+    sops.templates."nzbget.conf" = {
+      content = cfg.nzbget.configContent;
       owner = "poddy";
       group = "poddy";
       mode = "0400";
