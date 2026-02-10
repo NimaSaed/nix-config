@@ -36,7 +36,7 @@ in
           idle: '120s'
 
       log:
-        level: debug
+        level: info
 
       totp:
         issuer: "${authCfg.authelia.subdomain}.${domain}"
