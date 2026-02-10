@@ -101,6 +101,7 @@ in
                   name = "homepage";
                   port = 3000;
                   subdomain = cfg.homepage.subdomain;
+                  middlewares = true;
                 };
 
                 environments = {
@@ -145,7 +146,6 @@ in
                   name = "it-tools";
                   port = 80;
                   subdomain = cfg.itTools.subdomain;
-                  # middlewares = true;  # Uncomment to enable Authelia protection
                 };
               };
             };
@@ -172,6 +172,7 @@ in
                   name = "dozzle";
                   port = 8080;
                   subdomain = cfg.dozzle.subdomain;
+                  middlewares = true;
                 };
 
                 environments = {

@@ -51,9 +51,14 @@ in
           - domain:
               - "${toolsCfg.homepage.subdomain}.${domain}"
               - "changedetection.${domain}"
+              - "${mediaCfg.sonarr.subdomain}.${domain}"
+              - "${mediaCfg.radarr.subdomain}.${domain}"
+              - "${mediaCfg.nzbget.subdomain}.${domain}"
+              - "${mediaCfg.jellyseerr.subdomain}.${domain}"
             policy: one_factor
           - domain:
               - "${rpCfg.subdomain}.${domain}"
+              - "${toolsCfg.dozzle.subdomain}.${domain}"
               - "${authCfg.lldap.subdomain}.${domain}"
               - "${shCfg.scrypted.subdomain}.${domain}"
             policy: two_factor

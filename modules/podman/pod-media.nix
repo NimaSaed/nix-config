@@ -196,6 +196,7 @@ in
                   name = "sonarr";
                   port = 8989;
                   subdomain = cfg.sonarr.subdomain;
+                  middlewares = true;
                 };
 
                 environments = {
@@ -231,6 +232,7 @@ in
                   name = "radarr";
                   port = 7878;
                   subdomain = cfg.radarr.subdomain;
+                  middlewares = true;
                 };
 
                 environments = {
@@ -266,6 +268,7 @@ in
                   name = "nzbget";
                   port = 6789;
                   subdomain = cfg.nzbget.subdomain;
+                  middlewares = true;
                 };
 
                 environments = {
@@ -305,6 +308,7 @@ in
                   name = "jellyseerr";
                   port = 5055;
                   subdomain = cfg.jellyseerr.subdomain;
+                  middlewares = true;
                 };
 
                 environments = {
