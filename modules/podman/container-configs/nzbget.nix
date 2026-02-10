@@ -21,8 +21,8 @@ in
         ##############################################################################
         ### PATHS
         MainDir=/config
-        DestDir=''${MainDir}/downloads/completed
-        InterDir=''${MainDir}/downloads/intermediate
+        DestDir=/media/downloads/completed
+        InterDir=/media/downloads/intermediate
         NzbDir=''${MainDir}/nzb
         QueueDir=''${MainDir}/queue
         TempDir=''${MainDir}/tmp
@@ -75,13 +75,13 @@ in
         ##############################################################################
         ### CATEGORIES
         Category1.Name=Movies
-        Category1.DestDir=''${MainDir}/downloads/completed/Movies
+        Category1.DestDir=
         Category1.Unpack=yes
         Category1.Extensions=
         Category1.Aliases=
 
         Category2.Name=Shows
-        Category2.DestDir=''${MainDir}/downloads/completed/Shows
+        Category2.DestDir=
         Category2.Unpack=yes
         Category2.Extensions=
         Category2.Aliases=
