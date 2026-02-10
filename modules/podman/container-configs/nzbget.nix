@@ -21,8 +21,8 @@ in
         ##############################################################################
         ### PATHS
         MainDir=/config
-        DestDir=/media/downloads/completed
-        InterDir=/media/downloads/intermediate
+        DestDir=''${MainDir}/completed
+        InterDir=''${MainDir}/intermediate
         NzbDir=''${MainDir}/nzb
         QueueDir=''${MainDir}/queue
         TempDir=''${MainDir}/tmp
