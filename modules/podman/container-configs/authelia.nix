@@ -27,6 +27,13 @@ in
 
       server:
         address: "tcp://:9091"
+        buffers:
+          read: 8192
+          write: 8192
+        timeouts:
+          read: '30s'
+          write: '30s'
+          idle: '120s'
 
       log:
         level: debug
