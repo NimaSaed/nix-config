@@ -137,7 +137,7 @@ in
             pods.media = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
-                userNs = "keep-id:uid=1001,gid=1001";
+                userns = "keep-id:uid=1001,gid=1001";
               };
             };
 
