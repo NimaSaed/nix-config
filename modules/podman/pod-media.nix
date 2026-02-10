@@ -171,6 +171,7 @@ in
                 ];
 
                 devices = [ "/dev/dri:/dev/dri" ];
+                addGroups = [ "keep-groups" ];
               };
             };
             containers.sonarr = lib.mkIf cfg.sonarr.enable {
