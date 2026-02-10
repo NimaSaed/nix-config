@@ -137,6 +137,7 @@ in
             pods.media = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
+                userNs = "keep-id:uid=1001,gid=1001";
               };
             };
 
@@ -171,7 +172,6 @@ in
                 ];
 
                 devices = [ "/dev/dri:/dev/dri" ];
-                addGroups = [ "keep-groups" ];
               };
             };
             containers.sonarr = lib.mkIf cfg.sonarr.enable {
@@ -201,14 +201,13 @@ in
                 environments = {
                   TZ = "Europe/Amsterdam";
                   PUID = "1001";
+                  PGID = "1001";
                 };
 
                 volumes = [
                   "${volumes.sonarr.ref}:/config"
                   "/data/media:/media:rw"
                 ];
-
-                addGroups = [ "keep-groups" ];
               };
             };
 
@@ -239,14 +238,13 @@ in
                 environments = {
                   TZ = "Europe/Amsterdam";
                   PUID = "1001";
+                  PGID = "1001";
                 };
 
                 volumes = [
                   "${volumes.radarr.ref}:/config"
                   "/data/media:/media:rw"
                 ];
-
-                addGroups = [ "keep-groups" ];
               };
             };
 
@@ -277,6 +275,7 @@ in
                 environments = {
                   TZ = "Europe/Amsterdam";
                   PUID = "1001";
+                  PGID = "1001";
                 };
 
                 environmentFiles = [ nzbgetSecretsPath ];
@@ -287,8 +286,6 @@ in
                   "${nzbgetInitScript}:/custom-cont-init.d/01-deploy-config:ro"
                   "/data/media:/media:rw"
                 ];
-
-                addGroups = [ "keep-groups" ];
               };
             };
 
