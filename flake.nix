@@ -113,6 +113,16 @@
         ./modules/podman
       ];
 
+      # Modules for hazelnut host - LattePanda iota desktop/workstation
+      hazelnutModules = [
+        ./hosts/hazelnut
+        inputs.disko.nixosModules.disko
+        inputs.sops-nix.nixosModules.sops
+        home-manager.nixosModules.home-manager
+        ./hosts/common/home-manager.nix
+        { home-manager.users.nima = import ./home/nima/hazelnut.nix; }
+      ];
+
     in
     {
       # -------------------------------------------------------------------------
@@ -186,6 +196,15 @@
         nutcracker = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = nutcrackerModules;
+          specialArgs = { inherit inputs outputs; };
+        };
+
+        # Hazelnut - Desktop/workstation (LattePanda iota)
+        # Build: nixos-rebuild build --flake .#hazelnut
+        # Switch: nixos-rebuild switch --flake .#hazelnut --target-host root@hazelnut.local
+        hazelnut = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = hazelnutModules;
           specialArgs = { inherit inputs outputs; };
         };
       };
