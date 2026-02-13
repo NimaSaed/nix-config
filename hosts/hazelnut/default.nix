@@ -11,6 +11,7 @@
     ./hardware-configuration.nix
     ../common/core
     ../common/users/nima
+    ../common/optional/wifi.nix
   ];
 
   # ============================================================================
