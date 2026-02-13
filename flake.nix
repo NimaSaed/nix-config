@@ -77,11 +77,13 @@
     let
       inherit (self) outputs;
 
-      # Shared overlay module that makes unstable packages available as pkgs.unstable.<pkg>
-      unstableOverlayModule =
+      # Shared overlay module applied to all hosts.
+      # Includes custom package overrides and unstable channel access.
+      sharedOverlayModule =
         { pkgs, ... }:
         {
           nixpkgs.overlays = [
+            outputs.overlays.default
             (final: prev: {
               unstable = import nixpkgs-unstable {
                 system = prev.system;
@@ -93,6 +95,7 @@
 
       # Shared modules for chestnut host - used by both nixosConfigurations and colmena
       chestnutModules = [
+        sharedOverlayModule
         ./hosts/chestnut
         inputs.disko.nixosModules.disko
         inputs.sops-nix.nixosModules.sops
@@ -104,6 +107,7 @@
 
       # Shared modules for nutcracker host - used by both nixosConfigurations and colmena
       nutcrackerModules = [
+        sharedOverlayModule
         ./hosts/nutcracker
         inputs.disko.nixosModules.disko
         inputs.sops-nix.nixosModules.sops
@@ -115,6 +119,7 @@
 
       # Modules for hazelnut host - LattePanda iota desktop/workstation
       hazelnutModules = [
+        sharedOverlayModule
         ./hosts/hazelnut
         inputs.disko.nixosModules.disko
         inputs.sops-nix.nixosModules.sops
@@ -176,6 +181,7 @@
         vm = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = [
+            sharedOverlayModule
             ./hosts/vm
             inputs.disko.nixosModules.disko
             home-manager.nixosModules.home-manager
@@ -219,7 +225,7 @@
         mac = darwin.lib.darwinSystem {
           system = "aarch64-darwin"; # Apple Silicon (M1/M2/M3)
           modules = [
-            unstableOverlayModule
+            sharedOverlayModule
             ./hosts/mac
             home-manager.darwinModules.home-manager
             ./hosts/common/home-manager.nix
