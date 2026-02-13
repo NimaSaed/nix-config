@@ -84,7 +84,7 @@ in
           x = 25;
           y = 25;
         };
-        opacity = 0.95;
+        opacity = 1;
         blur = false;
         decorations = "Buttonless";
         option_as_alt = "Both";
