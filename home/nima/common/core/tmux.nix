@@ -38,6 +38,11 @@
       # macOS keeps default C-b prefix
 
       # =========================================================================
+      # Clipboard (OSC 52)
+      # =========================================================================
+      set -s set-clipboard on
+
+      # =========================================================================
       # Vi Copy Mode Settings
       # =========================================================================
       set-window-option -g mode-keys vi
@@ -50,7 +55,7 @@
         if pkgs.stdenv.isDarwin then
           ''
             # macOS - use pbcopy
-            bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
+            bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel "pbcopy"
           ''
         else
           ''

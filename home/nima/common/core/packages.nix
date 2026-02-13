@@ -42,14 +42,5 @@
       util-linux # For colrm and other utilities (Linux)
       awscli2 # AWS CLI v2 for AWS functions
 
-      # macOS-specific (conditionally included)
-    ]
-    ++ (
-      if pkgs.stdenv.isDarwin then
-        [
-          reattach-to-user-namespace # For tmux clipboard on macOS
-        ]
-      else
-        [ ]
-    );
+    ];
 }
