@@ -16,6 +16,9 @@
       # Vi mode
       sl = "ls";
 
+      # vim -> nvim
+      vim = "nvim";
+
       # List directory contents
       la = "ls -AF";
       ll = "ls -hl";

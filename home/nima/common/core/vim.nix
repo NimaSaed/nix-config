@@ -2,12 +2,14 @@
 
 {
   home.activation.createVimUndoDir = config.lib.dag.entryAfter [ "writeBoundary" ] ''
-    run mkdir -p "${config.xdg.stateHome}/vim/undo"
+    run mkdir -p "${config.xdg.stateHome}/nvim/undo"
   '';
 
-  programs.vim = {
+  programs.neovim = {
     enable = true;
     defaultEditor = true;
+    vimAlias = true;
+    viAlias = true;
 
     plugins = with pkgs.vimPlugins; [
       # To align text using tabs automatically
@@ -23,27 +25,22 @@
       open-browser-vim
     ];
 
-    settings = {
-      # Enable line numbers
-      number = true;
-      relativenumber = true;
-
-      # Tab settings
-      tabstop = 2;
-      shiftwidth = 2;
-      expandtab = true;
-
-      # Persistent undo - store undo files in a dedicated directory
-      undofile = true;
-      undodir = [ "${config.xdg.stateHome}/vim/undo//" ];
-
-      # Smart case-sensitive search
-      ignorecase = true;
-      smartcase = true;
-    };
-
     extraConfig = ''
       " vim:foldmethod=marker:foldlevel=0
+
+      " Settings (migrated from programs.vim.settings) {{{
+
+      set number
+      set relativenumber
+      set tabstop=2
+      set shiftwidth=2
+      set expandtab
+      set undofile
+      set undodir=${config.xdg.stateHome}/nvim/undo//
+      set ignorecase
+      set smartcase
+
+      " }}}
 
       " General Setting {{{
 
@@ -66,13 +63,10 @@
       " Enhanced command-line completion menu
       set wildmenu
 
-      " Set clipboard to be shared
-      set clipboard=unnamed
+      " Set clipboard to be shared (unnamed=*, unnamedplus=+)
+      set clipboard=unnamed,unnamedplus
 
       set encoding=utf-8
-
-      " Toggle paste mode
-      set pastetoggle=<F12>
 
       " Disable arrow keys
       noremap <Up> <Nop>
