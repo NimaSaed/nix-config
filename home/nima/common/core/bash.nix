@@ -149,6 +149,7 @@
             # =======================================================================
             if [ -x "$(command -v op)" ] && [ -f "~/.config/op/plugins.sh" ]; then
                 source ~/.config/op/plugins.sh
+                export SOPS_AGE_KEY_CMD="op item get 'SOPS Age Private Key' --fields password --reveal"
             fi
 
             # =======================================================================
