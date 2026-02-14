@@ -150,8 +150,7 @@
             # =======================================================================
             # 1Password Integration
             # =======================================================================
-            if [ -x "$(command -v op)" ] && [ -f "~/.config/op/plugins.sh" ]; then
-                source ~/.config/op/plugins.sh
+            if command -v op &>/dev/null; then
                 export SOPS_AGE_KEY_CMD="op item get 'SOPS Age Private Key' --fields password --reveal"
             fi
 
