@@ -61,6 +61,7 @@ in
     ./pod-tools.nix
     ./pod-media.nix
     ./pod-auth.nix
+    ./pod-nextcloud.nix
     ./pod-smart-home.nix
   ];
 
