@@ -14,7 +14,6 @@ in
   imports = [
     ./container-configs/nextcloud.nix
     ./container-configs/nextcloud-mariadb.nix
-    ./container-configs/nextcloud-redis.nix
   ];
 
   options.services.pods.nextcloud = {
@@ -352,7 +351,25 @@ in
 
     # Redis config file (with password from sops)
     sops.templates."redis.conf" = {
-      content = nixosConfig.services.pods.nextcloud._redisConfigFile;
+      content = ''
+        # Redis configuration for Nextcloud
+        requirepass ${config.sops.placeholder."nextcloud/redis_password"}
+
+        # Memory management
+        maxmemory 512mb
+        maxmemory-policy allkeys-lru
+
+        # Persistence (AOF)
+        appendonly yes
+        appendfsync everysec
+
+        # Network
+        bind 127.0.0.1
+        port 6379
+
+        # Logging
+        loglevel notice
+      '';
       owner = "poddy";
       group = "poddy";
       mode = "0400";
