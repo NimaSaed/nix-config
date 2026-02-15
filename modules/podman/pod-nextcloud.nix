@@ -135,10 +135,12 @@ in
             containers.nextcloud-redis =
               let
                 # Shell wrapper to expand env vars (Quadlet's Exec= doesn't do variable expansion)
-                redisEntrypoint = pkgs.writeShellScript "redis-entrypoint.sh" ''
+                # Use /bin/sh for Alpine compatibility (Alpine doesn't have bash)
+                redisEntrypoint = pkgs.writeScript "redis-entrypoint.sh" ''
+                  #!/bin/sh
                   set -e
                   # Source environment file to get REDIS_PASSWORD
-                  source ${nixosConfig.sops.templates."nextcloud-redis-secrets".path}
+                  . ${nixosConfig.sops.templates."nextcloud-redis-secrets".path}
                   # Execute Redis with expanded variables
                   exec redis-server \
                     --requirepass "$REDIS_PASSWORD" \
