@@ -14,6 +14,7 @@ in
   imports = [
     ./container-configs/nextcloud.nix
     ./container-configs/nextcloud-mariadb.nix
+    ./container-configs/nextcloud-redis.nix
   ];
 
   options.services.pods.nextcloud = {
@@ -132,54 +133,36 @@ in
             };
 
             # Container 2: Redis 8.0 cache
-            containers.nextcloud-redis =
-              let
-                # Shell wrapper to expand env vars (Quadlet's Exec= doesn't do variable expansion)
-                # Use /bin/sh for Alpine compatibility (Alpine doesn't have bash)
-                redisEntrypoint = pkgs.writeScript "redis-entrypoint.sh" ''
-                  #!/bin/sh
-                  set -e
-                  # Source environment file to get REDIS_PASSWORD
-                  . ${nixosConfig.sops.templates."nextcloud-redis-secrets".path}
-                  # Execute Redis with expanded variables
-                  exec redis-server \
-                    --requirepass "$REDIS_PASSWORD" \
-                    --maxmemory 512mb \
-                    --maxmemory-policy allkeys-lru \
-                    --appendonly yes \
-                    --appendfsync everysec
-                '';
-              in
-              {
-                autoStart = true;
+            containers.nextcloud-redis = {
+              autoStart = true;
 
-                serviceConfig = {
-                  Restart = "always";
-                  TimeoutStopSec = 70;
-                };
-
-                unitConfig = {
-                  Description = "Nextcloud Redis cache container";
-                  After = [ pods.nextcloud.ref ];
-                };
-
-                containerConfig = {
-                  image = "docker.io/library/redis:8.0-alpine";
-                  pod = pods.nextcloud.ref;
-                  autoUpdate = "registry";
-
-                  # Use wrapper script for env var expansion
-                  # maxmemory: 512MB limit to prevent unbounded growth
-                  # allkeys-lru: Evict least recently used keys when memory limit reached
-                  # appendonly: AOF persistence for durability
-                  exec = "${redisEntrypoint}";
-
-                  volumes = [
-                    "${volumes.nextcloud_redis.ref}:/data"
-                    "${redisEntrypoint}:${redisEntrypoint}:ro"
-                  ];
-                };
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
               };
+
+              unitConfig = {
+                Description = "Nextcloud Redis cache container";
+                After = [ pods.nextcloud.ref ];
+              };
+
+              containerConfig = {
+                image = "docker.io/library/redis:8.0-alpine";
+                pod = pods.nextcloud.ref;
+                autoUpdate = "registry";
+
+                # Use config file with sops-injected password (standard Redis approach)
+                # maxmemory: 512MB limit to prevent unbounded growth
+                # allkeys-lru: Evict least recently used keys when memory limit reached
+                # appendonly: AOF persistence for durability
+                exec = "redis-server /etc/redis/redis.conf";
+
+                volumes = [
+                  "${volumes.nextcloud_redis.ref}:/data"
+                  "${nixosConfig.sops.templates."redis.conf".path}:/etc/redis/redis.conf:ro"
+                ];
+              };
+            };
 
             # Container 3: Nextcloud 32 application (Apache variant)
             containers.nextcloud-app = {
@@ -367,11 +350,9 @@ in
       mode = "0400";
     };
 
-    # Redis secrets (password for --requirepass)
-    sops.templates."nextcloud-redis-secrets" = {
-      content = ''
-        REDIS_PASSWORD=${config.sops.placeholder."nextcloud/redis_password"}
-      '';
+    # Redis config file (with password from sops)
+    sops.templates."redis.conf" = {
+      content = nixosConfig.services.pods.nextcloud._redisConfigFile;
       owner = "poddy";
       group = "poddy";
       mode = "0400";
