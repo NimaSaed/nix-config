@@ -113,10 +113,6 @@ in
 
                 addGroups = [ "keep-groups" ];
 
-                # MariaDB configuration is provided via mounted config file
-                # See: container-configs/nextcloud-mariadb.nix
-                # Note: Do NOT use 'exec' - it bypasses the entrypoint and prevents DB initialization
-
                 environments = {
                   TZ = "Europe/Amsterdam";
                   MYSQL_DATABASE = "nextcloud";
@@ -153,10 +149,6 @@ in
 
                 addGroups = [ "keep-groups" ];
 
-                # Use config file with sops-injected password (standard Redis approach)
-                # maxmemory: 512MB limit to prevent unbounded growth
-                # allkeys-lru: Evict least recently used keys when memory limit reached
-                # appendonly: AOF persistence for durability
                 exec = "redis-server /etc/redis/redis.conf";
 
                 volumes = [
@@ -324,7 +316,7 @@ in
                   # Nextcloud domain for WOPI integration
                   "aliasgroup1" = "https://${cfg.subdomain}.${domain}";
                   # Disable internal SSL (Traefik handles it)
-                  # Disable mount namespaces for rootless Podman compatibility (v24.04.5.2.1+)
+                  # Disable mount namespaces for rootless Podman compatibility
                   "extra_params" = "--o:ssl.enable=false --o:ssl.termination=true --o:mount_namespaces=false";
                 };
 
@@ -381,7 +373,7 @@ in
       '';
       owner = "poddy";
       group = "poddy";
-      mode = "0444";  # World-readable so Redis container user can read it
+      mode = "0400";
     };
 
     # Nextcloud app secrets (database, Redis, admin credentials, and OIDC)
