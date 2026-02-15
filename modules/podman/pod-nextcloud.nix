@@ -373,7 +373,7 @@ in
       '';
       owner = "poddy";
       group = "poddy";
-      mode = "0400";
+      mode = "0444";
     };
 
     # Nextcloud app secrets (database, Redis, admin credentials, and OIDC)
