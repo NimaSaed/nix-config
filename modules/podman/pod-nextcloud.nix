@@ -167,8 +167,8 @@ in
                 Description = "Nextcloud application container";
                 After = [
                   pods.nextcloud.ref
-                  "quadlet-nextcloud-db.service"
-                  "quadlet-nextcloud-redis.service"
+                  "nextcloud-db.service"
+                  "nextcloud-redis.service"
                 ];
               };
 
@@ -242,7 +242,7 @@ in
                 Description = "Nextcloud cron job executor container";
                 After = [
                   pods.nextcloud.ref
-                  "quadlet-nextcloud-app.service"
+                  "nextcloud-app.service"
                 ];
               };
 
