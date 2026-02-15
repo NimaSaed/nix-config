@@ -88,7 +88,6 @@ in
             pods.nextcloud = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
-                userns = "keep-id:uid=1001,gid=1001";
               };
             };
 
@@ -110,8 +109,6 @@ in
                 image = "docker.io/library/mariadb:12.0";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
-
-                addGroups = [ "keep-groups" ];
 
                 environments = {
                   TZ = "Europe/Amsterdam";
@@ -147,8 +144,6 @@ in
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
-                addGroups = [ "keep-groups" ];
-
                 exec = "redis-server /etc/redis/redis.conf";
 
                 volumes = [
@@ -180,8 +175,6 @@ in
                 image = "docker.io/library/nextcloud:32-apache";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
-
-                addGroups = [ "keep-groups" ];
 
                 labels = mkTraefikLabels {
                   name = "nextcloud";
@@ -257,8 +250,6 @@ in
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
-                addGroups = [ "keep-groups" ];
-
                 # Override entrypoint to run cron daemon instead of Apache
                 exec = "/cron.sh";
 
@@ -297,8 +288,6 @@ in
                 image = "docker.io/collabora/code:latest";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
-
-                addGroups = [ "keep-groups" ];
 
                 labels = mkTraefikLabels {
                   name = "collabora";
