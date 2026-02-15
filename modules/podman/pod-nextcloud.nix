@@ -88,8 +88,7 @@ in
             pods.nextcloud = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
-                # No userns - let Podman's automatic subuid mapping handle www-data (UID 33)
-                # This is standard for official Docker images (not LinuxServer.io PUID/PGID style)
+                userns = "keep-id:uid=1001,gid=1001";
               };
             };
 
@@ -111,6 +110,8 @@ in
                 image = "docker.io/library/mariadb:12.0";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
+
+                addGroups = [ "keep-groups" ];
 
                 # MariaDB configuration is provided via mounted config file
                 # See: container-configs/nextcloud-mariadb.nix
@@ -150,6 +151,8 @@ in
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
+                addGroups = [ "keep-groups" ];
+
                 # Use config file with sops-injected password (standard Redis approach)
                 # maxmemory: 512MB limit to prevent unbounded growth
                 # allkeys-lru: Evict least recently used keys when memory limit reached
@@ -185,6 +188,8 @@ in
                 image = "docker.io/library/nextcloud:32-apache";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
+
+                addGroups = [ "keep-groups" ];
 
                 labels = mkTraefikLabels {
                   name = "nextcloud";
@@ -260,6 +265,8 @@ in
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
+                addGroups = [ "keep-groups" ];
+
                 # Override entrypoint to run cron daemon instead of Apache
                 exec = "/cron.sh";
 
@@ -298,6 +305,8 @@ in
                 image = "docker.io/collabora/code:latest";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
+
+                addGroups = [ "keep-groups" ];
 
                 labels = mkTraefikLabels {
                   name = "collabora";
