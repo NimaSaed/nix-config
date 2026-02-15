@@ -204,10 +204,6 @@ in
                   MYSQL_DATABASE = "nextcloud";
                   MYSQL_USER = "nextcloud";
 
-                  # Redis connection (pod-local via 127.0.0.1)
-                  REDIS_HOST = "127.0.0.1";
-                  REDIS_HOST_PORT = "6379";
-
                   # Trusted domain and protocol (behind Traefik HTTPS reverse proxy)
                   NEXTCLOUD_TRUSTED_DOMAINS = "${cfg.subdomain}.${domain}";
                   OVERWRITEPROTOCOL = "https";
