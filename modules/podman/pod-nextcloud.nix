@@ -88,6 +88,7 @@ in
             pods.nextcloud = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
+                userns = "keep-id:uid=1001,gid=998";
               };
             };
 
