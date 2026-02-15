@@ -60,7 +60,7 @@ in
         ),
         'oidc_login_default_group' => 'oidc',
         'oidc_login_scope' => 'openid profile email groups nextcloud_userinfo',
-        'oidc_login_disable_registration' => true,
+        'oidc_login_disable_registration' => false,
         'oidc_login_remap_users' => true,
         'oidc_login_tls_verify' => true,
 
