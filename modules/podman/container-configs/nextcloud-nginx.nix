@@ -36,6 +36,13 @@ in
           server_tokens off;
           keepalive_timeout 65;
 
+          # Use /tmp for cache directories (writable in rootless containers)
+          client_body_temp_path /tmp/client_temp;
+          proxy_temp_path /tmp/proxy_temp;
+          fastcgi_temp_path /tmp/fastcgi_temp;
+          uwsgi_temp_path /tmp/uwsgi_temp;
+          scgi_temp_path /tmp/scgi_temp;
+
           map $arg_v $asset_immutable {
               "" "";
               default ", immutable";
