@@ -14,6 +14,7 @@ in
   imports = [
     ./container-configs/nextcloud.nix
     ./container-configs/nextcloud-mariadb.nix
+    ./container-configs/nextcloud-nginx.nix
   ];
 
   options.services.pods.nextcloud = {
@@ -154,7 +155,7 @@ in
               };
             };
 
-            # Container 3: Nextcloud 32 application (Apache variant)
+            # Container 3: Nextcloud 32 PHP-FPM backend
             containers.nextcloud-app = {
               autoStart = true;
 
@@ -164,7 +165,7 @@ in
               };
 
               unitConfig = {
-                Description = "Nextcloud application container";
+                Description = "Nextcloud PHP-FPM backend container";
                 After = [
                   pods.nextcloud.ref
                   "nextcloud-db.service"
@@ -173,28 +174,9 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/library/nextcloud:32-apache";
+                image = "docker.io/library/nextcloud:32-fpm";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikLabels {
-                  name = "nextcloud";
-                  port = 80;
-                  subdomain = cfg.subdomain;
-                  extraLabels = name: {
-                    # CalDAV/CardDAV well-known URL redirects (required for mobile apps)
-                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.permanent" = "true";
-                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.regex" = "^https://(.*)/.well-known/(card|cal)dav";
-                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.replacement" = "https://$${1}/remote.php/dav/";
-
-                    # HSTS and security headers
-                    "traefik.http.middlewares.nextcloud-headers.headers.stsSeconds" = "315360000";
-                    "traefik.http.middlewares.nextcloud-headers.headers.stsIncludeSubdomains" = "true";
-
-                    # Apply middlewares (NO authelia - Nextcloud has its own auth + OIDC)
-                    "traefik.http.routers.${name}.middlewares" = "nextcloud-caldav,nextcloud-headers";
-                  };
-                };
 
                 environments = {
                   TZ = "Europe/Amsterdam";
@@ -224,7 +206,59 @@ in
               };
             };
 
-            # Container 4: Nextcloud cron job executor
+            # Container 4: Nginx web server (serves static files, proxies to FPM)
+            containers.nextcloud-web = {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "Nextcloud nginx web server container";
+                After = [
+                  pods.nextcloud.ref
+                  "nextcloud-app.service"
+                ];
+              };
+
+              containerConfig = {
+                image = "docker.io/library/nginx:1.27-alpine";
+                pod = pods.nextcloud.ref;
+                autoUpdate = "registry";
+
+                labels = mkTraefikLabels {
+                  name = "nextcloud";
+                  port = 8080;
+                  subdomain = cfg.subdomain;
+                  extraLabels = name: {
+                    # CalDAV/CardDAV well-known URL redirects (required for mobile apps)
+                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.permanent" = "true";
+                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.regex" = "^https://(.*)/.well-known/(card|cal)dav";
+                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.replacement" = "https://$${1}/remote.php/dav/";
+
+                    # HSTS and security headers
+                    "traefik.http.middlewares.nextcloud-headers.headers.stsSeconds" = "315360000";
+                    "traefik.http.middlewares.nextcloud-headers.headers.stsIncludeSubdomains" = "true";
+
+                    # Apply middlewares (NO authelia - Nextcloud has its own auth + OIDC)
+                    "traefik.http.routers.${name}.middlewares" = "nextcloud-caldav,nextcloud-headers";
+                  };
+                };
+
+                environments = {
+                  TZ = "Europe/Amsterdam";
+                };
+
+                volumes = [
+                  "${volumes.nextcloud_data.ref}:/var/www/html:ro"
+                  "${nixosConfig.services.pods.nextcloud._nginxConfigFile}:/etc/nginx/nginx.conf:ro"
+                ];
+              };
+            };
+
+            # Container 5: Nextcloud cron job executor
             # Official recommendation: separate container for background jobs
             containers.nextcloud-cron = {
               autoStart = true;
@@ -238,16 +272,16 @@ in
                 Description = "Nextcloud cron job executor container";
                 After = [
                   pods.nextcloud.ref
-                  "nextcloud-app.service"
+                  "nextcloud-web.service"
                 ];
               };
 
               containerConfig = {
-                image = "docker.io/library/nextcloud:32-apache";
+                image = "docker.io/library/nextcloud:32-fpm";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
-                # Override entrypoint to run cron daemon instead of Apache
+                # Override entrypoint to run cron daemon instead of FPM
                 exec = "/cron.sh";
 
                 environments = {
@@ -255,7 +289,6 @@ in
                   MYSQL_HOST = "127.0.0.1";
                   MYSQL_DATABASE = "nextcloud";
                   MYSQL_USER = "nextcloud";
-                  REDIS_HOST = "127.0.0.1";
                 };
 
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-app-secrets".path ];
