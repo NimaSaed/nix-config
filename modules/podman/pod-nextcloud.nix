@@ -112,11 +112,9 @@ in
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
-                # Nextcloud-optimized MariaDB arguments
-                # READ-COMMITTED: Required by Nextcloud for proper transaction handling
-                # ROW binlog: Recommended for replication
-                # utf8mb4: Full Unicode support (including emoji)
-                exec = "mariadbd --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --innodb-file-per-table=1";
+                # MariaDB configuration is provided via mounted config file
+                # See: container-configs/nextcloud-mariadb.nix
+                # Note: Do NOT use 'exec' - it bypasses the entrypoint and prevents DB initialization
 
                 environments = {
                   TZ = "Europe/Amsterdam";
@@ -156,7 +154,7 @@ in
                 # maxmemory: 512MB limit to prevent unbounded growth
                 # allkeys-lru: Evict least recently used keys when memory limit reached
                 # appendonly: AOF persistence for durability
-                exec = "redis-server --requirepass \"$REDIS_PASSWORD\" --maxmemory 512mb --maxmemory-policy allkeys-lru --appendonly yes --appendfsync everysec";
+                exec = "redis-server --requirepass $REDIS_PASSWORD --maxmemory 512mb --maxmemory-policy allkeys-lru --appendonly yes --appendfsync everysec";
 
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-redis-secrets".path ];
 
