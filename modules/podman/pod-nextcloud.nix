@@ -254,8 +254,6 @@ in
                 volumes = [
                   "${volumes.nextcloud_data.ref}:/var/www/html:ro"
                   "${nixosConfig.services.pods.nextcloud._nginxConfigFile}:/etc/nginx/nginx.conf:ro"
-                  "tmpfs:/var/cache/nginx:rw"
-                  "tmpfs:/var/run:rw"
                 ];
               };
             };
