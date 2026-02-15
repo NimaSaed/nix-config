@@ -119,7 +119,7 @@ in
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-db-secrets".path ];
 
                 volumes = [
-                  "${volumes.nextcloud_db.ref}:/var/lib/mysql"
+                  "${volumes.nextcloud_db.ref}:/var/lib/mysql:U"
                   "${nixosConfig.services.pods.nextcloud._mariadbConfigFile}:/etc/mysql/conf.d/nextcloud.cnf:ro"
                 ];
               };
@@ -147,7 +147,7 @@ in
                 exec = "redis-server /etc/redis/redis.conf";
 
                 volumes = [
-                  "${volumes.nextcloud_redis.ref}:/data"
+                  "${volumes.nextcloud_redis.ref}:/data:U"
                   "${nixosConfig.sops.templates."redis.conf".path}:/etc/redis/redis.conf:ro"
                 ];
               };
@@ -175,7 +175,6 @@ in
                 image = "docker.io/library/nextcloud:32-apache";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
-                userns = "keep-id";
 
                 labels = mkTraefikLabels {
                   name = "nextcloud";
@@ -222,7 +221,7 @@ in
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-app-secrets".path ];
 
                 volumes = [
-                  "${volumes.nextcloud_data.ref}:/var/www/html"
+                  "${volumes.nextcloud_data.ref}:/var/www/html:U"
                   "${nixosConfig.services.pods.nextcloud._configFile}:/var/www/html/config/zzz-nix-overrides.config.php:ro"
                 ];
               };
@@ -250,7 +249,6 @@ in
                 image = "docker.io/library/nextcloud:32-apache";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
-                userns = "keep-id";
 
                 # Override entrypoint to run cron daemon instead of Apache
                 exec = "/cron.sh";
@@ -266,7 +264,7 @@ in
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-app-secrets".path ];
 
                 volumes = [
-                  "${volumes.nextcloud_data.ref}:/var/www/html"
+                  "${volumes.nextcloud_data.ref}:/var/www/html:U"
                   "${nixosConfig.services.pods.nextcloud._configFile}:/var/www/html/config/zzz-nix-overrides.config.php:ro"
                 ];
               };
