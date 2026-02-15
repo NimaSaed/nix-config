@@ -127,7 +127,7 @@ in
               client_secret: '{{ secret "/secrets/nextcloud_client_secret" }}'
               public: false
               authorization_policy: two_factor
-              require_pkce: true
+              require_pkce: false
               pkce_challenge_method: S256
               claims_policy: nextcloud_userinfo
               redirect_uris:

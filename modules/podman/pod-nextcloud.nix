@@ -426,27 +426,29 @@ in
 
 # Post-deployment manual steps (run AFTER first boot):
 #
+# NOTE: Container runs as UID 1001:998 (poddy), so occ commands run without --user flag
+#
 # 1. Wait for database and Nextcloud initialization:
 #    podman logs nextcloud-db
 #    podman logs nextcloud-app
 #
 # 2. Install OIDC Login app:
-#    podman exec --user www-data nextcloud-app php occ app:install oidc_login
-#    podman exec --user www-data nextcloud-app php occ app:enable oidc_login
+#    podman exec nextcloud-app php occ app:install oidc_login
+#    podman exec nextcloud-app php occ app:enable oidc_login
 #
 # 3. Install Collabora integration (if enabled):
-#    podman exec --user www-data nextcloud-app php occ app:install richdocuments
-#    podman exec --user www-data nextcloud-app php occ app:enable richdocuments
-#    podman exec --user www-data nextcloud-app php occ richdocuments:activate-config
+#    podman exec nextcloud-app php occ app:install richdocuments
+#    podman exec nextcloud-app php occ app:enable richdocuments
+#    podman exec nextcloud-app php occ richdocuments:activate-config
 #
 # 4. Verify background jobs are using cron:
-#    podman exec --user www-data nextcloud-app php occ background:cron
+#    podman exec nextcloud-app php occ background:cron
 #
 # 5. Run maintenance and repair:
-#    podman exec --user www-data nextcloud-app php occ maintenance:repair --include-expensive
+#    podman exec nextcloud-app php occ maintenance:repair --include-expensive
 #
 # 6. Check Nextcloud status:
-#    podman exec --user www-data nextcloud-app php occ status
+#    podman exec nextcloud-app php occ status
 #
 # 7. Test OIDC login:
 #    Visit https://cloud.nmsd.xyz and click "Login with Authelia"
