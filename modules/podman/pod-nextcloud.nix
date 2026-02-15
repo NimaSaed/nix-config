@@ -175,6 +175,7 @@ in
                 image = "docker.io/library/nextcloud:32-apache";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
+                userns = "keep-id";
 
                 labels = mkTraefikLabels {
                   name = "nextcloud";
@@ -249,6 +250,7 @@ in
                 image = "docker.io/library/nextcloud:32-apache";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
+                userns = "keep-id";
 
                 # Override entrypoint to run cron daemon instead of Apache
                 exec = "/cron.sh";
