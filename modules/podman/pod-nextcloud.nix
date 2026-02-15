@@ -224,7 +224,7 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/library/nginx:1.27-alpine";
+                image = "docker.io/nginxinc/nginx-unprivileged:alpine";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
