@@ -15,10 +15,6 @@
       character_set_server = utf8mb4
       collation_server = utf8mb4_unicode_ci
 
-      # Binary logging for replication and backups
-      log_bin = binlog
-      binlog_format = ROW
-
       # Transaction isolation required by Nextcloud
       transaction_isolation = READ-COMMITTED
 

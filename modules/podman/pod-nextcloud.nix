@@ -93,7 +93,7 @@ in
               };
             };
 
-            # Container 1: MariaDB 12.0 database
+            # Container 1: MariaDB LTS database
             containers.nextcloud-db = {
               autoStart = true;
 
@@ -108,7 +108,7 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/library/mariadb:12.0";
+                image = "docker.io/library/mariadb:11.4";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
@@ -174,7 +174,7 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/library/nextcloud:32-fpm";
+                image = "docker.io/library/nextcloud:32.0-fpm";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
                 #user = "1001:998";
@@ -278,7 +278,7 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/library/nextcloud:32-fpm";
+                image = "docker.io/library/nextcloud:32.0-fpm";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
                 #user = "1001:998";
@@ -317,7 +317,7 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/collabora/code:latest";
+                image = "docker.io/collabora/code:25.04";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
@@ -415,6 +415,7 @@ in
     # Collabora secrets (admin password)
     sops.templates."nextcloud-collabora-secrets" = lib.mkIf cfg.collabora.enable {
       content = ''
+        username=admin
         password=${config.sops.placeholder."nextcloud/collabora_password"}
       '';
       owner = "poddy";

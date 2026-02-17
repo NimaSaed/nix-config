@@ -11,6 +11,7 @@ let
   toolsCfg = config.services.pods.tools;
   mediaCfg = config.services.pods.media;
   rpCfg = config.services.pods.reverse-proxy;
+  nextcloudCfg = config.services.pods.nextcloud;
   shCfg = config.services.pods.smart-home;
   baseDN = authCfg._baseDN;
 in
@@ -129,7 +130,7 @@ in
               authorization_policy: two_factor
               claims_policy: nextcloud_userinfo
               redirect_uris:
-                - "https://cloud.${domain}/apps/oidc_login/oidc"
+                - "https://${nextcloudCfg.subdomain}.${domain}/apps/oidc_login/oidc"
               scopes:
                 - openid
                 - profile
