@@ -177,7 +177,7 @@ in
                 image = "docker.io/library/nextcloud:32.0-fpm";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
-                #user = "1001:998";
+                user = "1001:998";
 
                 environments = {
                   TZ = "Europe/Amsterdam";
@@ -281,7 +281,7 @@ in
                 image = "docker.io/library/nextcloud:32.0-fpm";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
-                #user = "1001:998";
+                user = "1001:998";
 
                 # Override entrypoint to run cron daemon instead of FPM
                 exec = "/cron.sh";
