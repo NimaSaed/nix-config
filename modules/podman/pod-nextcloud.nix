@@ -383,6 +383,7 @@ in
 
                 environments = {
                   TZ = "Europe/Amsterdam";
+                  MAX_UPLOAD_FILE_SIZE = "10";
                 };
 
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-whiteboard-secrets".path ];
@@ -518,7 +519,7 @@ in
 #
 # 7. Configure Whiteboard real-time collaboration (if enabled):
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ config:app:set whiteboard collabBackendUrl --value="https://whiteboard.nmsd.xyz"
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ config:app:set whiteboard jwt_secret_key --value="$(grep JWT_SECRET_KEY /run/secrets/rendered/nextcloud-whiteboard-secrets | cut -d= -f2)"
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ config:app:set whiteboard jwt_secret_key --value="$(sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 grep JWT_SECRET_KEY /run/secrets/rendered/nextcloud-whiteboard-secrets | cut -d= -f2)"
 #
 # 8. Test OIDC login:
 #    Visit https://cloud.nmsd.xyz and click "Login with Authelia"
