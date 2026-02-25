@@ -430,26 +430,25 @@ in
 # NOTE: Container runs as UID 1001:998 (poddy), so occ commands run without --user flag
 #
 # 1. Wait for database and Nextcloud initialization:
-#    podman logs nextcloud-db
-#    podman logs nextcloud-app
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman logs nextcloud-db
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman logs nextcloud-app
 #
 # 2. Install OIDC Login app:
-#    podman exec nextcloud-app php occ app:install oidc_login
-#    podman exec nextcloud-app php occ app:enable oidc_login
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:install oidc_login
 #
 # 3. Install Collabora integration (if enabled):
-#    podman exec nextcloud-app php occ app:install richdocuments
-#    podman exec nextcloud-app php occ app:enable richdocuments
-#    podman exec nextcloud-app php occ richdocuments:activate-config
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:install richdocuments
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ config:app:set richdocuments wopi_url --value="https://office.nmsd.xyz"
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ richdocuments:activate-config
 #
 # 4. Verify background jobs are using cron:
-#    podman exec nextcloud-app php occ background:cron
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ background:cron
 #
 # 5. Run maintenance and repair:
-#    podman exec nextcloud-app php occ maintenance:repair --include-expensive
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ maintenance:repair --include-expensive
 #
 # 6. Check Nextcloud status:
-#    podman exec nextcloud-app php occ status
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ status
 #
 # 7. Test OIDC login:
 #    Visit https://cloud.nmsd.xyz and click "Login with Authelia"

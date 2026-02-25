@@ -67,7 +67,6 @@ in
         ${lib.optionalString cfg.collabora.enable ''
         // Collabora Online integration
         // Requires: php occ app:install richdocuments
-        'richdocuments_wopi_url' => 'https://${cfg.collabora.subdomain}.${domain}',
         ''}
 
         // Performance and logging
