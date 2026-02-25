@@ -104,10 +104,12 @@ in
 
               # .well-known URLs (handled by Traefik middleware in main config)
               location ^~ /.well-known {
-                  location = /.well-known/carddav { return 301 /remote.php/dav/; }
-                  location = /.well-known/caldav { return 301 /remote.php/dav/; }
-                  location /.well-known/acme-challenge { try_files $uri $uri/ =404; }
-                  location /.well-known/pki-validation { try_files $uri $uri/ =404; }
+                  location = /.well-known/carddav   { return 301 /remote.php/dav/; }
+                  location = /.well-known/caldav    { return 301 /remote.php/dav/; }
+                  location = /.well-known/webfinger { return 301 /index.php$request_uri; }
+                  location = /.well-known/nodeinfo  { return 301 /index.php$request_uri; }
+                  location /.well-known/acme-challenge  { try_files $uri $uri/ =404; }
+                  location /.well-known/pki-validation  { try_files $uri $uri/ =404; }
                   return 301 /index.php$request_uri;
               }
 

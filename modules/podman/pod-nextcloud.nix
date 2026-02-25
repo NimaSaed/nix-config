@@ -441,13 +441,16 @@ in
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ config:app:set richdocuments wopi_url --value="https://office.nmsd.xyz"
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ richdocuments:activate-config
 #
-# 4. Verify background jobs are using cron:
+# 4. Switch background jobs to cron mode and trigger an immediate run:
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ background:cron
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-cron php -f /var/www/html/cron.php
 #
-# 5. Run maintenance and repair:
+# 5. Run maintenance, repair, and add missing DB indices:
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ maintenance:repair --include-expensive
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ db:add-missing-indices
 #
-# 6. Check Nextcloud status:
+# 6. Check code integrity and Nextcloud status:
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ integrity:check-core
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ status
 #
 # 7. Test OIDC login:
