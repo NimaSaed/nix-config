@@ -39,6 +39,19 @@ in
       };
     };
 
+    whiteboard = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable Nextcloud Whiteboard real-time collaboration server";
+      };
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "whiteboard";
+        description = "Subdomain for the Whiteboard WebSocket server";
+      };
+    };
+
     adminUser = lib.mkOption {
       type = lib.types.str;
       default = "admin";
@@ -349,6 +362,39 @@ in
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-collabora-secrets".path ];
               };
             };
+            # Container 7: Nextcloud Whiteboard WebSocket server
+            containers.nextcloud-whiteboard = lib.mkIf cfg.whiteboard.enable {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "Nextcloud Whiteboard real-time collaboration server";
+                After = [ pods.nextcloud.ref ];
+              };
+
+              containerConfig = {
+                image = "ghcr.io/nextcloud-releases/whiteboard:stable";
+                pod = pods.nextcloud.ref;
+                autoUpdate = "registry";
+
+                environments = {
+                  TZ = "Europe/Amsterdam";
+                };
+
+                environmentFiles = [ nixosConfig.sops.templates."nextcloud-whiteboard-secrets".path ];
+
+                labels = mkTraefikLabels {
+                  name = "nextcloud-whiteboard";
+                  port = 3002;
+                  subdomain = cfg.whiteboard.subdomain;
+                  extraLabels = _: { };
+                };
+              };
+            };
           };
       };
 
@@ -360,6 +406,7 @@ in
       "nextcloud/redis_password"
       "nextcloud/oidc_client_secret"
       "nextcloud/collabora_password"
+      "nextcloud/whiteboard_jwt_secret"
     ] (_: {
       owner = "poddy";
       group = "poddy";
@@ -417,6 +464,17 @@ in
       mode = "0400";
     };
 
+    # Whiteboard secrets (shared JWT secret between Nextcloud and whiteboard server)
+    sops.templates."nextcloud-whiteboard-secrets" = lib.mkIf cfg.whiteboard.enable {
+      content = ''
+        JWT_SECRET_KEY=${config.sops.placeholder."nextcloud/whiteboard_jwt_secret"}
+        NEXTCLOUD_URL=https://${cfg.subdomain}.${domain}
+      '';
+      owner = "poddy";
+      group = "poddy";
+      mode = "0400";
+    };
+
     # Collabora secrets (admin password)
     sops.templates."nextcloud-collabora-secrets" = lib.mkIf cfg.collabora.enable {
       content = ''
@@ -458,5 +516,9 @@ in
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ integrity:check-core
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ status
 #
-# 7. Test OIDC login:
+# 7. Configure Whiteboard real-time collaboration (if enabled):
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ config:app:set whiteboard collabBackendUrl --value="https://whiteboard.nmsd.xyz"
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ config:app:set whiteboard jwt_secret_key --value="$(grep JWT_SECRET_KEY /run/secrets/rendered/nextcloud-whiteboard-secrets | cut -d= -f2)"
+#
+# 8. Test OIDC login:
 #    Visit https://cloud.nmsd.xyz and click "Login with Authelia"
