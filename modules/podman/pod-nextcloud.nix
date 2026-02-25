@@ -317,7 +317,7 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/collabora/code:25.04";
+                image = "docker.io/collabora/code:latest";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
