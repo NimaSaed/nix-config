@@ -239,12 +239,17 @@ in
                     "traefik.http.middlewares.nextcloud-caldav.redirectregex.regex" = "^https://(.*)/.well-known/(card|cal)dav";
                     "traefik.http.middlewares.nextcloud-caldav.redirectregex.replacement" = "https://$${1}/remote.php/dav/";
 
+                    # WebFinger/NodeInfo well-known URL redirects (required for federation and social apps)
+                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.permanent" = "true";
+                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.regex" = "^https://(.*)/.well-known/(webfinger|nodeinfo)(.*)";
+                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.replacement" = "https://$${1}/index.php/.well-known/$${2}$${3}";
+
                     # HSTS and security headers
                     "traefik.http.middlewares.nextcloud-headers.headers.stsSeconds" = "315360000";
                     "traefik.http.middlewares.nextcloud-headers.headers.stsIncludeSubdomains" = "true";
 
                     # Apply middlewares (NO authelia - Nextcloud has its own auth + OIDC)
-                    "traefik.http.routers.${name}.middlewares" = "nextcloud-caldav,nextcloud-headers";
+                    "traefik.http.routers.${name}.middlewares" = "nextcloud-caldav,nextcloud-wellknown,nextcloud-headers";
                   };
                 };
 
