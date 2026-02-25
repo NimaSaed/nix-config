@@ -42,6 +42,9 @@
       nzbget.enable = true;
       jellyseerr.enable = true;
     };
+    nextcloud = {
+      enable = true;
+    };
   };
 
   # ============================================================================

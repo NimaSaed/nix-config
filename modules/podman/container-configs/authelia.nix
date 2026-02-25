@@ -11,6 +11,7 @@ let
   toolsCfg = config.services.pods.tools;
   mediaCfg = config.services.pods.media;
   rpCfg = config.services.pods.reverse-proxy;
+  nextcloudCfg = config.services.pods.nextcloud;
   shCfg = config.services.pods.smart-home;
   baseDN = authCfg._baseDN;
 in
@@ -127,11 +128,9 @@ in
               client_secret: '{{ secret "/secrets/nextcloud_client_secret" }}'
               public: false
               authorization_policy: two_factor
-              require_pkce: true
-              pkce_challenge_method: S256
               claims_policy: nextcloud_userinfo
               redirect_uris:
-                - "https://cloud.${domain}/apps/oidc_login/oidc"
+                - "https://${nextcloudCfg.subdomain}.${domain}/apps/oidc_login/oidc"
               scopes:
                 - openid
                 - profile

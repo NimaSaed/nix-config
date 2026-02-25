@@ -12,6 +12,7 @@ let
   toolsCfg = config.services.pods.tools;
   mediaCfg = config.services.pods.media;
   rpCfg = config.services.pods.reverse-proxy;
+  nextcloudCfg = config.services.pods.nextcloud;
   shCfg = config.services.pods.smart-home;
 in
 {
@@ -113,18 +114,15 @@ in
               }
             ])
 
-            # Future Managed Containers - commented out until pod modules exist
-            # TODO: Uncomment when respective pod modules are created
-            # (lib.optionals cloudCfg.nextcloud.enable [
-            #   {
-            #     Nextcloud = {
-            #       icon = "sh-nextcloud";
-            #       href = "https://${cloudCfg.nextcloud.subdomain}.${domain}/";
-            #       description = "iCloud replacement";
-            #     };
-            #   }
-            # ])
-            #
+            (lib.optionals nextcloudCfg.enable [
+              {
+                Nextcloud = {
+                  icon = "sh-nextcloud";
+                  href = "https://${nextcloudCfg.subdomain}.${domain}/";
+                  description = "iCloud replacement";
+                };
+              }
+            ])
             (lib.optionals mediaCfg.jellyseerr.enable [
               {
                 Jellyseerr = {
