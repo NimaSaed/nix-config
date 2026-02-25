@@ -241,7 +241,7 @@ in
 
                     # WebFinger/NodeInfo well-known URL redirects (required for federation and social apps)
                     "traefik.http.middlewares.nextcloud-wellknown.redirectregex.permanent" = "true";
-                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.regex" = "^https://(.*)/.well-known/(webfinger|nodeinfo)(.*)";
+                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.regex" = "^https://([^/]+)/.well-known/(webfinger|nodeinfo)(.*)";
                     "traefik.http.middlewares.nextcloud-wellknown.redirectregex.replacement" = "https://$${1}/index.php/.well-known/$${2}$${3}";
 
                     # HSTS and security headers
