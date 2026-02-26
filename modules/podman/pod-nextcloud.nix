@@ -359,9 +359,11 @@ in
         # Executes cron.php inside the running nextcloud-app container, bypassing
         # the www-data UID mismatch in the official image's /cron.sh + busybox crond.
         systemd.user.services.nextcloud-cron = {
-          description = "Nextcloud background job (cron.php)";
-          after = [ "nextcloud-app.service" ];
-          serviceConfig = {
+          Unit = {
+            Description = "Nextcloud background job (cron.php)";
+            After = [ "nextcloud-app.service" ];
+          };
+          Service = {
             Type = "oneshot";
             ExecStart = "${pkgs.podman}/bin/podman exec nextcloud-app php -f /var/www/html/cron.php";
           };
