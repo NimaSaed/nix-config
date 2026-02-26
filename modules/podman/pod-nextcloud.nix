@@ -370,9 +370,9 @@ in
         };
 
         systemd.user.timers.nextcloud-cron = {
-          description = "Run Nextcloud cron.php every 5 minutes";
-          wantedBy = [ "timers.target" ];
-          timerConfig = {
+          Unit.Description = "Run Nextcloud cron.php every 5 minutes";
+          Install.WantedBy = [ "timers.target" ];
+          Timer = {
             OnBootSec = "5min";
             OnUnitActiveSec = "5min";
             Unit = "nextcloud-cron.service";
