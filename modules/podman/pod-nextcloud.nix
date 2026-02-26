@@ -358,7 +358,7 @@ in
         # Systemd timer to run Nextcloud background jobs every 5 minutes.
         # Executes cron.php inside the running nextcloud-app container, bypassing
         # the www-data UID mismatch in the official image's /cron.sh + busybox crond.
-        systemd.services.nextcloud-cron = {
+        systemd.user.services.nextcloud-cron = {
           description = "Nextcloud background job (cron.php)";
           after = [ "nextcloud-app.service" ];
           serviceConfig = {
@@ -367,7 +367,7 @@ in
           };
         };
 
-        systemd.timers.nextcloud-cron = {
+        systemd.user.timers.nextcloud-cron = {
           description = "Run Nextcloud cron.php every 5 minutes";
           wantedBy = [ "timers.target" ];
           timerConfig = {
