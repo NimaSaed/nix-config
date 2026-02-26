@@ -95,6 +95,7 @@
       "lm-studio" # Local LLM management
       "protonvpn" # VPN client
       "inkscape" # Vector graphics editor
+      "nextcloud"
     ];
 
     # Mac App Store applications

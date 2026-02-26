@@ -69,6 +69,23 @@ in
         // Requires: php occ app:install richdocuments
         ''}
 
+        // Preview generation (required for Photos app)
+        'enable_previews' => true,
+        'enabledPreviewProviders' => array (
+          'OC\Preview\PNG',
+          'OC\Preview\JPEG',
+          'OC\Preview\GIF',
+          'OC\Preview\BMP',
+          'OC\Preview\HEIC',
+          'OC\Preview\Movie',
+          'OC\Preview\MKV',
+          'OC\Preview\MP4',
+          'OC\Preview\AVI',
+        ),
+        'preview_max_x' => 2048,
+        'preview_max_y' => 2048,
+        'jpeg_quality' => 60,
+
         // Performance and logging
         'loglevel' => 2,  // Warnings and above
         'log_type' => 'file',

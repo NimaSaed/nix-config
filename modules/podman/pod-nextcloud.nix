@@ -523,3 +523,8 @@ in
 #
 # 8. Test OIDC login:
 #    Visit https://cloud.nmsd.xyz and click "Login with Authelia"
+#
+# 9. Generate previews for existing files (required for Photos app):
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ preview:generate-all --path="/"
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:install preview_generator
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ preview:pre-generate
