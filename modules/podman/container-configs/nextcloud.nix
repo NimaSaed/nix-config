@@ -77,10 +77,9 @@ in
           'OC\Preview\GIF',
           'OC\Preview\BMP',
           'OC\Preview\HEIC',
-          'OC\Preview\Movie',
-          'OC\Preview\MKV',
-          'OC\Preview\MP4',
-          'OC\Preview\AVI',
+          'OC\Preview\TIFF',
+          'OC\Preview\SVG',
+          'OC\Preview\Movie',  // Covers all video formats (MP4, MKV, AVI, MOV, etc.)
         ),
         'preview_max_x' => 2048,
         'preview_max_y' => 2048,
