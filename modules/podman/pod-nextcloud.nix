@@ -277,49 +277,6 @@ in
               };
             };
 
-            # Container 5: Nextcloud cron job executor
-            # Official recommendation: separate container for background jobs
-            containers.nextcloud-cron = {
-              autoStart = true;
-
-              serviceConfig = {
-                Restart = "always";
-                TimeoutStopSec = 70;
-              };
-
-              unitConfig = {
-                Description = "Nextcloud cron job executor container";
-                After = [
-                  pods.nextcloud.ref
-                  "nextcloud-web.service"
-                ];
-              };
-
-              containerConfig = {
-                image = "docker.io/library/nextcloud:32.0-fpm";
-                pod = pods.nextcloud.ref;
-                autoUpdate = "registry";
-                user = "1001:998";
-
-                # Override entrypoint to run cron daemon instead of FPM
-                exec = "/cron.sh";
-
-                environments = {
-                  TZ = "Europe/Amsterdam";
-                  MYSQL_HOST = "127.0.0.1";
-                  MYSQL_DATABASE = "nextcloud";
-                  MYSQL_USER = "nextcloud";
-                };
-
-                environmentFiles = [ nixosConfig.sops.templates."nextcloud-app-secrets".path ];
-
-                volumes = [
-                  "${volumes.nextcloud_data.ref}:/var/www/html:U"
-                  "${nixosConfig.services.pods.nextcloud._configFile}:/var/www/html/config/zzz-nix-overrides.config.php:ro"
-                ];
-              };
-            };
-
             # Container 5: Collabora Office (online document editing)
             containers.nextcloud-code = lib.mkIf cfg.collabora.enable {
               autoStart = true;
@@ -362,7 +319,7 @@ in
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-collabora-secrets".path ];
               };
             };
-            # Container 7: Nextcloud Whiteboard WebSocket server
+            # Container 6: Nextcloud Whiteboard WebSocket server
             containers.nextcloud-whiteboard = lib.mkIf cfg.whiteboard.enable {
               autoStart = true;
 
@@ -397,6 +354,28 @@ in
               };
             };
           };
+
+        # Systemd timer to run Nextcloud background jobs every 5 minutes.
+        # Executes cron.php inside the running nextcloud-app container, bypassing
+        # the www-data UID mismatch in the official image's /cron.sh + busybox crond.
+        systemd.services.nextcloud-cron = {
+          description = "Nextcloud background job (cron.php)";
+          after = [ "nextcloud-app.service" ];
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = "${pkgs.podman}/bin/podman exec nextcloud-app php -f /var/www/html/cron.php";
+          };
+        };
+
+        systemd.timers.nextcloud-cron = {
+          description = "Run Nextcloud cron.php every 5 minutes";
+          wantedBy = [ "timers.target" ];
+          timerConfig = {
+            OnBootSec = "5min";
+            OnUnitActiveSec = "5min";
+            Unit = "nextcloud-cron.service";
+          };
+        };
       };
 
     # Secret management using sops-nix
