@@ -29,6 +29,11 @@ in
         // Phone number validation region
         'default_phone_region' => '${cfg.phoneRegion}',
 
+        // Locale must be region-specific (not bare 'en') to avoid Photos app crash
+        // See: https://help.nextcloud.com/t/photos-page-blank-when-using-en-locale/240664
+        'default_language' => 'en',
+        'default_locale' => 'en_US',
+
         // Redis configuration for caching and file locking
         'memcache.local' => '\\OC\\Memcache\\APCu',
         'memcache.distributed' => '\\OC\\Memcache\\Redis',
