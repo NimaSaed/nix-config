@@ -355,30 +355,32 @@ in
             };
           };
 
-        # Systemd timer to run Nextcloud background jobs every 5 minutes.
-        # Executes cron.php inside the running nextcloud-app container, bypassing
-        # the www-data UID mismatch in the official image's /cron.sh + busybox crond.
-        systemd.user.services.nextcloud-cron = {
-          Unit = {
-            Description = "Nextcloud background job (cron.php)";
-            After = [ "nextcloud-app.service" ];
-          };
-          Service = {
-            Type = "oneshot";
-            ExecStart = "${pkgs.podman}/bin/podman exec nextcloud-app php -f /var/www/html/cron.php";
-          };
-        };
-
-        systemd.user.timers.nextcloud-cron = {
-          Unit.Description = "Run Nextcloud cron.php every 5 minutes";
-          Install.WantedBy = [ "timers.target" ];
-          Timer = {
-            OnBootSec = "5min";
-            OnUnitActiveSec = "5min";
-            Unit = "nextcloud-cron.service";
-          };
-        };
       };
+
+    # Systemd timer to run Nextcloud background jobs every 5 minutes.
+    # System-level (not home-manager) to avoid blocking home-manager activation.
+    # Executes cron.php inside the running nextcloud-app container, bypassing
+    # the www-data UID mismatch in the official image's /cron.sh + busybox crond.
+    systemd.services.nextcloud-cron = {
+      description = "Nextcloud background job (cron.php)";
+      after = [ "nextcloud-app.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "poddy";
+        Environment = "XDG_RUNTIME_DIR=/run/user/1001";
+        ExecStart = "${pkgs.podman}/bin/podman exec nextcloud-app php -f /var/www/html/cron.php";
+      };
+    };
+
+    systemd.timers.nextcloud-cron = {
+      description = "Run Nextcloud cron.php every 5 minutes";
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnBootSec = "5min";
+        OnUnitActiveSec = "5min";
+        Unit = "nextcloud-cron.service";
+      };
+    };
 
     # Secret management using sops-nix
     sops.secrets = lib.genAttrs [
