@@ -37,7 +37,19 @@ in
           opacity = 50;
         };
         layout = {
-          Services = {
+          Media = {
+            style = "row";
+            columns = 3;
+          };
+          Storage = {
+            style = "row";
+            columns = 3;
+          };
+          Tools = {
+            style = "row";
+            columns = 3;
+          };
+          Infrastructure = {
             style = "row";
             columns = 3;
           };
@@ -52,9 +64,124 @@ in
     servicesFile = lib.mkOption {
       type = lib.types.package;
       default = yaml.generate "services.yaml" [
+        # -----------------------------------------------------------------------
+        # Media
+        # -----------------------------------------------------------------------
         {
-          Services = lib.flatten [
-            # Core Infrastructure Services - always enabled
+          Media = lib.flatten [
+            (lib.optionals mediaCfg.jellyfin.enable [
+              {
+                Jellyfin = {
+                  icon = "sh-jellyfin";
+                  href = "https://${mediaCfg.jellyfin.subdomain}.${domain}/sso/OID/start/authelia";
+                  description = "Movies, TV shows and Music";
+                };
+              }
+            ])
+            (lib.optionals mediaCfg.jellyseerr.enable [
+              {
+                Jellyseerr = {
+                  icon = "sh-jellyseerr";
+                  href = "https://${mediaCfg.jellyseerr.subdomain}.${domain}";
+                  description = "Media request and discovery manager";
+                };
+              }
+            ])
+            (lib.optionals mediaCfg.sonarr.enable [
+              {
+                Sonarr = {
+                  icon = "sh-sonarr";
+                  href = "https://${mediaCfg.sonarr.subdomain}.${domain}/";
+                  description = "Automated TV show download manager";
+                };
+              }
+            ])
+            (lib.optionals mediaCfg.radarr.enable [
+              {
+                Radarr = {
+                  icon = "sh-radarr";
+                  href = "https://${mediaCfg.radarr.subdomain}.${domain}/";
+                  description = "Automated movie download manager";
+                };
+              }
+            ])
+            (lib.optionals mediaCfg.nzbget.enable [
+              {
+                Nzbget = {
+                  icon = "sh-nzbget";
+                  href = "https://${mediaCfg.nzbget.subdomain}.${domain}/";
+                  description = "Usenet binary downloader client";
+                };
+              }
+            ])
+          ];
+        }
+
+        # -----------------------------------------------------------------------
+        # Storage
+        # -----------------------------------------------------------------------
+        {
+          Storage = lib.flatten [
+            (lib.optionals nextcloudCfg.enable [
+              {
+                Nextcloud = {
+                  icon = "sh-nextcloud";
+                  href = "https://${nextcloudCfg.subdomain}.${domain}/apps/oidc_login/oidc";
+                  description = "Files, calendar, and collaboration suite";
+                };
+              }
+            ])
+          ];
+        }
+
+        # -----------------------------------------------------------------------
+        # Tools
+        # -----------------------------------------------------------------------
+        {
+          Tools = lib.flatten [
+            (lib.optionals toolsCfg.itTools.enable [
+              {
+                "IT Tools" = {
+                  icon = "it-tools";
+                  href = "https://${toolsCfg.itTools.subdomain}.${domain}/";
+                  description = "Developer and IT utility toolkit";
+                };
+              }
+            ])
+            (lib.optionals toolsCfg.dozzle.enable [
+              {
+                Dozzle = {
+                  icon = "sh-dozzle";
+                  href = "https://${toolsCfg.dozzle.subdomain}.${domain}/";
+                  description = "Real-time Docker log viewer";
+                };
+              }
+            ])
+            (lib.optionals shCfg.scrypted.enable [
+              {
+                Scrypted = {
+                  icon = "sh-scrypted";
+                  href = "https://${shCfg.scrypted.subdomain}.${domain}/";
+                  description = "Smart home camera management hub";
+                };
+              }
+            ])
+            # (lib.optionals toolsCfg.changeDetection.enable [
+            #   {
+            #     "Change Detection" = {
+            #       icon = "sh-changedetection";
+            #       href = "https://${toolsCfg.changeDetection.subdomain}.${domain}/";
+            #     };
+            #   }
+            # ])
+          ];
+        }
+
+        # -----------------------------------------------------------------------
+        # Infrastructure
+        # -----------------------------------------------------------------------
+        {
+          Infrastructure = lib.flatten [
             [
               {
                 Traefik = {
@@ -77,109 +204,6 @@ in
                   description = "Lightweight LDAP user directory";
                 };
               }
-            ]
-
-            # Optional Managed Containers - conditional on enable flags
-            (lib.optionals mediaCfg.jellyfin.enable [
-              {
-                Jellyfin = {
-                  icon = "sh-jellyfin";
-                  href = "https://${mediaCfg.jellyfin.subdomain}.${domain}/sso/OID/start/authelia";
-                  description = "Movies, TV shows and Music";
-                };
-              }
-            ])
-
-            (lib.optionals shCfg.scrypted.enable [
-              {
-                Scrypted = {
-                  icon = "sh-scrypted";
-                  href = "https://${shCfg.scrypted.subdomain}.${domain}/";
-                  description = "Smart home camera management hub";
-                };
-              }
-            ])
-
-            (lib.optionals toolsCfg.itTools.enable [
-              {
-                "IT Tools" = {
-                  icon = "it-tools";
-                  href = "https://${toolsCfg.itTools.subdomain}.${domain}/";
-                  description = "Developer and IT utility toolkit";
-                };
-              }
-            ])
-
-            (lib.optionals toolsCfg.dozzle.enable [
-              {
-                Dozzle = {
-                  icon = "sh-dozzle";
-                  href = "https://${toolsCfg.dozzle.subdomain}.${domain}/";
-                  description = "Real-time Docker log viewer";
-                };
-              }
-            ])
-
-            (lib.optionals nextcloudCfg.enable [
-              {
-                Nextcloud = {
-                  icon = "sh-nextcloud";
-                  href = "https://${nextcloudCfg.subdomain}.${domain}/apps/oidc_login/oidc";
-                  description = "Files, calendar, and collaboration suite";
-                };
-              }
-            ])
-            (lib.optionals mediaCfg.jellyseerr.enable [
-              {
-                Jellyseerr = {
-                  icon = "sh-jellyseerr";
-                  href = "https://${mediaCfg.jellyseerr.subdomain}.${domain}";
-                  description = "Media request and discovery manager";
-                };
-              }
-            ])
-
-            (lib.optionals mediaCfg.sonarr.enable [
-              {
-                Sonarr = {
-                  icon = "sh-sonarr";
-                  href = "https://${mediaCfg.sonarr.subdomain}.${domain}/";
-                  description = "Automated TV show download manager";
-                };
-              }
-            ])
-
-            (lib.optionals mediaCfg.radarr.enable [
-              {
-                Radarr = {
-                  icon = "sh-radarr";
-                  href = "https://${mediaCfg.radarr.subdomain}.${domain}/";
-                  description = "Automated movie download manager";
-                };
-              }
-            ])
-
-            (lib.optionals mediaCfg.nzbget.enable [
-              {
-                Nzbget = {
-                  icon = "sh-nzbget";
-                  href = "https://${mediaCfg.nzbget.subdomain}.${domain}/";
-                  description = "Usenet binary downloader client";
-                };
-              }
-            ])
-            #
-            # (lib.optionals toolsCfg.changeDetection.enable [
-            #   {
-            #     "Change Detection" = {
-            #       icon = "sh-changedetection";
-            #       href = "https://${toolsCfg.changeDetection.subdomain}.${domain}/";
-            #     };
-            #   }
-            # ])
-
-            # Truly External Services - always included
-            [
               {
                 Unifi = {
                   icon = "sh-ubiquiti-unifi";
