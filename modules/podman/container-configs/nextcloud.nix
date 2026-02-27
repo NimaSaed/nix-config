@@ -69,6 +69,18 @@ in
         'oidc_login_remap_users' => true,
         'oidc_login_tls_verify' => true,
 
+        // SMTP mail configuration (all values injected via sops environmentFiles)
+        'mail_smtpmode' => 'smtp',
+        'mail_smtphost' => getenv('SMTP_HOST'),
+        'mail_smtpport' => (int)getenv('SMTP_PORT'),
+        'mail_smtpauth' => true,
+        'mail_smtpauthtype' => 'LOGIN',
+        'mail_smtpsecure' => getenv('SMTP_SECURE'),  // 'ssl' = implicit TLS (port 465)
+        'mail_smtpname' => getenv('SMTP_USER'),
+        'mail_smtppassword' => getenv('SMTP_PASSWORD'),
+        'mail_from_address' => getenv('SMTP_FROM_ADDRESS'),
+        'mail_domain' => '${domain}',
+
         ${lib.optionalString cfg.collabora.enable ''
         // Collabora Online integration
         // Requires: php occ app:install richdocuments

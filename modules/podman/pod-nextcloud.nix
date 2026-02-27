@@ -391,6 +391,12 @@ in
       "nextcloud/oidc_client_secret"
       "nextcloud/collabora_password"
       "nextcloud/whiteboard_jwt_secret"
+      "nextcloud/smtp_host"
+      "nextcloud/smtp_port"
+      "nextcloud/smtp_secure"
+      "nextcloud/smtp_user"
+      "nextcloud/smtp_password"
+      "nextcloud/smtp_from_address"
     ] (_: {
       owner = "poddy";
       group = "poddy";
@@ -442,6 +448,12 @@ in
         NEXTCLOUD_ADMIN_USER=${cfg.adminUser}
         NEXTCLOUD_ADMIN_PASSWORD=${config.sops.placeholder."nextcloud/admin_password"}
         OIDC_CLIENT_SECRET=${config.sops.placeholder."nextcloud/oidc_client_secret"}
+        SMTP_HOST=${config.sops.placeholder."nextcloud/smtp_host"}
+        SMTP_PORT=${config.sops.placeholder."nextcloud/smtp_port"}
+        SMTP_SECURE=${config.sops.placeholder."nextcloud/smtp_secure"}
+        SMTP_USER=${config.sops.placeholder."nextcloud/smtp_user"}
+        SMTP_PASSWORD=${config.sops.placeholder."nextcloud/smtp_password"}
+        SMTP_FROM_ADDRESS=${config.sops.placeholder."nextcloud/smtp_from_address"}
       '';
       owner = "poddy";
       group = "poddy";
