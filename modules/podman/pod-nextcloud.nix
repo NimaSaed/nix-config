@@ -319,7 +319,46 @@ in
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-collabora-secrets".path ];
               };
             };
-            # Container 6: Nextcloud Whiteboard WebSocket server
+            # Container 6: notify_push — Client Push server for desktop sync notifications
+            containers.nextcloud-push = {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "on-failure";
+                RestartSec = "10s";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "Nextcloud notify_push client push server";
+                After = [
+                  pods.nextcloud.ref
+                  "nextcloud-app.service"
+                  "nextcloud-db.service"
+                  "nextcloud-redis.service"
+                ];
+              };
+
+              containerConfig = {
+                image = "docker.io/library/nextcloud:32.0-fpm";
+                pod = pods.nextcloud.ref;
+                autoUpdate = "registry";
+                user = "1001:998";
+                exec = "/var/www/html/custom_apps/notify_push/bin/notify_push /var/www/html/config/config.php";
+
+                volumes = [
+                  "${volumes.nextcloud_data.ref}:/var/www/html:ro"
+                ];
+
+                environments = {
+                  TZ = "Europe/Amsterdam";
+                  PORT = "7867";
+                  NEXTCLOUD_URL = "https://${cfg.subdomain}.${domain}";
+                };
+              };
+            };
+
+            # Container 7: Nextcloud Whiteboard WebSocket server
             containers.nextcloud-whiteboard = lib.mkIf cfg.whiteboard.enable {
               autoStart = true;
 
@@ -523,3 +562,10 @@ in
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:install previewgenerator
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ preview:generate-all
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ preview:pre-generate
+#
+# 10. Install notify_push and set up the push server (nextcloud-push container crash-loops until this is done):
+#     sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:install notify_push
+#     sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:setup https://cloud.nmsd.xyz/push
+#
+# 11. Verify push server is working (nextcloud-push container self-heals on next restart):
+#     sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:self-test

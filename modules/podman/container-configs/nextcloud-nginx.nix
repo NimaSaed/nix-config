@@ -158,6 +158,16 @@ in
                   access_log off;
               }
 
+              # notify_push — Client Push for desktop sync notifications
+              location ^~ /push/ {
+                  proxy_pass http://127.0.0.1:7867/;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection "Upgrade";
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              }
+
               location /remote {
                   return 301 /remote.php$request_uri;
               }
