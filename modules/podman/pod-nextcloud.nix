@@ -353,7 +353,7 @@ in
                 environments = {
                   TZ = "Europe/Amsterdam";
                   PORT = "7867";
-                  NEXTCLOUD_URL = "https://${cfg.subdomain}.${domain}";
+                  NEXTCLOUD_URL = "http://127.0.0.1:8080";
                 };
               };
             };

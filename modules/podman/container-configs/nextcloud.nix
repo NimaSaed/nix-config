@@ -20,6 +20,7 @@ in
         ),
         'trusted_proxies' => array (
           0 => '10.88.0.0/16',  // Podman default subnet (Traefik pod)
+          1 => '127.0.0.1',     // notify_push (same pod, connects directly to nginx)
         ),
 
         // Protocol and host overrides (behind HTTPS reverse proxy)
