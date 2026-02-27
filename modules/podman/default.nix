@@ -44,7 +44,7 @@ let
       "traefik.http.routers.${name}.rule" = "Host(`${subdomain}.${cfg.domain}`)";
       "traefik.http.routers.${name}.entrypoints" = "websecure";
       "traefik.http.routers.${name}.tls" = "true";
-      "traefik.http.routers.${name}.tls.certresolver" = "namecheap";
+      "traefik.http.routers.${name}.tls.certresolver" = "letsencrypt";
       "traefik.http.routers.${name}.service" = name;
       "traefik.http.services.${name}.loadbalancer.server.scheme" = scheme;
       "traefik.http.services.${name}.loadbalancer.server.port" = toString port;

@@ -181,7 +181,7 @@ in
                     "traefik.tcp.routers.${name}.entrypoints" = "lldapsecure";
                     "traefik.tcp.routers.${name}.tls" = "true";
                     "traefik.tcp.routers.${name}.tls.domains[0].main" = "${cfg.lldap.subdomain}.${domain}";
-                    "traefik.tcp.routers.${name}.tls.certresolver" = "namecheap";
+                    "traefik.tcp.routers.${name}.tls.certresolver" = "letsencrypt";
                     "traefik.tcp.services.${name}.loadbalancer.server.port" = "3890";
                   };
                 };

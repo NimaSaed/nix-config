@@ -29,9 +29,8 @@ in
 
     # Declare secrets this module needs
     sops.secrets = lib.genAttrs [
-      "reverse-proxy/namecheap_email"
-      "reverse-proxy/namecheap_api_user"
-      "reverse-proxy/namecheap_api_key"
+      "reverse-proxy/cloudflare_email"
+      "reverse-proxy/cloudflare_api_token"
     ] (_: { owner = "poddy"; group = "poddy"; });
 
     networking.firewall = {
@@ -123,14 +122,14 @@ in
                   TRAEFIK_ENTRYPOINTS_SCRYPTEDHOMEKIT_ADDRESS = ":45888";
                   TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_TO = "websecure";
                   TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_SCHEME = "https";
-                  TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE = "true";
-                  TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_PROVIDER = "namecheap";
-                  TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_DNSCHALLENGE_RESOLVERS = "1.1.1.1:53,198.54.117.10:53,198.54.117.11:53";
-                  TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_STORAGE = "/data/acme.json";
+                  TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_DNSCHALLENGE = "true";
+                  TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_DNSCHALLENGE_PROVIDER = "cloudflare";
+                  TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_DNSCHALLENGE_RESOLVERS = "1.1.1.1:53,1.0.0.1:53";
+                  TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_STORAGE = "/data/acme.json";
                   TRAEFIK_SERVERSTRANSPORT_INSECURESKIPVERIFY = "true";
                 }
                 // lib.optionalAttrs cfg.useAcmeStaging {
-                  TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_CASERVER = "https://acme-staging-v02.api.letsencrypt.org/directory";
+                  TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_CASERVER = "https://acme-staging-v02.api.letsencrypt.org/directory";
                 };
 
                 securityLabelType = "container_runtime_t";
@@ -141,11 +140,11 @@ in
 
     sops.templates."traefik-secrets" = {
       content = ''
-        TRAEFIK_CERTIFICATESRESOLVERS_NAMECHEAP_ACME_EMAIL=${
-          config.sops.placeholder."reverse-proxy/namecheap_email"
+        TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL=${
+          config.sops.placeholder."reverse-proxy/cloudflare_email"
         }
-        NAMECHEAP_API_USER=${config.sops.placeholder."reverse-proxy/namecheap_api_user"}
-        NAMECHEAP_API_KEY=${config.sops.placeholder."reverse-proxy/namecheap_api_key"}
+        CF_API_EMAIL=${config.sops.placeholder."reverse-proxy/cloudflare_email"}
+        CF_DNS_API_TOKEN=${config.sops.placeholder."reverse-proxy/cloudflare_api_token"}
       '';
       owner = "poddy";
       group = "poddy";
