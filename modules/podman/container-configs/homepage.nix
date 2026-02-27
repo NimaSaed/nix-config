@@ -60,18 +60,21 @@ in
                 Traefik = {
                   icon = "sh-traefik";
                   href = "https://${rpCfg.subdomain}.${domain}/";
+                  description = "Reverse proxy and load balancer";
                 };
               }
               {
                 Authelia = {
                   icon = "sh-authelia";
                   href = "https://${authCfg.authelia.subdomain}.${domain}/";
+                  description = "Single sign-on authentication portal";
                 };
               }
               {
                 lldap = {
                   icon = "sh-lldap-light";
                   href = "https://${authCfg.lldap.subdomain}.${domain}/";
+                  description = "Lightweight LDAP user directory";
                 };
               }
             ]
@@ -92,6 +95,7 @@ in
                 Scrypted = {
                   icon = "sh-scrypted";
                   href = "https://${shCfg.scrypted.subdomain}.${domain}/";
+                  description = "Smart home camera management hub";
                 };
               }
             ])
@@ -101,6 +105,7 @@ in
                 "IT Tools" = {
                   icon = "it-tools";
                   href = "https://${toolsCfg.itTools.subdomain}.${domain}/";
+                  description = "Developer and IT utility toolkit";
                 };
               }
             ])
@@ -110,6 +115,7 @@ in
                 Dozzle = {
                   icon = "sh-dozzle";
                   href = "https://${toolsCfg.dozzle.subdomain}.${domain}/";
+                  description = "Real-time Docker log viewer";
                 };
               }
             ])
@@ -118,8 +124,8 @@ in
               {
                 Nextcloud = {
                   icon = "sh-nextcloud";
-                  href = "https://${nextcloudCfg.subdomain}.${domain}/";
-                  description = "iCloud replacement";
+                  href = "https://${nextcloudCfg.subdomain}.${domain}/apps/oidc_login/oidc";
+                  description = "Files, calendar, and collaboration suite";
                 };
               }
             ])
@@ -128,6 +134,7 @@ in
                 Jellyseerr = {
                   icon = "sh-jellyseerr";
                   href = "https://${mediaCfg.jellyseerr.subdomain}.${domain}";
+                  description = "Media request and discovery manager";
                 };
               }
             ])
@@ -137,6 +144,7 @@ in
                 Sonarr = {
                   icon = "sh-sonarr";
                   href = "https://${mediaCfg.sonarr.subdomain}.${domain}/";
+                  description = "Automated TV show download manager";
                 };
               }
             ])
@@ -146,6 +154,7 @@ in
                 Radarr = {
                   icon = "sh-radarr";
                   href = "https://${mediaCfg.radarr.subdomain}.${domain}/";
+                  description = "Automated movie download manager";
                 };
               }
             ])
@@ -155,6 +164,7 @@ in
                 Nzbget = {
                   icon = "sh-nzbget";
                   href = "https://${mediaCfg.nzbget.subdomain}.${domain}/";
+                  description = "Usenet binary downloader client";
                 };
               }
             ])
@@ -174,6 +184,7 @@ in
                 Unifi = {
                   icon = "sh-ubiquiti-unifi";
                   href = "https://unifi.ui.com/";
+                  description = "Ubiquiti network device management";
                 };
               }
             ]
