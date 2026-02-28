@@ -63,6 +63,7 @@ in
           'name' => 'name',
           'mail' => 'email',
           'groups' => 'groups',
+          'is_admin' => 'is_nextcloud_admin',
         ),
         'oidc_login_default_group' => 'oidc',
         'oidc_login_scope' => 'openid profile email groups nextcloud_userinfo',
