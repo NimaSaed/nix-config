@@ -54,6 +54,7 @@ in
 
           server {
               listen 8080;  # Non-privileged port for rootless Podman
+              absolute_redirect off;  # Prevent nginx from building absolute redirects with http://host:8080
 
               client_max_body_size 10G;  # Match PHP_UPLOAD_LIMIT
               client_body_timeout 300s;
