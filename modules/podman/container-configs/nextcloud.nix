@@ -26,6 +26,7 @@ in
         // Protocol and host overrides (behind HTTPS reverse proxy)
         'overwrite.cli.url' => 'https://${cfg.subdomain}.${domain}',
         'overwriteprotocol' => 'https',
+        'overwritehost'     => '${cfg.subdomain}.${domain}',
 
         // Phone number validation region
         'default_phone_region' => '${cfg.phoneRegion}',
