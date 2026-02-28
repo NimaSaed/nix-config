@@ -47,6 +47,7 @@
   networking.nat = {
     enable = true;
     externalInterface = "ens3";
+    internalInterfaces = [ "wg0" ];
     forwardPorts = [
       {
         sourcePort = 80;
