@@ -128,6 +128,14 @@
         { home-manager.users.nima = import ./home/nima/hazelnut.nix; }
       ];
 
+      # Modules for gateway host - UpCloud VPS WireGuard relay (minimal, no home-manager/podman)
+      gatewayModules = [
+        sharedOverlayModule
+        ./hosts/gateway
+        inputs.disko.nixosModules.disko
+        inputs.sops-nix.nixosModules.sops
+      ];
+
     in
     {
       # -------------------------------------------------------------------------
@@ -213,6 +221,14 @@
           modules = hazelnutModules;
           specialArgs = { inherit inputs outputs; };
         };
+
+        # Gateway - UpCloud VPS relay (WireGuard tunnel + NAT port forwarding)
+        # Hides chestnut's home IP; forwards ports 80/443 to chestnut via WireGuard
+        gateway = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = gatewayModules;
+          specialArgs = { inherit inputs outputs; };
+        };
       };
 
       # =========================================================================
@@ -288,6 +304,18 @@
             ];
           };
           imports = nutcrackerModules;
+        };
+
+        # Gateway - UpCloud VPS WireGuard relay
+        # Deploy: colmena apply --on gateway
+        gateway = {
+          deployment = {
+            targetHost = "UPCLOUD_PUBLIC_IP_PLACEHOLDER"; # replace with gateway's public IP
+            targetUser = "root";
+            buildOnTarget = true;
+            tags = [ "gateway" ];
+          };
+          imports = gatewayModules;
         };
       };
     };
