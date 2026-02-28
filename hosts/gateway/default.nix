@@ -98,6 +98,7 @@
 
   sops.defaultSopsFile = ./secrets.yaml;
   sops.age.keyFile = "/var/lib/sops-nix/key.txt";
+  sops.validateSopsFiles = false;
   sops.secrets."gateway/wg_private_key" = { };
 
   # ============================================================================
