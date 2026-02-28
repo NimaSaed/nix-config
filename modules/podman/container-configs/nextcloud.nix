@@ -53,10 +53,11 @@ in
         'oidc_login_provider_url' => 'https://${authCfg.authelia.subdomain}.${domain}',
         'oidc_login_client_id' => 'nextcloud',
         'oidc_login_client_secret' => getenv('OIDC_CLIENT_SECRET'),  // From environmentFiles
-        'oidc_login_auto_redirect' => false,
+        'oidc_login_auto_redirect' => true,
         'oidc_login_end_session_redirect' => true,
         'oidc_login_button_text' => 'Login with Authelia',
-        'oidc_login_hide_password_form' => false,
+        'lost_password_link' => 'disabled',
+        'hide_login_form' => true,
         'oidc_login_use_id_token' => false,
         'oidc_login_attributes' => array (
           'id' => 'preferred_username',
