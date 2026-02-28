@@ -140,7 +140,7 @@ in
               };
             };
 
-            containers.jellyfin = lib.mkIf cfg.jellyfin.enable {
+            containers.media-jellyfin = lib.mkIf cfg.jellyfin.enable {
               autoStart = true;
 
               serviceConfig = {
@@ -174,7 +174,7 @@ in
                 addGroups = [ "keep-groups" ];
               };
             };
-            containers.sonarr = lib.mkIf cfg.sonarr.enable {
+            containers.media-sonarr = lib.mkIf cfg.sonarr.enable {
               autoStart = true;
 
               serviceConfig = {
@@ -210,7 +210,7 @@ in
               };
             };
 
-            containers.radarr = lib.mkIf cfg.radarr.enable {
+            containers.media-radarr = lib.mkIf cfg.radarr.enable {
               autoStart = true;
 
               serviceConfig = {
@@ -246,7 +246,7 @@ in
               };
             };
 
-            containers.nzbget = lib.mkIf cfg.nzbget.enable {
+            containers.media-nzbget = lib.mkIf cfg.nzbget.enable {
               autoStart = true;
 
               serviceConfig = {
@@ -286,7 +286,7 @@ in
               };
             };
 
-            containers.jellyseerr = lib.mkIf cfg.jellyseerr.enable {
+            containers.media-jellyseerr = lib.mkIf cfg.jellyseerr.enable {
               autoStart = true;
 
               serviceConfig = {

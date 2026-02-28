@@ -94,7 +94,7 @@ in
               };
             };
 
-            containers.authelia = {
+            containers.auth-authelia = {
               autoStart = true;
 
               serviceConfig = {
@@ -152,7 +152,7 @@ in
               };
             };
 
-            containers.lldap = {
+            containers.auth-lldap = {
               autoStart = true;
 
               serviceConfig = {

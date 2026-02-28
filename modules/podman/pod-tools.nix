@@ -79,7 +79,7 @@ in
               };
             };
 
-            containers.homepage = lib.mkIf cfg.homepage.enable {
+            containers.tools-homepage = lib.mkIf cfg.homepage.enable {
               autoStart = true;
 
               serviceConfig = {
@@ -124,7 +124,7 @@ in
               };
             };
 
-            containers.it_tools = lib.mkIf cfg.itTools.enable {
+            containers.tools-ittools = lib.mkIf cfg.itTools.enable {
               autoStart = true;
 
               serviceConfig = {
@@ -150,7 +150,7 @@ in
               };
             };
 
-            containers.dozzle = lib.mkIf cfg.dozzle.enable {
+            containers.tools-dozzle = lib.mkIf cfg.dozzle.enable {
               autoStart = true;
 
               serviceConfig = {

@@ -55,7 +55,7 @@ in
               };
             };
 
-            containers.scrypted = lib.mkIf cfg.scrypted.enable {
+            containers.smart-home-scrypted = lib.mkIf cfg.scrypted.enable {
               autoStart = true;
 
               serviceConfig = {

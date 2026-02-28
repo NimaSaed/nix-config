@@ -72,7 +72,7 @@ in
               };
             };
 
-            containers.traefik = {
+            containers.reverse-proxy-traefik = {
               autoStart = true;
 
               serviceConfig = {
