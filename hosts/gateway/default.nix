@@ -30,6 +30,11 @@
     listenPort = 51820;
     privateKeyFile = config.sops.secrets."gateway/wg_private_key".path;
 
+    # MASQUERADE forwarded packets out through wg0 so chestnut sees 10.99.0.1 as source
+    # and routes responses back through the tunnel to gateway (which then NATs back to client).
+    postSetup = "${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE";
+    postShutdown = "${pkgs.iptables}/bin/iptables -t nat -D POSTROUTING -o wg0 -j MASQUERADE";
+
     peers = [
       {
         # chestnut
@@ -47,7 +52,6 @@
   networking.nat = {
     enable = true;
     externalInterface = "ens3";
-    internalInterfaces = [ "wg0" ];
     forwardPorts = [
       {
         sourcePort = 80;
