@@ -11,7 +11,7 @@
     ./disko.nix
   ];
 
-  networking.hostName = "gateway";
+  networking.hostName = "walnut";
 
   # ============================================================================
   # Boot
@@ -22,16 +22,16 @@
   # ============================================================================
   # WireGuard - Tunnel server (persistent public endpoint)
   # ============================================================================
-  # gateway (10.99.0.1) is the server — chestnut (10.99.0.2) connects outbound to it.
-  # chestnut lives behind NAT (UDM Pro), so gateway must be the stable endpoint.
+  # walnut (10.99.0.1) is the server — chestnut (10.99.0.2) connects outbound to it.
+  # chestnut lives behind NAT (UDM Pro), so walnut must be the stable endpoint.
 
   networking.wireguard.interfaces.wg0 = {
     ips = [ "10.99.0.1/24" ];
     listenPort = 51820;
-    privateKeyFile = config.sops.secrets."gateway/wg_private_key".path;
+    privateKeyFile = config.sops.secrets."wireguard/walnut_private_key".path;
 
     # MASQUERADE forwarded packets out through wg0 so chestnut sees 10.99.0.1 as source
-    # and routes responses back through the tunnel to gateway (which then NATs back to client).
+    # and routes responses back through the tunnel to walnut (which then NATs back to client).
     postSetup = "${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE";
     postShutdown = "${pkgs.iptables}/bin/iptables -t nat -D POSTROUTING -o wg0 -j MASQUERADE";
 
@@ -46,7 +46,7 @@
 
   # ============================================================================
   # NAT - Layer 4 port forwarding to chestnut via WireGuard
-  # Traffic is forwarded as raw encrypted TCP — gateway never inspects TLS content.
+  # Traffic is forwarded as raw encrypted TCP — walnut never inspects TLS content.
   # ============================================================================
 
   networking.nat = {
@@ -92,17 +92,17 @@
   # Secrets - sops-nix
   # ============================================================================
   # Bootstrap steps (one-time, after first boot):
-  # 1. ssh root@<gateway-ip>
-  # 2. ssh-keyscan <gateway-ip> | ssh-to-age  → get gateway age pubkey
-  # 3. Add pubkey to .sops.yaml under &gateway
-  # 4. Add creation_rule for hosts/gateway/secrets.yaml
-  # 5. sops hosts/gateway/secrets.yaml  → add gateway/wg_private_key
-  # 6. colmena apply --on gateway
+  # 1. ssh root@<walnut-ip>
+  # 2. ssh-keyscan <walnut-ip> | ssh-to-age  → get walnut age pubkey
+  # 3. Add pubkey to .sops.yaml under &walnut
+  # 4. Add creation_rule for hosts/walnut/secrets.yaml
+  # 5. sops hosts/walnut/secrets.yaml  → add wireguard/walnut_private_key
+  # 6. colmena apply --on walnut
 
   sops.defaultSopsFile = ./secrets.yaml;
   sops.age.keyFile = "/var/lib/sops-nix/key.txt";
   sops.validateSopsFiles = false;
-  sops.secrets."gateway/wg_private_key" = { };
+  sops.secrets."wireguard/walnut_private_key" = { };
 
   # ============================================================================
   # SSH

@@ -128,10 +128,10 @@
         { home-manager.users.nima = import ./home/nima/hazelnut.nix; }
       ];
 
-      # Modules for gateway host - VPS WireGuard relay (minimal, no home-manager/podman)
-      gatewayModules = [
+      # Modules for walnut host - VPS WireGuard relay (minimal, no home-manager/podman)
+      walnutModules = [
         sharedOverlayModule
-        ./hosts/gateway
+        ./hosts/walnut
         inputs.disko.nixosModules.disko
         inputs.sops-nix.nixosModules.sops
       ];
@@ -222,20 +222,20 @@
           specialArgs = { inherit inputs outputs; };
         };
 
-        # Gateway - VPS relay (WireGuard tunnel + NAT port forwarding)
+        # Walnut - VPS relay (WireGuard tunnel + NAT port forwarding)
         # Hides chestnut's home IP; forwards ports 80/443 to chestnut via WireGuard
-        gateway = nixpkgs.lib.nixosSystem {
+        walnut = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          modules = gatewayModules;
+          modules = walnutModules;
           specialArgs = { inherit inputs outputs; };
         };
 
-        # Gateway VM - local test build for Apple Silicon Mac
-        # Build: nix build .#nixosConfigurations.gateway-vm.config.system.build.vm
-        # Run:   ./result/bin/run-gateway-vm-vm
-        gateway-vm = nixpkgs.lib.nixosSystem {
+        # Walnut VM - local test build for Apple Silicon Mac
+        # Build: nix build .#nixosConfigurations.walnut-vm.config.system.build.vm
+        # Run:   ./result/bin/run-walnut-vm-vm
+        walnut-vm = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
-          modules = gatewayModules ++ [
+          modules = walnutModules ++ [
             {
               nixpkgs.hostPlatform = nixpkgs.lib.mkForce "aarch64-linux";
 
@@ -335,16 +335,16 @@
           imports = nutcrackerModules;
         };
 
-        # Gateway - VPS WireGuard relay
-        # Deploy: colmena apply --on gateway
-        gateway = {
+        # Walnut - VPS WireGuard relay
+        # Deploy: colmena apply --on walnut
+        walnut = {
           deployment = {
-            targetHost = "gateway.nmsd.xyz";
+            targetHost = "walnut.nmsd.xyz";
             targetUser = "root";
             buildOnTarget = true;
-            tags = [ "gateway" ];
+            tags = [ "walnut" ];
           };
-          imports = gatewayModules;
+          imports = walnutModules;
         };
       };
     };
