@@ -32,8 +32,8 @@ in
 
         // Locale must be region-specific (not bare 'en') to avoid Photos app crash
         // See: https://help.nextcloud.com/t/photos-page-blank-when-using-en-locale/240664
-        'default_language' => 'en',
-        'default_locale' => 'en_US',
+        'default_language' => 'en_GB',
+        'default_locale' => 'en_GB',
 
         // Redis configuration for caching and file locking
         'memcache.local' => '\\OC\\Memcache\\APCu',
