@@ -11,6 +11,7 @@
     ./disko-zfs-datapool.nix
     ./hardware-configuration.nix
     ./samba.nix
+    ./wireguard.nix
     ../common/core
     ../common/users/nima
   ];
