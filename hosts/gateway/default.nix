@@ -17,8 +17,7 @@
   # Boot
   # ============================================================================
 
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub.enable = true;
 
   # ============================================================================
   # WireGuard - Tunnel server (persistent public endpoint)
@@ -34,7 +33,7 @@
     peers = [
       {
         # chestnut
-        publicKey = "";
+        publicKey = "fjayqafC3ZyDGcp3LsM14CZCPjf/mJRpye+24p+S/ic=";
         allowedIPs = [ "10.99.0.2/32" ];
       }
     ];
@@ -48,7 +47,6 @@
   networking.nat = {
     enable = true;
     externalInterface = "ens3";
-    internalInterfaces = [ "wg0" ];
     forwardPorts = [
       {
         sourcePort = 80;

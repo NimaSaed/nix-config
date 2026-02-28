@@ -128,7 +128,7 @@
         { home-manager.users.nima = import ./home/nima/hazelnut.nix; }
       ];
 
-      # Modules for gateway host - UpCloud VPS WireGuard relay (minimal, no home-manager/podman)
+      # Modules for gateway host - VPS WireGuard relay (minimal, no home-manager/podman)
       gatewayModules = [
         sharedOverlayModule
         ./hosts/gateway
@@ -222,11 +222,40 @@
           specialArgs = { inherit inputs outputs; };
         };
 
-        # Gateway - UpCloud VPS relay (WireGuard tunnel + NAT port forwarding)
+        # Gateway - VPS relay (WireGuard tunnel + NAT port forwarding)
         # Hides chestnut's home IP; forwards ports 80/443 to chestnut via WireGuard
         gateway = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = gatewayModules;
+          specialArgs = { inherit inputs outputs; };
+        };
+
+        # Gateway VM - local test build for Apple Silicon Mac
+        # Build: nix build .#nixosConfigurations.gateway-vm.config.system.build.vm
+        # Run:   ./result/bin/run-gateway-vm-vm
+        gateway-vm = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          modules = gatewayModules ++ [
+            {
+              nixpkgs.hostPlatform = nixpkgs.lib.mkForce "aarch64-linux";
+
+              users.users.root.initialHashedPassword = "";
+              services.getty.autologinUser = "root";
+
+              networking.nat.externalInterface = nixpkgs.lib.mkForce "eth0";
+
+              virtualisation.vmVariant.virtualisation = {
+                memorySize = 512;
+                cores = 1;
+                host.pkgs = nixpkgs.legacyPackages.aarch64-darwin;
+                forwardPorts = [
+                  { from = "host"; host.port = 8080; guest.port = 80;    }
+                  { from = "host"; host.port = 8443; guest.port = 443;   }
+                  { from = "host"; host.port = 51820; guest.port = 51820; proto = "udp"; }
+                ];
+              };
+            }
+          ];
           specialArgs = { inherit inputs outputs; };
         };
       };
@@ -306,11 +335,11 @@
           imports = nutcrackerModules;
         };
 
-        # Gateway - UpCloud VPS WireGuard relay
+        # Gateway - VPS WireGuard relay
         # Deploy: colmena apply --on gateway
         gateway = {
           deployment = {
-            targetHost = "UPCLOUD_PUBLIC_IP_PLACEHOLDER"; # replace with gateway's public IP
+            targetHost = "gateway.nmsd.xyz";
             targetUser = "root";
             buildOnTarget = true;
             tags = [ "gateway" ];
