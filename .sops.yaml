@@ -13,6 +13,9 @@ keys:
   # Hazelnut Lattepanda - age key
   - &hazelnut age1nfedn87d4vznulenxj37v7vaja9aa50zpm8st585gxuknm4vrpxqrhspmd
 
+  # Walnut - age key
+  - &walnut age1mqkttrhvc6nvtp062tchj4v346xwvd38tp6kgf6wr9z22eanpa6salsz2z
+
 creation_rules:
   - path_regex: hosts/chestnut/secrets\.yaml$
     key_groups:
@@ -32,3 +35,9 @@ creation_rules:
       - age:
         - *personal
         - *hazelnut
+
+  - path_regex: hosts/walnut/secrets\.yaml$
+    key_groups:
+      - age:
+        - *personal
+        - *walnut

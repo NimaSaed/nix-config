@@ -128,6 +128,14 @@
         { home-manager.users.nima = import ./home/nima/hazelnut.nix; }
       ];
 
+      # Modules for walnut host - VPS WireGuard relay (minimal, no home-manager/podman)
+      walnutModules = [
+        sharedOverlayModule
+        ./hosts/walnut
+        inputs.disko.nixosModules.disko
+        inputs.sops-nix.nixosModules.sops
+      ];
+
     in
     {
       # -------------------------------------------------------------------------
@@ -213,6 +221,43 @@
           modules = hazelnutModules;
           specialArgs = { inherit inputs outputs; };
         };
+
+        # Walnut - VPS relay (WireGuard tunnel + NAT port forwarding)
+        # Hides chestnut's home IP; forwards ports 80/443 to chestnut via WireGuard
+        walnut = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = walnutModules;
+          specialArgs = { inherit inputs outputs; };
+        };
+
+        # Walnut VM - local test build for Apple Silicon Mac
+        # Build: nix build .#nixosConfigurations.walnut-vm.config.system.build.vm
+        # Run:   ./result/bin/run-walnut-vm-vm
+        walnut-vm = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          modules = walnutModules ++ [
+            {
+              nixpkgs.hostPlatform = nixpkgs.lib.mkForce "aarch64-linux";
+
+              users.users.root.initialHashedPassword = "";
+              services.getty.autologinUser = "root";
+
+              networking.nat.externalInterface = nixpkgs.lib.mkForce "eth0";
+
+              virtualisation.vmVariant.virtualisation = {
+                memorySize = 512;
+                cores = 1;
+                host.pkgs = nixpkgs.legacyPackages.aarch64-darwin;
+                forwardPorts = [
+                  { from = "host"; host.port = 8080; guest.port = 80;    }
+                  { from = "host"; host.port = 8443; guest.port = 443;   }
+                  { from = "host"; host.port = 51820; guest.port = 51820; proto = "udp"; }
+                ];
+              };
+            }
+          ];
+          specialArgs = { inherit inputs outputs; };
+        };
       };
 
       # =========================================================================
@@ -288,6 +333,18 @@
             ];
           };
           imports = nutcrackerModules;
+        };
+
+        # Walnut - VPS WireGuard relay
+        # Deploy: colmena apply --on walnut
+        walnut = {
+          deployment = {
+            targetHost = "walnut.nmsd.xyz";
+            targetUser = "root";
+            buildOnTarget = true;
+            tags = [ "walnut" ];
+          };
+          imports = walnutModules;
         };
       };
     };
