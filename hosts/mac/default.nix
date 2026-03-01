@@ -16,6 +16,8 @@
   # ===========================================================================
   nix.settings = {
     experimental-features = "nix-command flakes";
+    # Allow this user to override restricted Nix settings at runtime (e.g. --option builders)
+    trusted-users = [ "root" "nima" ];
   };
 
   # Automatic garbage collection - weekly cleanup

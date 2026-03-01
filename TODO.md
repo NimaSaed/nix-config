@@ -62,6 +62,27 @@ don't come from module options. Consider adding them as options for consistency.
 to `HostSNI(\`${cfg.lldap.subdomain}.${domain}\`)` for specificity.
 - File: `pod-auth.nix` (line ~229)
 
+## Installation / Scripts
+
+### Unexpectedly large NixOS closure on walnut (mdadm, nfs-utils)
+During nixos-anywhere installation of walnut, `mdadm` and `nfs-utils` appear in the closure
+despite walnut using plain ext4 and having no RAID or NFS configuration.
+These are likely pulled in transitively by a module in `hosts/common/core` or a default NixOS
+option (e.g. `boot.initrd.availableKernelModules`, `services.lvm`, or hardware scan defaults).
+
+**Impact:** Inflates the closure unnecessarily for a minimal WireGuard relay VPS.
+
+**To investigate:**
+```bash
+nix path-info --recursive --json .#nixosConfigurations.walnut.config.system.build.toplevel \
+  | jq -r '.[].path' | grep -E 'mdadm|nfs-utils'
+# Then trace why via:
+nix why-depends .#nixosConfigurations.walnut.config.system.build.toplevel /nix/store/<mdadm-path>
+```
+
+**Solution:** Identify and disable the module/option pulling them in.
+- Candidates: `boot.initrd.availableKernelModules`, hardware-configuration.nix generated entries
+
 ## Minor
 
 - `TRAEFIK_SERVERSTRANSPORT_INSECURESKIPVERIFY=true` skips TLS verification for

@@ -1,15 +1,44 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: ./install.sh [--mount-only] <remote-host>
+# Usage: ./install.sh [--mount-only] [--no-disko-deps] [--build-on-target | --builder <user@host>] <remote-host>
+
+# Nix distributed builder settings (used when --builder <host> is passed)
+# Builder spec format: uri  systems  ssh-identity  max-jobs  speed-factor  supported-features  mandatory-features
+# ssh-identity: path to SSH private key, or "-" to use the default SSH agent / known keys
+BUILDER_SSH_KEY="-"
+# max-jobs: parallel build jobs on the remote builder
+BUILDER_MAX_JOBS="4"
+# speed-factor: relative preference when multiple builders are available (higher = more preferred)
+BUILDER_SPEED_FACTOR="1"
+# supported-features: capabilities the builder supports
+#   nixos-test   - can run NixOS VM tests
+#   benchmark    - can run benchmarks
+#   big-parallel - can handle large parallel derivations (recommended for servers)
+#   kvm          - has KVM virtualisation support (required to actually run nixos-test VMs)
+BUILDER_FEATURES="nixos-test,benchmark,big-parallel,kvm"
 
 MOUNT_ONLY=false
-if [[ "${1:-}" == "--mount-only" ]]; then
-    MOUNT_ONLY=true
-    shift
-fi
+NO_DISKO_DEPS=false
+BUILD_ON_TARGET=false
+BUILD_HOST=""
 
-REMOTE_HOST="${1:?Usage: $0 [--mount-only] <remote-host>}"
+while [[ "${1:-}" == --* ]]; do
+    case "${1:-}" in
+        --mount-only)      MOUNT_ONLY=true; shift ;;
+        --no-disko-deps)   NO_DISKO_DEPS=true; shift ;;
+        --build-on-target) BUILD_ON_TARGET=true; shift ;;
+        --builder)         BUILD_HOST="${2:?--builder requires a value (e.g. root@host)}"; shift 2 ;;
+        *) echo "Unknown option: $1"; exit 1 ;;
+    esac
+done
+
+REMOTE_HOST="${1:?Usage: $0 [--mount-only] [--no-disko-deps] [--build-on-target | --builder <user@host>] <user@host>}"
+
+if [[ "$BUILD_ON_TARGET" == true && -n "$BUILD_HOST" ]]; then
+    echo "Error: --build-on-target and --builder are mutually exclusive"
+    exit 1
+fi
 
 # Extract hostname from REMOTE_HOST (e.g., root@chestnut.nmsd.xyz -> chestnut)
 HOST_PART="${REMOTE_HOST#*@}"
@@ -20,6 +49,9 @@ HOSTNAME_CAPITALIZED="$(echo "${HOSTNAME:0:1}" | tr '[:lower:]' '[:upper:]')${HO
 OP_ITEM="${HOSTNAME_CAPITALIZED} SOPS Age"
 
 FLAKE_TARGET="$HOSTNAME"
+
+# Read target system architecture from flake (e.g. x86_64-linux, aarch64-linux)
+TARGET_SYSTEM=$(nix eval --raw ".#nixosConfigurations.${FLAKE_TARGET}.config.nixpkgs.system")
 
 # Extract disk device paths from the host's disko configuration
 echo "Reading disk configuration for $FLAKE_TARGET..."
@@ -106,10 +138,29 @@ echo "All disks wiped successfully."
 WIPE_EOF
 fi
 
+BUILD_ARGS=()
+if [[ "$BUILD_ON_TARGET" == true ]]; then
+    BUILD_ARGS+=(--build-on remote)
+elif [[ -n "$BUILD_HOST" ]]; then
+    BUILD_ARGS+=(--option builders \
+        "ssh://$BUILD_HOST $TARGET_SYSTEM $BUILDER_SSH_KEY $BUILDER_MAX_JOBS $BUILDER_SPEED_FACTOR $BUILDER_FEATURES")
+else
+    BUILD_ARGS+=(--build-on local)
+fi
+
+EXTRA_ARGS=()
+if [[ "$NO_DISKO_DEPS" == true ]]; then
+    # Skip uploading disko tool dependencies (parted, zfs, mdadm, etc.) into the kexec
+    # installer RAM. Safe only when the target has no ZFS/exotic filesystems, since the
+    # kexec environment's built-in tools must already cover all disko operations.
+    EXTRA_ARGS+=(--no-disko-deps)
+fi
+
 echo "Installing NixOS to $REMOTE_HOST with SOPS key..."
 nix run github:nix-community/nixos-anywhere/1.13.0 -- \
-    --build-on remote \
     --extra-files "$temp" \
     "${DISKO_ARGS[@]}" \
+    "${BUILD_ARGS[@]}" \
+    "${EXTRA_ARGS[@]}" \
     --flake ".#$FLAKE_TARGET" \
     "$REMOTE_HOST"
