@@ -101,7 +101,7 @@
 
   sops.defaultSopsFile = ./secrets.yaml;
   sops.age.keyFile = "/var/lib/sops-nix/key.txt";
-  sops.validateSopsFiles = false;
+  sops.validateSopsFiles = true;
   sops.secrets."wireguard/walnut_private_key" = { };
 
   # ============================================================================
