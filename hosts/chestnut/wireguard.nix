@@ -17,6 +17,7 @@
         allowedIPs = [ "10.99.0.1/32" ];
         endpoint = "walnut.nmsd.xyz:51820";
         persistentKeepalive = 25; # essential: UDM Pro NAT tables expire without this
+        dynamicEndpointRefreshSeconds = 300; # re-resolve walnut.nmsd.xyz DNS every 5 min
       }
     ];
   };
