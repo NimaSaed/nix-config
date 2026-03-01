@@ -53,7 +53,6 @@
     brave # Web browser
     monitorcontrol # External monitor controls
     zoom-us # Video conferencing
-    _1password-cli # 1Password CLI (GUI installed via nix-darwin)
   ];
 
   # ===========================================================================

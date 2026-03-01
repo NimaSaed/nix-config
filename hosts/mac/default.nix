@@ -12,11 +12,6 @@
   imports = [ ../common/core ];
 
   # ===========================================================================
-  # 1Password - Must use nix-darwin module for proper /Applications install
-  # ===========================================================================
-  programs._1password-gui.enable = true;
-
-  # ===========================================================================
   # Nix Configuration
   # ===========================================================================
   nix.settings = {
@@ -36,6 +31,11 @@
 
   # Automatic store optimization
   nix.optimise.automatic = true;
+
+  # Linux builder - aarch64-linux VM using Apple's Virtualization framework.
+  # Enables building NixOS configs and VMs directly on Apple Silicon.
+  nix.linux-builder.enable = true;
+
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
@@ -96,6 +96,8 @@
       "protonvpn" # VPN client
       "inkscape" # Vector graphics editor
       "nextcloud"
+      "1password"
+      "1password-cli"
     ];
 
     # Mac App Store applications
