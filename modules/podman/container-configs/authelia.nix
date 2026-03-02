@@ -115,6 +115,8 @@ in
               custom_claims:
                 is_nextcloud_admin: {}
             immich_policy:
+              id_token:
+                - immich_role
               custom_claims:
                 immich_role: {}
           scopes:
