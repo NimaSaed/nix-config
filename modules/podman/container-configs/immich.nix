@@ -29,11 +29,16 @@ in
           issuerUrl = "https://${authCfg.authelia.subdomain}.${domain}/.well-known/openid-configuration";
           clientId = "immich";
           clientSecret = config.sops.placeholder."immich/oauth_client_secret";
-          scope = "openid email profile";
+          scope = "openid email profile immich_scope";
           autoRegister = true;
-          autoLaunch = false;
+          autoLaunch = true;
           buttonText = "Login with Authelia";
           tokenEndpointAuthMethod = "client_secret_post";
+          roleClaim = "immich_role";
+        };
+        passwordLogin = {
+          # Disable email/password login — enforce OIDC-only via Authelia
+          enabled = false;
         };
         machineLearning = {
           # ML container shares the pod network namespace — reach it via localhost

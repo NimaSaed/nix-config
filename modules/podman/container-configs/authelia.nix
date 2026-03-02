@@ -105,6 +105,8 @@ in
         user_attributes:
           is_nextcloud_admin:
             expression: '"nextcloud-admins" in groups'
+          immich_role:
+            expression: '"immich-admins" in groups ? "immich_admin" : ""'
 
       identity_providers:
         oidc:
@@ -112,10 +114,16 @@ in
             nextcloud_userinfo:
               custom_claims:
                 is_nextcloud_admin: {}
+            immich_policy:
+              custom_claims:
+                immich_role: {}
           scopes:
             nextcloud_userinfo:
               claims:
                 - is_nextcloud_admin
+            immich_scope:
+              claims:
+                - immich_role
 
           jwks:
             - key_id: 'authelia_key'
@@ -171,6 +179,7 @@ in
               client_secret: '{{ secret "/secrets/immich_client_secret" }}'
               public: false
               authorization_policy: two_factor
+              claims_policy: immich_policy
               redirect_uris:
                 - "https://${immichCfg.subdomain}.${domain}/auth/login"
                 - "https://${immichCfg.subdomain}.${domain}/user-settings"
@@ -179,6 +188,7 @@ in
                 - openid
                 - profile
                 - email
+                - immich_scope
               response_types:
                 - code
               grant_types:
