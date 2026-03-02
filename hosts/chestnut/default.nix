@@ -46,6 +46,10 @@
     nextcloud = {
       enable = true;
     };
+    immich = {
+      enable = true;
+      machinelearning.openvino.enable = true;
+    };
   };
 
   # ============================================================================

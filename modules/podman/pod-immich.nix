@@ -237,13 +237,16 @@ in
       };
 
     # Secret management using sops-nix
-    sops.secrets = lib.genAttrs [
-      "immich/db_password"
-      "immich/oauth_client_secret"
-    ] (_: {
-      owner = "poddy";
-      group = "poddy";
-    });
+    sops.secrets =
+      lib.genAttrs
+        [
+          "immich/db_password"
+          "immich/oauth_client_secret"
+        ]
+        (_: {
+          owner = "poddy";
+          group = "poddy";
+        });
 
     # Database password (shared between immich-db and immich-server)
     sops.templates."immich-db-secrets" = {
