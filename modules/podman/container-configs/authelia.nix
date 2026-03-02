@@ -101,7 +101,7 @@ in
           base_dn: "${baseDN}"
           user: "uid=admin,ou=people,${baseDN}"
           attributes:
-            picture: 'avatar_url'
+            picture: 'avatarurl'
 
       definitions:
         user_attributes:
