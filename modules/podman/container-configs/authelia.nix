@@ -100,6 +100,8 @@ in
           address: "ldap://auth:3890"
           base_dn: "${baseDN}"
           user: "uid=admin,ou=people,${baseDN}"
+          attributes:
+            picture: 'avatar_url'
 
       definitions:
         user_attributes:
