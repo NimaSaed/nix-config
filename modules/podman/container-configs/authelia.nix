@@ -13,6 +13,7 @@ let
   rpCfg = config.services.pods.reverse-proxy;
   nextcloudCfg = config.services.pods.nextcloud;
   shCfg = config.services.pods.smart-home;
+  immichCfg = config.services.pods.immich;
   baseDN = authCfg._baseDN;
 in
 {
@@ -47,7 +48,6 @@ in
         rules:
           - domain:
               - "${toolsCfg.itTools.subdomain}.${domain}"
-              - "${mediaCfg.jellyfin.subdomain}.${domain}"
             policy: bypass
           - domain:
               - "${toolsCfg.homepage.subdomain}.${domain}"
@@ -100,11 +100,15 @@ in
           address: "ldap://auth:3890"
           base_dn: "${baseDN}"
           user: "uid=admin,ou=people,${baseDN}"
+          attributes:
+            picture: 'avatarurl'
 
       definitions:
         user_attributes:
           is_nextcloud_admin:
             expression: '"nextcloud-admins" in groups'
+          immich_role:
+            expression: '"immich-admins" in groups ? "admin" : "user"'
 
       identity_providers:
         oidc:
@@ -112,10 +116,18 @@ in
             nextcloud_userinfo:
               custom_claims:
                 is_nextcloud_admin: {}
+            immich_policy:
+              id_token:
+                - immich_role
+              custom_claims:
+                immich_role: {}
           scopes:
             nextcloud_userinfo:
               claims:
                 - is_nextcloud_admin
+            immich_scope:
+              claims:
+                - immich_role
 
           jwks:
             - key_id: 'authelia_key'
@@ -158,6 +170,29 @@ in
                 - openid
                 - profile
                 - groups
+              response_types:
+                - code
+              grant_types:
+                - authorization_code
+              consent_mode: implicit
+              access_token_signed_response_alg: none
+              userinfo_signed_response_alg: none
+              token_endpoint_auth_method: client_secret_post
+            - client_id: immich
+              client_name: Immich
+              client_secret: '{{ secret "/secrets/immich_client_secret" }}'
+              public: false
+              authorization_policy: two_factor
+              claims_policy: immich_policy
+              redirect_uris:
+                - "https://${immichCfg.subdomain}.${domain}/auth/login"
+                - "https://${immichCfg.subdomain}.${domain}/user-settings"
+                - "app.immich:///oauth-callback"
+              scopes:
+                - openid
+                - profile
+                - email
+                - immich_scope
               response_types:
                 - code
               grant_types:

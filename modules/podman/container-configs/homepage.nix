@@ -14,6 +14,7 @@ let
   rpCfg = config.services.pods.reverse-proxy;
   nextcloudCfg = config.services.pods.nextcloud;
   shCfg = config.services.pods.smart-home;
+  immichCfg = config.services.pods.immich;
 in
 {
   options.services.pods.homepage = {
@@ -116,6 +117,15 @@ in
                   icon = "sh-nextcloud";
                   href = "https://${nextcloudCfg.subdomain}.${domain}/apps/oidc_login/oidc";
                   description = "Files, calendar, and collaboration suite";
+                };
+              }
+            ])
+            (lib.optionals immichCfg.enable [
+              {
+                Immich = {
+                  icon = "sh-immich";
+                  href = "https://${immichCfg.subdomain}.${domain}";
+                  description = "Photo and video library";
                 };
               }
             ])

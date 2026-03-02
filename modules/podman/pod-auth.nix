@@ -65,6 +65,7 @@ in
       "authelia/oidc_jwks_certificate_chain"
       "authelia/oidc_client_secret_nextcloud"
       "authelia/oidc_client_secret_jellyfin"
+      "authelia/oidc_client_secret_immich"
       "authelia/smtp_address"
       "authelia/smtp_username"
       "ldap/lldap_ldap_user_pass"
@@ -148,6 +149,9 @@ in
                   "${
                     nixosConfig.sops.secrets."authelia/oidc_client_secret_jellyfin".path
                   }:/secrets/jellyfin_client_secret:ro"
+                  "${
+                    nixosConfig.sops.secrets."authelia/oidc_client_secret_immich".path
+                  }:/secrets/immich_client_secret:ro"
                 ];
               };
             };
