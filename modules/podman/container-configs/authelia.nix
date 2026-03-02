@@ -106,7 +106,7 @@ in
           is_nextcloud_admin:
             expression: '"nextcloud-admins" in groups'
           immich_role:
-            expression: '"immich-admins" in groups ? "immich_admin" : ""'
+            expression: '"immich-admins" in groups ? "admin" : "user"'
 
       identity_providers:
         oidc:
