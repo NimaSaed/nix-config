@@ -13,6 +13,7 @@ let
   rpCfg = config.services.pods.reverse-proxy;
   nextcloudCfg = config.services.pods.nextcloud;
   shCfg = config.services.pods.smart-home;
+  immichCfg = config.services.pods.immich;
   baseDN = authCfg._baseDN;
 in
 {
@@ -47,7 +48,6 @@ in
         rules:
           - domain:
               - "${toolsCfg.itTools.subdomain}.${domain}"
-              - "${mediaCfg.jellyfin.subdomain}.${domain}"
             policy: bypass
           - domain:
               - "${toolsCfg.homepage.subdomain}.${domain}"
@@ -158,6 +158,27 @@ in
                 - openid
                 - profile
                 - groups
+              response_types:
+                - code
+              grant_types:
+                - authorization_code
+              consent_mode: implicit
+              access_token_signed_response_alg: none
+              userinfo_signed_response_alg: none
+              token_endpoint_auth_method: client_secret_post
+            - client_id: immich
+              client_name: Immich
+              client_secret: '{{ secret "/secrets/immich_client_secret" }}'
+              public: false
+              authorization_policy: two_factor
+              redirect_uris:
+                - "https://${immichCfg.subdomain}.${domain}/auth/login"
+                - "https://${immichCfg.subdomain}.${domain}/user-settings"
+                - "app.immich:///oauth-callback"
+              scopes:
+                - openid
+                - profile
+                - email
               response_types:
                 - code
               grant_types:

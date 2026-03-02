@@ -63,6 +63,7 @@ in
     ./pod-auth.nix
     ./pod-nextcloud.nix
     ./pod-smart-home.nix
+    ./pod-immich.nix
   ];
 
   options.services.pods = {
