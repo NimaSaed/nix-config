@@ -53,7 +53,6 @@
     brave # Web browser
     monitorcontrol # External monitor controls
     zoom-us # Video conferencing
-    firefox
   ];
 
   # ===========================================================================

@@ -17,7 +17,10 @@
   nix.settings = {
     experimental-features = "nix-command flakes";
     # Allow this user to override restricted Nix settings at runtime (e.g. --option builders)
-    trusted-users = [ "root" "nima" ];
+    trusted-users = [
+      "root"
+      "nima"
+    ];
   };
 
   # Automatic garbage collection - weekly cleanup
@@ -37,7 +40,6 @@
   # Linux builder - aarch64-linux VM using Apple's Virtualization framework.
   # Enables building NixOS configs and VMs directly on Apple Silicon.
   nix.linux-builder.enable = true;
-
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
@@ -100,6 +102,7 @@
       "nextcloud"
       "1password"
       "1password-cli"
+      "firefox"
     ];
 
     # Mac App Store applications

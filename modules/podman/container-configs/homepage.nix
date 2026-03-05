@@ -38,10 +38,30 @@ in
           opacity = 50;
         };
         layout = [
-          { Media = { style = "row"; columns = 3; }; }
-          { Storage = { style = "row"; columns = 3; }; }
-          { Tools = { style = "row"; columns = 3; }; }
-          { Infrastructure = { style = "row"; columns = 3; }; }
+          {
+            Media = {
+              style = "row";
+              columns = 3;
+            };
+          }
+          {
+            Storage = {
+              style = "row";
+              columns = 3;
+            };
+          }
+          {
+            Tools = {
+              style = "row";
+              columns = 3;
+            };
+          }
+          {
+            Infrastructure = {
+              style = "row";
+              columns = 3;
+            };
+          }
         ];
       };
       description = "Generated settings.yaml file";

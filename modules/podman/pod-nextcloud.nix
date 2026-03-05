@@ -249,20 +249,25 @@ in
                   extraLabels = name: {
                     # CalDAV/CardDAV well-known URL redirects (required for mobile apps)
                     "traefik.http.middlewares.nextcloud-caldav.redirectregex.permanent" = "true";
-                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.regex" = "^https://(.*)/.well-known/(card|cal)dav";
-                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.replacement" = "https://$${1}/remote.php/dav/";
+                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.regex" =
+                      "^https://(.*)/.well-known/(card|cal)dav";
+                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.replacement" =
+                      "https://$${1}/remote.php/dav/";
 
                     # WebFinger/NodeInfo well-known URL redirects (required for federation and social apps)
                     "traefik.http.middlewares.nextcloud-wellknown.redirectregex.permanent" = "true";
-                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.regex" = "^https://([^/]+)/.well-known/(webfinger|nodeinfo)(.*)";
-                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.replacement" = "https://$${1}/index.php/.well-known/$${2}$${3}";
+                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.regex" =
+                      "^https://([^/]+)/.well-known/(webfinger|nodeinfo)(.*)";
+                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.replacement" =
+                      "https://$${1}/index.php/.well-known/$${2}$${3}";
 
                     # HSTS and security headers
                     "traefik.http.middlewares.nextcloud-headers.headers.stsSeconds" = "315360000";
                     "traefik.http.middlewares.nextcloud-headers.headers.stsIncludeSubdomains" = "true";
 
                     # Apply middlewares (NO authelia - Nextcloud has its own auth + OIDC)
-                    "traefik.http.routers.${name}.middlewares" = "nextcloud-caldav,nextcloud-wellknown,nextcloud-headers";
+                    "traefik.http.routers.${name}.middlewares" =
+                      "nextcloud-caldav,nextcloud-wellknown,nextcloud-headers";
                   };
                 };
 
@@ -302,7 +307,8 @@ in
                   subdomain = cfg.collabora.subdomain;
                   extraLabels = name: {
                     # Forward HTTPS protocol header (SSL termination via Traefik)
-                    "traefik.http.middlewares.collabora-headers.headers.customRequestHeaders.X-Forwarded-Proto" = "https";
+                    "traefik.http.middlewares.collabora-headers.headers.customRequestHeaders.X-Forwarded-Proto" =
+                      "https";
                     "traefik.http.routers.${name}.middlewares" = "collabora-headers";
                   };
                 };
@@ -422,24 +428,27 @@ in
     };
 
     # Secret management using sops-nix
-    sops.secrets = lib.genAttrs [
-      "nextcloud/admin_password"
-      "nextcloud/mysql_root_password"
-      "nextcloud/mysql_password"
-      "nextcloud/redis_password"
-      "nextcloud/oidc_client_secret"
-      "nextcloud/collabora_password"
-      "nextcloud/whiteboard_jwt_secret"
-      "nextcloud/smtp_host"
-      "nextcloud/smtp_port"
-      "nextcloud/smtp_secure"
-      "nextcloud/smtp_user"
-      "nextcloud/smtp_password"
-      "nextcloud/smtp_from_address"
-    ] (_: {
-      owner = "poddy";
-      group = "poddy";
-    });
+    sops.secrets =
+      lib.genAttrs
+        [
+          "nextcloud/admin_password"
+          "nextcloud/mysql_root_password"
+          "nextcloud/mysql_password"
+          "nextcloud/redis_password"
+          "nextcloud/oidc_client_secret"
+          "nextcloud/collabora_password"
+          "nextcloud/whiteboard_jwt_secret"
+          "nextcloud/smtp_host"
+          "nextcloud/smtp_port"
+          "nextcloud/smtp_secure"
+          "nextcloud/smtp_user"
+          "nextcloud/smtp_password"
+          "nextcloud/smtp_from_address"
+        ]
+        (_: {
+          owner = "poddy";
+          group = "poddy";
+        });
 
     # MariaDB secrets (root and nextcloud user passwords)
     sops.templates."nextcloud-db-secrets" = {

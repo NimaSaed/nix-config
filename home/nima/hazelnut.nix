@@ -63,12 +63,15 @@
       ];
 
       # Basic keybindings (sway defaults + custom)
-      keybindings = let
-        mod = config.wayland.windowManager.sway.config.modifier;
-      in lib.mkOptionDefault {
-        "${mod}+Shift+s" = "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
-        "${mod}+l" = "exec swaylock -f -c 000000";
-      };
+      keybindings =
+        let
+          mod = config.wayland.windowManager.sway.config.modifier;
+        in
+        lib.mkOptionDefault {
+          "${mod}+Shift+s" =
+            "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
+          "${mod}+l" = "exec swaylock -f -c 000000";
+        };
     };
   };
 

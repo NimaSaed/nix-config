@@ -228,8 +228,8 @@
   # Subdirectories can have different owners based on access requirements
   systemd.tmpfiles.rules = [
     "d /data 2775 root samby - -"
-    "d /data/media 2775 root poddy - -"       # Shared between nima and containers
-    "d /data/backups 2775 root samby - -"     # Samba-accessible backups
+    "d /data/media 2775 root poddy - -" # Shared between nima and containers
+    "d /data/backups 2775 root samby - -" # Samba-accessible backups
   ];
 
   # ============================================================================

@@ -249,9 +249,22 @@
                 cores = 1;
                 host.pkgs = nixpkgs.legacyPackages.aarch64-darwin;
                 forwardPorts = [
-                  { from = "host"; host.port = 8080; guest.port = 80;    }
-                  { from = "host"; host.port = 8443; guest.port = 443;   }
-                  { from = "host"; host.port = 51820; guest.port = 51820; proto = "udp"; }
+                  {
+                    from = "host";
+                    host.port = 8080;
+                    guest.port = 80;
+                  }
+                  {
+                    from = "host";
+                    host.port = 8443;
+                    guest.port = 443;
+                  }
+                  {
+                    from = "host";
+                    host.port = 51820;
+                    guest.port = 51820;
+                    proto = "udp";
+                  }
                 ];
               };
             }

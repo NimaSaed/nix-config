@@ -117,11 +117,17 @@ in
       uid = poddyUid;
       linger = true;
       shell = "${pkgs.shadow}/bin/nologin";
-      extraGroups = [ "podman" "render" "video" ];
+      extraGroups = [
+        "podman"
+        "render"
+        "video"
+      ];
       autoSubUidGidRange = true;
     };
 
-    users.groups.poddy = { gid = poddyGid; };
+    users.groups.poddy = {
+      gid = poddyGid;
+    };
 
     home-manager.users.poddy =
       { pkgs, config, ... }:

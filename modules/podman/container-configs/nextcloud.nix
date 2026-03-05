@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   inherit (config.services.pods) domain;
@@ -89,8 +94,8 @@ in
         'mail_domain' => '${domain}',
 
         ${lib.optionalString cfg.collabora.enable ''
-        // Collabora Online integration
-        // Requires: php occ app:install richdocuments
+          // Collabora Online integration
+          // Requires: php occ app:install richdocuments
         ''}
 
         // Preview generation (required for Photos app)

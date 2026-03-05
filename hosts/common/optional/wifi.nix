@@ -3,8 +3,8 @@
 {
   # WiFi secrets from sops
   # Each host must provide wifi/ssid and wifi/password in its secrets.yaml
-  sops.secrets."wifi/ssid" = {};
-  sops.secrets."wifi/password" = {};
+  sops.secrets."wifi/ssid" = { };
+  sops.secrets."wifi/password" = { };
 
   sops.templates."wifi-env" = {
     content = ''

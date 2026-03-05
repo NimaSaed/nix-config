@@ -55,23 +55,29 @@ in
     ];
 
     # Declare secrets this module needs
-    sops.secrets = lib.genAttrs [
-      "authelia/smtp_password"
-      "authelia/authelia_jwt_secret"
-      "authelia/authelia_session_secret"
-      "authelia/authelia_storage_encryption_key"
-      "authelia/authelia_oidc_hmac_secret"
-      "authelia/oidc_jwks_private_key"
-      "authelia/oidc_jwks_certificate_chain"
-      "authelia/oidc_client_secret_nextcloud"
-      "authelia/oidc_client_secret_jellyfin"
-      "authelia/oidc_client_secret_immich"
-      "authelia/smtp_address"
-      "authelia/smtp_username"
-      "ldap/lldap_ldap_user_pass"
-      "ldap/lldap_key_seed"
-      "ldap/lldap_jwt_secret"
-    ] (_: { owner = "poddy"; group = "poddy"; });
+    sops.secrets =
+      lib.genAttrs
+        [
+          "authelia/smtp_password"
+          "authelia/authelia_jwt_secret"
+          "authelia/authelia_session_secret"
+          "authelia/authelia_storage_encryption_key"
+          "authelia/authelia_oidc_hmac_secret"
+          "authelia/oidc_jwks_private_key"
+          "authelia/oidc_jwks_certificate_chain"
+          "authelia/oidc_client_secret_nextcloud"
+          "authelia/oidc_client_secret_jellyfin"
+          "authelia/oidc_client_secret_immich"
+          "authelia/smtp_address"
+          "authelia/smtp_username"
+          "ldap/lldap_ldap_user_pass"
+          "ldap/lldap_key_seed"
+          "ldap/lldap_jwt_secret"
+        ]
+        (_: {
+          owner = "poddy";
+          group = "poddy";
+        });
 
     home-manager.users.poddy =
       { pkgs, config, ... }:
@@ -120,8 +126,7 @@ in
                   extraLabels = _: {
                     # ForwardAuth middleware definition (used by other services via middlewares = true)
                     # Note: middleware name stays "authelia" regardless of container name
-                    "traefik.http.middlewares.authelia.forwardauth.address" =
-                      "http://auth:9091/api/authz/forward-auth";
+                    "traefik.http.middlewares.authelia.forwardauth.address" = "http://auth:9091/api/authz/forward-auth";
                     "traefik.http.middlewares.authelia.forwardauth.trustforwardheader" = "true";
                     "traefik.http.middlewares.authelia.forwardauth.authresponseheaders" =
                       "remote-user,remote-groups,remote-email,remote-name";

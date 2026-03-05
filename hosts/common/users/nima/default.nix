@@ -15,8 +15,8 @@ in
     extraGroups = ifTheyExist [
       "wheel"
       "networkmanager"
-      "samby"  # Access to /data and /data/backups (Samba shares)
-      "poddy"  # Access to /data/media and container volumes
+      "samby" # Access to /data and /data/backups (Samba shares)
+      "poddy" # Access to /data/media and container volumes
     ];
 
     openssh.authorizedKeys.keys = lib.splitString "\n" (

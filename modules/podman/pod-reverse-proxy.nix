@@ -28,10 +28,16 @@ in
     services.pods._enabledPods = [ "reverse-proxy" ];
 
     # Declare secrets this module needs
-    sops.secrets = lib.genAttrs [
-      "reverse-proxy/cloudflare_email"
-      "reverse-proxy/cloudflare_api_token"
-    ] (_: { owner = "poddy"; group = "poddy"; });
+    sops.secrets =
+      lib.genAttrs
+        [
+          "reverse-proxy/cloudflare_email"
+          "reverse-proxy/cloudflare_api_token"
+        ]
+        (_: {
+          owner = "poddy";
+          group = "poddy";
+        });
 
     networking.firewall = {
       allowedTCPPorts = [

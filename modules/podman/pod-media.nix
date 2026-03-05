@@ -325,16 +325,19 @@ in
       };
 
     # NZBGet secrets - password for web UI and news server credentials
-    sops.secrets = lib.genAttrs [
-      "nzbget/username"
-      "nzbget/password"
-      "nzbget/server_host"
-      "nzbget/server_username"
-      "nzbget/server_password"
-    ] (_: {
-      owner = "poddy";
-      group = "poddy";
-    });
+    sops.secrets =
+      lib.genAttrs
+        [
+          "nzbget/username"
+          "nzbget/password"
+          "nzbget/server_host"
+          "nzbget/server_username"
+          "nzbget/server_password"
+        ]
+        (_: {
+          owner = "poddy";
+          group = "poddy";
+        });
 
     sops.templates."nzbget-secrets" = {
       content = ''
