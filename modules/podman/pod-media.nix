@@ -300,7 +300,7 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/fallenbagel/jellyseerr:latest";
+                image = "ghcr.io/seerr-team/seerr:latest"
                 pod = pods.media.ref;
                 autoUpdate = "registry";
 
