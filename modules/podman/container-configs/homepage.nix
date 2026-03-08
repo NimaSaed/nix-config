@@ -87,11 +87,11 @@ in
                 };
               }
             ])
-            (lib.optionals mediaCfg.jellyseerr.enable [
+            (lib.optionals mediaCfg.seerr.enable [
               {
-                Jellyseerr = {
-                  icon = "sh-jellyseerr";
-                  href = "https://${mediaCfg.jellyseerr.subdomain}.${domain}";
+                seerr = {
+                  icon = "sh-seerr";
+                  href = "https://${mediaCfg.seerr.subdomain}.${domain}";
                   description = "Media request and discovery manager";
                 };
               }

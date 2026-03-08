@@ -70,16 +70,16 @@ in
       };
     };
 
-    jellyseerr = {
+    seerr = {
       enable = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description = "Enable jellyseerr container in the media pod";
+        description = "Enable seerr container in the media pod";
       };
       subdomain = lib.mkOption {
         type = lib.types.str;
-        default = "jellyseerr";
-        description = "Subdomain for jellyseerr (e.g., jellyseerr -> jellyseerr.domain)";
+        default = "seerr";
+        description = "Subdomain for seerr (e.g., seerr -> seerr.domain)";
       };
     };
   };
@@ -129,7 +129,7 @@ in
               volumeConfig = { };
             };
 
-            volumes.jellyseerr = {
+            volumes.seerr = {
               volumeConfig = { };
             };
 
@@ -286,7 +286,7 @@ in
               };
             };
 
-            containers.media-jellyseerr = lib.mkIf cfg.jellyseerr.enable {
+            containers.media-seerr = lib.mkIf cfg.seerr.enable {
               autoStart = true;
 
               serviceConfig = {
@@ -295,19 +295,19 @@ in
               };
 
               unitConfig = {
-                Description = "Jellyseerr container";
+                Description = "seerr container";
                 After = [ pods.media.ref ];
               };
 
               containerConfig = {
-                image = "ghcr.io/seerr-team/seerr:latest"
+                image = "ghcr.io/seerr-team/seerr:latest";
                 pod = pods.media.ref;
                 autoUpdate = "registry";
 
                 labels = mkTraefikLabels {
-                  name = "jellyseerr";
+                  name = "seerr";
                   port = 5055;
-                  subdomain = cfg.jellyseerr.subdomain;
+                  subdomain = cfg.seerr.subdomain;
                   middlewares = true;
                 };
 
@@ -317,7 +317,7 @@ in
                 };
 
                 volumes = [
-                  "${volumes.jellyseerr.ref}:/app/config"
+                  "${volumes.seerr.ref}:/app/config"
                 ];
               };
             };

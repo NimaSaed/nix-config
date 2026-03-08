@@ -55,7 +55,7 @@ in
               - "${mediaCfg.sonarr.subdomain}.${domain}"
               - "${mediaCfg.radarr.subdomain}.${domain}"
               - "${mediaCfg.nzbget.subdomain}.${domain}"
-              - "${mediaCfg.jellyseerr.subdomain}.${domain}"
+              - "${mediaCfg.seerr.subdomain}.${domain}"
             policy: one_factor
           - domain:
               - "${rpCfg.subdomain}.${domain}"

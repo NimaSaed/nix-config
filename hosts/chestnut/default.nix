@@ -41,7 +41,7 @@
       sonarr.enable = true;
       radarr.enable = true;
       nzbget.enable = true;
-      jellyseerr.enable = true;
+      seerr.enable = true;
     };
     nextcloud = {
       enable = true;

@@ -54,7 +54,7 @@ Store the hash in sops, give the plaintext to the relying party (Nextcloud/Jelly
 
 ### Homepage references hardcoded subdomains
 `container-configs/homepage.nix` has several services with hardcoded subdomains
-(changedetection, scrypted, cloud, srv1, jellyseerr, sonarr, radarr, nzbget) that
+(changedetection, scrypted, cloud, srv1, seerr, sonarr, radarr, nzbget) that
 don't come from module options. Consider adding them as options for consistency.
 
 ### LLDAP TCP router uses wildcard SNI
