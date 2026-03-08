@@ -308,7 +308,7 @@ in
                   name = "seerr";
                   port = 5055;
                   subdomain = cfg.seerr.subdomain;
-                  middlewares = true;
+                  middlewares = false;
                 };
 
                 environments = {

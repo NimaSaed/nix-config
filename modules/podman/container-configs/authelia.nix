@@ -48,6 +48,7 @@ in
         rules:
           - domain:
               - "${toolsCfg.itTools.subdomain}.${domain}"
+              - "${mediaCfg.seerr.subdomain}.${domain}"
             policy: bypass
           - domain:
               - "${toolsCfg.homepage.subdomain}.${domain}"
@@ -55,7 +56,6 @@ in
               - "${mediaCfg.sonarr.subdomain}.${domain}"
               - "${mediaCfg.radarr.subdomain}.${domain}"
               - "${mediaCfg.nzbget.subdomain}.${domain}"
-              - "${mediaCfg.seerr.subdomain}.${domain}"
             policy: one_factor
           - domain:
               - "${rpCfg.subdomain}.${domain}"
