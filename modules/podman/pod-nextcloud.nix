@@ -209,8 +209,6 @@ in
                   # PHP tuning
                   PHP_MEMORY_LIMIT = "2G";
                   PHP_UPLOAD_LIMIT = "10G";
-                  PHP_MAX_EXECUTION_TIME = "300";
-                  PHP_MAX_INPUT_TIME = "300";
                 };
 
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-app-secrets".path ];
@@ -218,6 +216,7 @@ in
                 volumes = [
                   "${volumes.nextcloud_data.ref}:/var/www/html:U"
                   "${nixosConfig.services.pods.nextcloud._configFile}:/var/www/html/config/zzz-nix-overrides.config.php:ro"
+                  "${nixosConfig.services.pods.nextcloud._phpTuningFile}:/usr/local/etc/php/conf.d/zzz-nix-tuning.ini:ro"
                 ];
               };
             };

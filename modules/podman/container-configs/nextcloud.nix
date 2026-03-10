@@ -11,6 +11,17 @@ let
   authCfg = config.services.pods.auth;
 in
 {
+  options.services.pods.nextcloud._phpTuningFile = lib.mkOption {
+    type = lib.types.package;
+    internal = true;
+    default = pkgs.writeText "zzz-nix-tuning.ini" ''
+      ; PHP-FPM performance tuning for Mail app (large mailbox sync)
+      max_execution_time = 300
+      max_input_time = 300
+    '';
+    description = "Custom PHP ini overrides for FPM performance tuning";
+  };
+
   options.services.pods.nextcloud._configFile = lib.mkOption {
     type = lib.types.package;
     internal = true;
