@@ -217,6 +217,7 @@ in
                   "${volumes.nextcloud_data.ref}:/var/www/html:U"
                   "${nixosConfig.services.pods.nextcloud._configFile}:/var/www/html/config/zzz-nix-overrides.config.php:ro"
                   "${nixosConfig.services.pods.nextcloud._phpTuningFile}:/usr/local/etc/php/conf.d/zzz-nix-tuning.ini:ro"
+                  "${nixosConfig.services.pods.nextcloud._fpmPoolFile}:/usr/local/etc/php-fpm.d/zzz-nix-fpm-pool.conf:ro"
                 ];
               };
             };

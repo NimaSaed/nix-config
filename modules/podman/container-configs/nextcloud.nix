@@ -22,6 +22,21 @@ in
     description = "Custom PHP ini overrides for FPM performance tuning";
   };
 
+  options.services.pods.nextcloud._fpmPoolFile = lib.mkOption {
+    type = lib.types.package;
+    internal = true;
+    default = pkgs.writeText "zzz-nix-fpm-pool.conf" ''
+      [www]
+      pm = dynamic
+      pm.max_children = 30
+      pm.start_servers = 8
+      pm.min_spare_servers = 4
+      pm.max_spare_servers = 16
+      pm.max_requests = 500
+    '';
+    description = "Custom PHP-FPM pool overrides for performance tuning";
+  };
+
   options.services.pods.nextcloud._configFile = lib.mkOption {
     type = lib.types.package;
     internal = true;
