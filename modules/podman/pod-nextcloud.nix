@@ -207,8 +207,10 @@ in
                   OVERWRITECLIURL = "https://${cfg.subdomain}.${domain}";
 
                   # PHP tuning
-                  PHP_MEMORY_LIMIT = "512M";
+                  PHP_MEMORY_LIMIT = "2G";
                   PHP_UPLOAD_LIMIT = "10G";
+                  PHP_MAX_EXECUTION_TIME = "300";
+                  PHP_MAX_INPUT_TIME = "300";
                 };
 
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-app-secrets".path ];
