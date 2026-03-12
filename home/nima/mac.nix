@@ -52,7 +52,7 @@
     aerospace # Window manager for macOS
     brave # Web browser
     monitorcontrol # External monitor controls
-    zoom-us # Video conferencing
+    #zoom-us # Video conferencing
   ];
 
   # ===========================================================================

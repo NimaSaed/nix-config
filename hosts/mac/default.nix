@@ -104,6 +104,7 @@
       "1password-cli"
       "firefox"
       "logseq"
+      "zoom"
     ];
 
     # Mac App Store applications
