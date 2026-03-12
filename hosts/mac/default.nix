@@ -99,10 +99,11 @@
       "lm-studio" # Local LLM management
       "protonvpn" # VPN client
       "inkscape" # Vector graphics editor
-      "nextcloud"
+      "nextcloud-vfs"
       "1password"
       "1password-cli"
       "firefox"
+      "logseq"
     ];
 
     # Mac App Store applications
