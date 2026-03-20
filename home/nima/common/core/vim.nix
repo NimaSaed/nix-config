@@ -15,12 +15,6 @@
       # To align text using tabs automatically
       tabular
 
-      # Color scheme
-      base16-vim
-
-      # Syntax highlight for different languages
-      vim-polyglot
-
       # Use gx to open links in browser
       open-browser-vim
     ];
@@ -125,12 +119,11 @@
       function! HighlighColor()
           " enable syntax highlighting
           syntax enable
-          colorscheme base16-solarized-light
           highlight Normal guibg=NONE ctermbg=NONE
 
           " Numbers color
           highlight LineNr ctermfg=NONE ctermbg=NONE
-          highlight CursorLineNr ctermfg=9 ctermbg=0
+          highlight CursorLineNr ctermfg=9 ctermbg=NONE
 
           " Menu color (auto complete)
           highlight Pmenu ctermfg=0 ctermbg=12
