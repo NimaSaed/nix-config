@@ -168,7 +168,7 @@ in
               };
             };
 
-            # Container 3: Nextcloud 32 PHP-FPM backend
+            # Container 3: Nextcloud 33 PHP-FPM backend
             containers.nextcloud-app = {
               autoStart = true;
 
@@ -187,7 +187,7 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/library/nextcloud:32.0-fpm";
+                image = "docker.io/library/nextcloud:33.0-fpm";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
                 user = "1001:998";
@@ -347,7 +347,7 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/library/nextcloud:32.0-fpm";
+                image = "docker.io/library/nextcloud:33.0-fpm";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
                 user = "1001:998";
