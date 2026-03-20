@@ -579,3 +579,38 @@ in
 #
 # 11. Verify push server is working (nextcloud-push container self-heals on next restart):
 #     sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:self-test
+
+# ── Major version upgrade steps (e.g. 32 → 33) ──────────────────────────
+#
+# After changing the image tag and running nixos-rebuild switch:
+#
+# 1. Finalize the upgrade (if not auto-applied by entrypoint):
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ upgrade
+#
+# 2. Update all apps to versions compatible with the new release:
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:update --all
+#
+# 3. Re-enable apps that were disabled during the upgrade:
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable oidc_login
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable richdocuments
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable notify_push
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable previewgenerator
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable whiteboard
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable calendar
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable contacts
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable deck
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable mail
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable notes
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable spreed  # Talk
+#
+# 4. Re-register the push server endpoint:
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:setup https://cloud.nmsd.xyz/push
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:self-test
+#
+# 5. Run post-upgrade maintenance:
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ maintenance:repair --include-expensive
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ db:add-missing-indices
+#
+# 6. Verify:
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ status
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:list
