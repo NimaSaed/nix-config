@@ -401,32 +401,60 @@ in
             };
           };
 
-      };
+        # Cron timer: run Nextcloud background jobs every 5 minutes
+        systemd.user.timers.nextcloud-cron = {
+          Unit.Description = "Run Nextcloud cron.php every 5 minutes";
+          Timer = {
+            OnBootSec = "5min";
+            OnUnitActiveSec = "5min";
+            Unit = "nextcloud-cron.service";
+          };
+          Install.WantedBy = [ "timers.target" ];
+        };
 
-    # Systemd timer to run Nextcloud background jobs every 5 minutes.
-    # System-level (not home-manager) to avoid blocking home-manager activation.
-    # Executes cron.php inside the running nextcloud-app container, bypassing
-    # the www-data UID mismatch in the official image's /cron.sh + busybox crond.
-    systemd.services.nextcloud-cron = {
-      description = "Nextcloud background job (cron.php)";
-      after = [ "nextcloud-app.service" ];
-      serviceConfig = {
-        Type = "oneshot";
-        User = "poddy";
-        Environment = "XDG_RUNTIME_DIR=/run/user/1001";
-        ExecStart = "${pkgs.podman}/bin/podman exec nextcloud-app php -f /var/www/html/cron.php";
-      };
-    };
+        # User-space systemd services: cron + 4 AI workers
+        # AI workers process tasks immediately rather than waiting for the 5-min cron cycle.
+        # 4 parallel workers required by apps like context_chat.
+        # -t 60: worker exits after 60 s so PHP/config changes are always picked up.
+        # StartLimitInterval/Burst: allow rapid restarts without systemd giving up.
+        systemd.user.services =
+          let
+            aiWorkerScript = pkgs.writeShellScript "nextcloud-ai-worker" ''
+              exec ${pkgs.podman}/bin/podman exec nextcloud-app \
+                php occ background-job:worker -t 60 \
+                'OC\TaskProcessing\SynchronousBackgroundJob'
+            '';
+            aiWorkerService = {
+              Unit = {
+                Description = "Nextcloud AI task processing worker";
+                After = [ "nextcloud-app.service" ];
+                StartLimitIntervalSec = 60;
+                StartLimitBurst = 10;
+              };
+              Service = {
+                ExecStart = "${aiWorkerScript}";
+                Restart = "always";
+              };
+              Install.WantedBy = [ "default.target" ];
+            };
+          in
+          {
+            nextcloud-cron = {
+              Unit = {
+                Description = "Nextcloud background job (cron.php)";
+                After = [ "nextcloud-app.service" ];
+              };
+              Service = {
+                Type = "oneshot";
+                ExecStart = "${pkgs.podman}/bin/podman exec nextcloud-app php -f /var/www/html/cron.php";
+              };
+            };
+          }
+          // lib.genAttrs
+            (map (i: "nextcloud-ai-worker-${toString i}") (lib.range 1 4))
+            (_: aiWorkerService);
 
-    systemd.timers.nextcloud-cron = {
-      description = "Run Nextcloud cron.php every 5 minutes";
-      wantedBy = [ "timers.target" ];
-      timerConfig = {
-        OnBootSec = "5min";
-        OnUnitActiveSec = "5min";
-        Unit = "nextcloud-cron.service";
       };
-    };
 
     # Secret management using sops-nix
     sops.secrets =
