@@ -465,6 +465,8 @@ in
                   ${pkgs.podman}/bin/podman exec nextcloud-app php occ user_oidc:provider Authelia \
                     --clientid="nextcloud" \
                     --discoveryuri="https://${authCfg.authelia.subdomain}.${domain}/.well-known/openid-configuration" \
+                    --endsessionendpointuri="https://${authCfg.authelia.subdomain}.${domain}/logout" \
+                    --send-id-token-hint=1 \
                     --scope="openid profile email groups" \
                     --mapping-uid=preferred_username \
                     --mapping-display-name=name \
