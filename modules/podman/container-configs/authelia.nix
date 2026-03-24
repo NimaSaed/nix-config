@@ -137,10 +137,14 @@ in
           clients:
             - client_id: nextcloud
               client_name: NextCloud
-              client_secret: '{{ secret "/secrets/nextcloud_client_secret" }}'
-              public: false
+              # Public client: user_oidc auto-enables PKCE when the discovery doc advertises
+              # code_challenge_methods_supported. PKCE S256 replaces the client secret as
+              # proof of identity — token_endpoint_auth_method=none with PKCE is secure.
+              public: true
               authorization_policy: two_factor
               claims_policy: nextcloud_userinfo
+              require_pkce: true
+              pkce_challenge_method: S256
               redirect_uris:
                 - "https://${nextcloudCfg.subdomain}.${domain}/apps/user_oidc/code"
               scopes:
@@ -156,7 +160,6 @@ in
               consent_mode: implicit
               access_token_signed_response_alg: none
               userinfo_signed_response_alg: none
-              token_endpoint_auth_method: client_secret_post
             - client_id: jellyfin
               client_name: Jellyfin
               client_secret: '{{ secret "/secrets/jellyfin_client_secret" }}'
