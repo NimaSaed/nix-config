@@ -135,7 +135,7 @@ in
               {
                 Nextcloud = {
                   icon = "sh-nextcloud";
-                  href = "https://${nextcloudCfg.subdomain}.${domain}/apps/oidc_login/oidc";
+                  href = "https://${nextcloudCfg.subdomain}.${domain}/";
                   description = "Files, calendar, and collaboration suite";
                 };
               }
