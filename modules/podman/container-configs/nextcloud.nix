@@ -69,6 +69,11 @@ in
         // Database configuration
         'mysql.utf8mb4' => true,
 
+        // Allow Nextcloud's HTTP client to reach internal services (e.g. Authelia on 10.10.10.x).
+        // user_oidc uses Nextcloud's GuzzleHttp client which enforces SSRF protection by default.
+        // No per-IP whitelist exists in Nextcloud — this is the documented approach for internal OIDC.
+        'allow_local_remote_servers' => true,
+
         // user_oidc (official Nextcloud OIDC backend)
         // Provider is configured declaratively via nextcloud-oidc-setup.service
         // Requires: php occ app:install user_oidc
