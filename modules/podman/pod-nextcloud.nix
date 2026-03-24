@@ -453,7 +453,6 @@ in
 
             # Declarative user_oidc provider setup — idempotent, runs on every boot.
             # Configures the Authelia OIDC provider so all options live in Nix.
-            # Secret read at runtime via $(cat ...) — never touches the Nix store.
             nextcloud-oidc-setup = {
               Unit = {
                 Description = "Configure user_oidc Authelia provider for Nextcloud";
@@ -465,7 +464,6 @@ in
                 ExecStart = "${pkgs.writeShellScript "nextcloud-oidc-setup" ''
                   ${pkgs.podman}/bin/podman exec nextcloud-app php occ user_oidc:provider Authelia \
                     --clientid="nextcloud" \
-                    --clientsecret="$(cat ${nixosConfig.sops.secrets."nextcloud/oidc_client_secret".path})" \
                     --discoveryuri="https://${authCfg.authelia.subdomain}.${domain}/.well-known/openid-configuration" \
                     --scope="openid profile email groups" \
                     --mapping-uid=preferred_username \
@@ -498,7 +496,6 @@ in
           "nextcloud/mysql_root_password"
           "nextcloud/mysql_password"
           "nextcloud/redis_password"
-          "nextcloud/oidc_client_secret"
           "nextcloud/collabora_password"
           "nextcloud/whiteboard_jwt_secret"
           "nextcloud/smtp_host"
@@ -551,8 +548,6 @@ in
     };
 
     # Nextcloud app secrets (database, Redis, admin credentials, and SMTP)
-    # Note: oidc_client_secret is consumed directly by nextcloud-oidc-setup.service
-    # via $(cat ...) at runtime, so it is NOT injected here as an env var.
     sops.templates."nextcloud-app-secrets" = {
       content = ''
         MYSQL_PASSWORD=${config.sops.placeholder."nextcloud/mysql_password"}

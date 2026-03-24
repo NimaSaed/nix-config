@@ -65,7 +65,6 @@ in
           "authelia/authelia_oidc_hmac_secret"
           "authelia/oidc_jwks_private_key"
           "authelia/oidc_jwks_certificate_chain"
-          "authelia/oidc_client_secret_nextcloud"
           "authelia/oidc_client_secret_jellyfin"
           "authelia/oidc_client_secret_immich"
           "authelia/smtp_address"
@@ -148,9 +147,6 @@ in
                   "${nixosConfig.services.pods.auth.authelia.configFile}:/etc/authelia/configuration.yml:ro"
                   "${nixosConfig.sops.secrets."authelia/oidc_jwks_private_key".path}:/secrets/oidc_jwks_key:ro"
                   "${nixosConfig.sops.secrets."authelia/oidc_jwks_certificate_chain".path}:/secrets/oidc_jwks_cert:ro"
-                  "${
-                    nixosConfig.sops.secrets."authelia/oidc_client_secret_nextcloud".path
-                  }:/secrets/nextcloud_client_secret:ro"
                   "${
                     nixosConfig.sops.secrets."authelia/oidc_client_secret_jellyfin".path
                   }:/secrets/jellyfin_client_secret:ro"
