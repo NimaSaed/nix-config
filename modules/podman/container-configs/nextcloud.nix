@@ -78,11 +78,12 @@ in
         // Provider is configured declaratively via nextcloud-oidc-setup.service
         // Requires: php occ app:install user_oidc
         'user_oidc' => array (
-          'single_logout'       => true,
-          'auto_provision'      => true,
-          'soft_auto_provision' => true,  // links OIDC login to existing accounts on migration
-          'use_pkce'            => true,
-          'hide_login_form'     => true,  // hides local login form; admin bypass: /login?direct=1
+          'single_logout'                        => true,
+          'auto_provision'                       => true,
+          'soft_auto_provision'                  => true,  // links OIDC login to existing accounts on migration
+          'use_pkce'                             => true,
+          'default_token_endpoint_auth_method'   => 'client_secret_post',
+          'hide_login_form'                      => true,  // hides local login form; admin bypass: /login?direct=1
         ),
         'lost_password_link' => 'disabled',
         'hide_login_form' => true,
