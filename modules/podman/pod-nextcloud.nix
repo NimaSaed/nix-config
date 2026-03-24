@@ -474,8 +474,8 @@ in
                     --unique-uid=0 \
                     --group-provisioning=1
                   # Disable multiple user backends so user_oidc auto-redirects to Authelia
-                  # (auto-redirect fires only when exactly one provider exists and this is false)
-                  ${pkgs.podman}/bin/podman exec nextcloud-app php occ config:app:set core allow_multiple_user_backends --value=false
+                  # (user_oidc reads this from its own app config as '0'/'1', not core)
+                  ${pkgs.podman}/bin/podman exec nextcloud-app php occ config:app:set user_oidc allow_multiple_user_backends --value=0
                 ''}";
               };
               Install.WantedBy = [ "default.target" ];
