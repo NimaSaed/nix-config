@@ -141,8 +141,6 @@ in
               public: false
               authorization_policy: two_factor
               claims_policy: nextcloud_userinfo
-              require_pkce: true
-              pkce_challenge_method: S256
               redirect_uris:
                 - "https://${nextcloudCfg.subdomain}.${domain}/apps/user_oidc/code"
               scopes:

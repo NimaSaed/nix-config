@@ -77,12 +77,12 @@ in
         // user_oidc (official Nextcloud OIDC backend)
         // Provider is configured declaratively via nextcloud-oidc-setup.service
         // Requires: php occ app:install user_oidc
+        // PKCE disabled: Nextcloud is a confidential server-side client; client_secret_post is sufficient.
+        // PKCE forces user_oidc into public-client mode (token_endpoint_auth_method=none), breaking auth.
         'user_oidc' => array (
           'single_logout'                        => true,
           'auto_provision'                       => true,
           'soft_auto_provision'                  => true,  // links OIDC login to existing accounts on migration
-          'use_pkce'                             => true,
-          'default_token_endpoint_auth_method'   => 'client_secret_post',
           'hide_login_form'                      => true,  // hides local login form; admin bypass: /login?direct=1
         ),
         'lost_password_link' => 'disabled',
