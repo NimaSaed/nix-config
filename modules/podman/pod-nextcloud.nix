@@ -465,7 +465,7 @@ in
                 ExecStart = "${pkgs.writeShellScript "nextcloud-oidc-setup" ''
                   ${pkgs.podman}/bin/podman exec nextcloud-app php occ user_oidc:provider Authelia \
                     --clientid="nextcloud" \
-                    --clientsecret-file="${nixosConfig.sops.secrets."nextcloud/oidc_client_secret".path}" \
+                    --clientsecret="$(cat ${nixosConfig.sops.secrets."nextcloud/oidc_client_secret".path})" \
                     --discoveryuri="https://${authCfg.authelia.subdomain}.${domain}/.well-known/openid-configuration" \
                     --scope="openid profile email groups" \
                     --mapping-uid=preferred_username \
