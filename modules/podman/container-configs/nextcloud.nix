@@ -69,34 +69,18 @@ in
         // Database configuration
         'mysql.utf8mb4' => true,
 
-        // OIDC Login (Authelia integration)
-        // Requires: php occ app:install oidc_login
-        'oidc_login_provider_url' => 'https://${authCfg.authelia.subdomain}.${domain}',
-        'oidc_login_client_id' => 'nextcloud',
-        'oidc_login_client_secret' => getenv('OIDC_CLIENT_SECRET'),  // From environmentFiles
-        'oidc_login_auto_redirect' => true,
-        'oidc_login_end_session_redirect' => false,
-        'oidc_login_logout_url' => 'https://${authCfg.authelia.subdomain}.${domain}/logout',
-        'oidc_login_button_text' => 'Login with Authelia',
+        // user_oidc (official Nextcloud OIDC backend)
+        // Provider is configured declaratively via nextcloud-oidc-setup.service
+        // Requires: php occ app:install user_oidc
+        'user_oidc' => array (
+          'single_logout'       => true,
+          'auto_provision'      => true,
+          'soft_auto_provision' => true,  // links OIDC login to existing accounts on migration
+          'use_pkce'            => true,
+          'hide_login_form'     => true,  // hides local login form; admin bypass: /login?direct=1
+        ),
         'lost_password_link' => 'disabled',
         'hide_login_form' => true,
-        'oidc_login_use_id_token' => false,
-        'oidc_login_attributes' => array (
-          'id' => 'preferred_username',
-          'name' => 'name',
-          'mail' => 'email',
-          'groups' => 'groups',
-          'is_admin' => 'is_nextcloud_admin',
-          'photoURL' => 'picture',
-        ),
-        'oidc_login_update_avatar' => true,
-        'oidc_login_default_group' => 'oidc',
-        'oidc_login_scope' => 'openid profile email groups nextcloud_userinfo',
-        'oidc_login_disable_registration' => false,
-        'oidc_login_remap_users' => true,
-        'oidc_login_tls_verify' => true,
-        // Hide the password change form — OIDC users have no local password
-        'oidc_login_hide_password_form' => true,
 
         // SMTP mail configuration (all values injected via sops environmentFiles)
         'mail_smtpmode' => 'smtp',

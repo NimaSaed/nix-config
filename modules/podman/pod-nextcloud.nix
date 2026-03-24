@@ -7,6 +7,7 @@
 
 let
   cfg = config.services.pods.nextcloud;
+  authCfg = config.services.pods.auth;
   nixosConfig = config;
   inherit (config.services.pods) domain mkTraefikLabels;
 in
@@ -449,6 +450,36 @@ in
                 ExecStart = "${pkgs.podman}/bin/podman exec nextcloud-app php -f /var/www/html/cron.php";
               };
             };
+
+            # Declarative user_oidc provider setup — idempotent, runs on every boot.
+            # Configures the Authelia OIDC provider so all options live in Nix.
+            # Uses --clientsecret-file to avoid the secret appearing in the Nix store.
+            nextcloud-oidc-setup = {
+              Unit = {
+                Description = "Configure user_oidc Authelia provider for Nextcloud";
+                After = [ "nextcloud-app.service" ];
+              };
+              Service = {
+                Type = "oneshot";
+                RemainAfterExit = true;
+                ExecStart = "${pkgs.writeShellScript "nextcloud-oidc-setup" ''
+                  ${pkgs.podman}/bin/podman exec nextcloud-app php occ user_oidc:provider Authelia \
+                    --clientid="nextcloud" \
+                    --clientsecret-file="${nixosConfig.sops.secrets."nextcloud/oidc_client_secret".path}" \
+                    --discoveryuri="https://${authCfg.authelia.subdomain}.${domain}/.well-known/openid-configuration" \
+                    --scope="openid profile email groups" \
+                    --mapping-uid=preferred_username \
+                    --mapping-display-name=name \
+                    --mapping-email=email \
+                    --mapping-avatar=picture \
+                    --mapping-groups=groups \
+                    --unique-uid=0 \
+                    --group-provisioning=1
+                ''}";
+              };
+              Install.WantedBy = [ "default.target" ];
+            };
+
           }
           // lib.genAttrs
             (map (i: "nextcloud-ai-worker-${toString i}") (lib.range 1 4))
@@ -516,15 +547,15 @@ in
       mode = "0444";
     };
 
-    # Nextcloud app secrets (database, Redis, admin credentials, and OIDC)
-    # CRITICAL: oidc_client_secret must be PLAINTEXT (not the PBKDF2 hash stored in authelia/)
+    # Nextcloud app secrets (database, Redis, admin credentials, and SMTP)
+    # Note: oidc_client_secret is consumed directly by nextcloud-oidc-setup.service
+    # via --clientsecret-file, so it is NOT injected here as an env var.
     sops.templates."nextcloud-app-secrets" = {
       content = ''
         MYSQL_PASSWORD=${config.sops.placeholder."nextcloud/mysql_password"}
         REDIS_HOST_PASSWORD=${config.sops.placeholder."nextcloud/redis_password"}
         NEXTCLOUD_ADMIN_USER=${cfg.adminUser}
         NEXTCLOUD_ADMIN_PASSWORD=${config.sops.placeholder."nextcloud/admin_password"}
-        OIDC_CLIENT_SECRET=${config.sops.placeholder."nextcloud/oidc_client_secret"}
         SMTP_HOST=${config.sops.placeholder."nextcloud/smtp_host"}
         SMTP_PORT=${config.sops.placeholder."nextcloud/smtp_port"}
         SMTP_SECURE=${config.sops.placeholder."nextcloud/smtp_secure"}
@@ -569,8 +600,12 @@ in
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman logs nextcloud-db
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman logs nextcloud-app
 #
-# 2. Install OIDC Login app:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:install oidc_login
+# 2. Install user_oidc app and configure the Authelia provider:
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:install user_oidc
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 systemctl --user start nextcloud-oidc-setup.service
+#
+# 2a. Re-grant admin to your admin user(s) — user_oidc has no is_admin claim mapping:
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ user:add-to-group <username> admin
 #
 # 3. Install Collabora integration (if enabled):
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:install richdocuments
@@ -619,7 +654,7 @@ in
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:update --all
 #
 # 3. Re-enable apps that were disabled during the upgrade:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable oidc_login
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable user_oidc
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable richdocuments
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable notify_push
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable previewgenerator
