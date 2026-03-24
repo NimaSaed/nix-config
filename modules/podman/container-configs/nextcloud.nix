@@ -95,6 +95,8 @@ in
         'oidc_login_disable_registration' => false,
         'oidc_login_remap_users' => true,
         'oidc_login_tls_verify' => true,
+        // Hide the password change form — OIDC users have no local password
+        'oidc_login_hide_password_form' => true,
 
         // SMTP mail configuration (all values injected via sops environmentFiles)
         'mail_smtpmode' => 'smtp',
