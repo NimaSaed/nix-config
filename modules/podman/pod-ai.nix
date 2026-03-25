@@ -12,6 +12,14 @@ in
 {
   options.services.pods.ai = {
     enable = lib.mkEnableOption "AI pod";
+
+    litellm = {
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "litellm";
+        description = "Subdomain for LiteLLM proxy";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -129,6 +137,7 @@ in
                 labels = mkTraefikLabels {
                   name = "litellm";
                   port = 4000;
+                  subdomain = cfg.litellm.subdomain;
                   middlewares = false;
                 };
               };
