@@ -50,6 +50,7 @@
       enable = true;
       machinelearning.openvino.enable = true;
     };
+    ai.enable = true;
   };
 
   # ============================================================================

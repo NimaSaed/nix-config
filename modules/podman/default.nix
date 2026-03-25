@@ -64,6 +64,7 @@ in
     ./pod-nextcloud.nix
     ./pod-smart-home.nix
     ./pod-immich.nix
+    ./pod-ai.nix
   ];
 
   options.services.pods = {
