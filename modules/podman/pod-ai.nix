@@ -129,7 +129,7 @@ in
                 labels = mkTraefikLabels {
                   name = "litellm";
                   port = 4000;
-                  middlewares = true;
+                  middlewares = false;
                 };
               };
             };
