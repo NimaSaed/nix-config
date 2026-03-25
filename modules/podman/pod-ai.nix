@@ -62,6 +62,7 @@ in
         GENERIC_SCOPE=openid profile email litellm_scope
         GENERIC_USER_ROLE_ATTRIBUTE=litellm_role
         AUTO_REDIRECT_UI_LOGIN_TO_SSO=true
+        PROXY_LOGOUT_URL=https://${authCfg.authelia.subdomain}.${domain}/logout
       '';
       owner = "poddy";
       group = "poddy";
