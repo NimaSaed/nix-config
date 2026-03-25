@@ -7,7 +7,8 @@
 let
   cfg = config.services.pods.ai;
   nixosConfig = config;
-  inherit (config.services.pods) mkTraefikLabels;
+  inherit (config.services.pods) mkTraefikLabels domain;
+  authCfg = config.services.pods.auth;
 in
 {
   options.services.pods.ai = {
@@ -35,6 +36,7 @@ in
     sops.secrets = lib.genAttrs [
       "ai/litellm/master_key"
       "ai/litellm/db_password"
+      "ai/litellm/oidc_client_secret_litellm"
     ] (_: { owner = "poddy"; group = "poddy"; });
 
     sops.templates."ai-litellm-db-env" = {
@@ -51,6 +53,13 @@ in
         LITELLM_MASTER_KEY=${config.sops.placeholder."ai/litellm/master_key"}
         DATABASE_URL=postgresql://llmproxy:${config.sops.placeholder."ai/litellm/db_password"}@127.0.0.1:5432/litellm
         STORE_MODEL_IN_DB=True
+        GENERIC_CLIENT_ID=litellm
+        GENERIC_CLIENT_SECRET=${config.sops.placeholder."ai/litellm/oidc_client_secret_litellm"}
+        GENERIC_AUTHORIZATION_ENDPOINT=https://${authCfg.authelia.subdomain}.${domain}/api/oidc/authorization
+        GENERIC_TOKEN_ENDPOINT=https://${authCfg.authelia.subdomain}.${domain}/api/oidc/token
+        GENERIC_USERINFO_ENDPOINT=https://${authCfg.authelia.subdomain}.${domain}/api/oidc/userinfo
+        PROXY_BASE_URL=https://litellm.${domain}
+        GENERIC_SCOPE=openid profile email
       '';
       owner = "poddy";
       group = "poddy";
