@@ -186,8 +186,6 @@ in
               client_secret: '{{ secret "/secrets/litellm_client_secret" }}'
               public: false
               authorization_policy: two_factor
-              require_pkce: true
-              pkce_challenge_method: S256
               redirect_uris:
                 - "https://litellm.${domain}/sso/callback"
               scopes:
