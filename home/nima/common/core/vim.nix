@@ -17,7 +17,28 @@
 
       # Use gx to open links in browser
       open-browser-vim
+
+      # Treesitter: accurate syntax highlighting for all used languages
+      (nvim-treesitter.withPlugins (p: with p; [
+        markdown
+        markdown_inline
+        nix
+        bash
+        yaml
+        json
+        dockerfile
+        lua
+        gitcommit
+        diff
+        toml
+      ]))
     ];
+
+    extraLuaConfig = ''
+      require('nvim-treesitter.configs').setup {
+        highlight = { enable = true },
+      }
+    '';
 
     extraConfig = ''
       " vim:foldmethod=marker:foldlevel=0
@@ -118,8 +139,10 @@
 
       function! HighlighColor()
           " enable syntax highlighting
+          colorscheme habamax
           syntax enable
           highlight Normal guibg=NONE ctermbg=NONE
+
 
           " Numbers color
           highlight LineNr ctermfg=NONE ctermbg=NONE
