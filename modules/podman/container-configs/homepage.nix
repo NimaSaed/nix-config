@@ -15,6 +15,7 @@ let
   nextcloudCfg = config.services.pods.nextcloud;
   shCfg = config.services.pods.smart-home;
   immichCfg = config.services.pods.immich;
+  aiCfg = config.services.pods.ai;
 in
 {
   options.services.pods.homepage = {
@@ -58,6 +59,12 @@ in
           }
           {
             Infrastructure = {
+              style = "row";
+              columns = 3;
+            };
+          }
+          {
+            AI = {
               style = "row";
               columns = 3;
             };
@@ -230,6 +237,23 @@ in
                 };
               }
             ]
+          ];
+        }
+
+        # -----------------------------------------------------------------------
+        # AI
+        # -----------------------------------------------------------------------
+        {
+          AI = lib.flatten [
+            (lib.optionals aiCfg.enable [
+              {
+                LiteLLM = {
+                  icon = "sh-litellm";
+                  href = "https://${aiCfg.litellm.subdomain}.${domain}/";
+                  description = "LLM proxy and model management";
+                };
+              }
+            ])
           ];
         }
       ];
