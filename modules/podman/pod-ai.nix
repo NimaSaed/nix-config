@@ -123,7 +123,8 @@ in
 
                 environmentFiles = [ nixosConfig.sops.templates."ai-litellm-env".path ];
 
-                healthCmd = ''python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')"'';
+                healthCmd = "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:4000/health/liveliness\")'";
+
 
                 labels = mkTraefikLabels {
                   name = "litellm";
