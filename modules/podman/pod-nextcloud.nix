@@ -472,7 +472,7 @@ in
                     --mapping-display-name=name \
                     --mapping-email=email \
                     --mapping-avatar=picture \
-                    --mapping-groups=groups \
+                    --mapping-groups=nextcloud_groups \
                     --unique-uid=0 \
                     --group-provisioning=1
                   # Disable multiple user backends so user_oidc auto-redirects to Authelia

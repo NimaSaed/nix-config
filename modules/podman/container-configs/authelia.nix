@@ -105,8 +105,8 @@ in
 
       definitions:
         user_attributes:
-          is_nextcloud_admin:
-            expression: '"nextcloud-admins" in groups'
+          nextcloud_groups:
+            expression: '"nextcloud-admins" in groups ? ["admin"] + groups : groups'
           immich_role:
             expression: '"immich-admins" in groups ? "admin" : "user"'
 
@@ -115,7 +115,7 @@ in
           claims_policies:
             nextcloud_userinfo:
               custom_claims:
-                is_nextcloud_admin: {}
+                nextcloud_groups: {}
             immich_policy:
               id_token:
                 - immich_role
@@ -124,7 +124,7 @@ in
           scopes:
             nextcloud_userinfo:
               claims:
-                - is_nextcloud_admin
+                - nextcloud_groups
             immich_scope:
               claims:
                 - immich_role
