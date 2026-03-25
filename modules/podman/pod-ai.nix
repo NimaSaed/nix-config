@@ -59,7 +59,8 @@ in
         GENERIC_TOKEN_ENDPOINT=https://${authCfg.authelia.subdomain}.${domain}/api/oidc/token
         GENERIC_USERINFO_ENDPOINT=https://${authCfg.authelia.subdomain}.${domain}/api/oidc/userinfo
         PROXY_BASE_URL=https://litellm.${domain}
-        GENERIC_SCOPE=openid profile email
+        GENERIC_SCOPE=openid profile email litellm_scope
+        GENERIC_USER_ROLE_ATTRIBUTE=litellm_role
         AUTO_REDIRECT_UI_LOGIN_TO_SSO=true
       '';
       owner = "poddy";
