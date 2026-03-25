@@ -60,6 +60,7 @@ in
         GENERIC_USERINFO_ENDPOINT=https://${authCfg.authelia.subdomain}.${domain}/api/oidc/userinfo
         PROXY_BASE_URL=https://litellm.${domain}
         GENERIC_SCOPE=openid profile email
+        AUTO_REDIRECT_UI_LOGIN_TO_SSO=true
       '';
       owner = "poddy";
       group = "poddy";
