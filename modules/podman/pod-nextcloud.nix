@@ -510,7 +510,7 @@ in
                     # Whiteboard: set backend URL and JWT secret
                     occ app:enable whiteboard
                     occ config:app:set whiteboard collabBackendUrl --value "https://${cfg.whiteboard.subdomain}.${domain}"
-                    occ config:app:set whiteboard jwt_secret_key --value "$(grep '^WHITEBOARD_JWT_SECRET=' ${nixosConfig.sops.templates."nextcloud-app-secrets".path} | cut -d= -f2-)"
+                    occ config:app:set whiteboard jwt_secret_key --value "$(grep '^WHITEBOARD_JWT_SECRET=' ${nixosConfig.sops.templates."nextcloud-app-secrets".path} | cut -d= -f2- | tr -d '\n')"
                   ''}
                 ''}";
               };
