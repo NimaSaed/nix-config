@@ -420,6 +420,32 @@ in
         # StartLimitInterval/Burst: allow rapid restarts without systemd giving up.
         systemd.user.services =
           let
+            # Add app names here to have them installed and enabled on every boot.
+            nextcloudApps = [
+              "user_oidc"
+              "notify_push"
+              "previewgenerator"
+              "calendar"
+              "contacts"
+              "deck"
+              "tasks"
+              "mail"
+              "notes"
+              "spreed"
+              "richdocuments"
+              "collectives"
+              "whiteboard"
+              "news"
+              "forms"
+              "tables"
+              "cookbook"
+              "assistant"
+              "context_chat"
+              "context_agent"
+              "integration_openai"
+              "music"
+            ];
+
             aiWorkerScript = pkgs.writeShellScript "nextcloud-ai-worker" ''
               exec ${pkgs.podman}/bin/podman exec nextcloud-app \
                 php occ background-job:worker -t 60 \
@@ -451,12 +477,79 @@ in
               };
             };
 
+            # App setup: install+enable all apps, configure integrations.
+            # Runs on every boot; all operations are idempotent.
+            # app:install exits non-zero if already present (|| true absorbs it); app:enable is always safe.
+            nextcloud-app-setup = {
+              Unit = {
+                Description = "Install, enable, and configure Nextcloud apps";
+                After = [ "nextcloud-app.service" ];
+              };
+              Service = {
+                Type = "oneshot";
+                RemainAfterExit = true;
+                ExecStart = "${pkgs.writeShellScript "nextcloud-app-setup" ''
+                  occ() { ${pkgs.podman}/bin/podman exec nextcloud-app php occ "$@"; }
+
+                  for app in ${lib.concatStringsSep " " nextcloudApps}; do
+                    occ app:install "$app" 2>/dev/null || true
+                    occ app:enable "$app"
+                  done
+
+                  # Switch background jobs to OS cron
+                  occ background:cron
+
+                  # Collabora Office: set WOPI server URL and activate config
+                  occ config:app:set richdocuments wopi_url --value "https://${cfg.collabora.subdomain}.${domain}"
+                  occ richdocuments:activate-config
+
+                  # notify_push: register the push endpoint in Nextcloud's DB
+                  occ notify_push:setup "https://${cfg.subdomain}.${domain}/push"
+
+                  ${lib.optionalString cfg.whiteboard.enable ''
+                    # Whiteboard: set backend URL and JWT secret
+                    occ app:enable whiteboard
+                    occ config:app:set whiteboard collabBackendUrl --value "https://${cfg.whiteboard.subdomain}.${domain}"
+                    occ config:app:set whiteboard jwt_secret_key --value "$(cat ${nixosConfig.sops.secrets."nextcloud/whiteboard_jwt_secret".path})"
+                  ''}
+                ''}";
+              };
+              Install.WantedBy = [ "default.target" ];
+            };
+
+            # Maintenance: update apps and repair DB. Runs after app-setup on every boot.
+            # db:add-missing-indices runs first so repair benefits from proper indices.
+            nextcloud-maintenance = {
+              Unit = {
+                Description = "Nextcloud app updates and database maintenance";
+                After = [ "nextcloud-app-setup.service" ];
+              };
+              Service = {
+                Type = "oneshot";
+                RemainAfterExit = true;
+                ExecStart = "${pkgs.writeShellScript "nextcloud-maintenance" ''
+                  occ() { ${pkgs.podman}/bin/podman exec nextcloud-app php occ "$@"; }
+
+                  # Update all appstore-installed apps (not updated by image pulls)
+                  occ app:update --all
+
+                  # Add missing DB indices before repair for better query performance
+                  occ db:add-missing-indices
+
+                  # Full repair including expensive checks
+                  occ maintenance:repair --include-expensive
+                ''}";
+              };
+              Install.WantedBy = [ "default.target" ];
+            };
+
             # Declarative user_oidc provider setup — idempotent, runs on every boot.
             # Configures the Authelia OIDC provider so all options live in Nix.
+            # Runs after nextcloud-app-setup so user_oidc is installed first.
             nextcloud-oidc-setup = {
               Unit = {
                 Description = "Configure user_oidc Authelia provider for Nextcloud";
-                After = [ "nextcloud-app.service" ];
+                After = [ "nextcloud-app-setup.service" ];
               };
               Service = {
                 Type = "oneshot";
@@ -478,6 +571,8 @@ in
                   # Disable multiple user backends so user_oidc auto-redirects to Authelia
                   # (user_oidc reads this from its own app config as '0'/'1', not core)
                   ${pkgs.podman}/bin/podman exec nextcloud-app php occ config:app:set user_oidc allow_multiple_user_backends --value=0
+                  # Re-grant admin role — lost after user_oidc takes over user management
+                  ${pkgs.podman}/bin/podman exec nextcloud-app php occ group:adduser admin ${cfg.adminUser}
                 ''}";
               };
               Install.WantedBy = [ "default.target" ];
@@ -592,56 +687,34 @@ in
   };
 }
 
-# Post-deployment manual steps (run AFTER first boot):
+# Post-deployment notes:
 #
-# NOTE: Container runs as UID 1001:998 (poddy), so occ commands run without --user flag
+# Most setup is automated by systemd one-shot services that run on every boot:
+#   nextcloud-app-setup   — installs/enables all apps, configures integrations
+#   nextcloud-oidc-setup  — configures Authelia OIDC provider, re-grants admin role
+#   nextcloud-maintenance — app:update --all, db:add-missing-indices, maintenance:repair
+#   nextcloud-cron.timer  — runs cron.php every 5 minutes
 #
-# 1. Wait for database and Nextcloud initialization:
+# Check service status after first boot:
+#   sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 systemctl --user status nextcloud-app-setup
+#   sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 systemctl --user status nextcloud-oidc-setup
+#   sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 systemctl --user status nextcloud-maintenance
+#
+# Manual steps still required:
+#
+# 1. Wait for database and Nextcloud initialization (before services can run):
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman logs nextcloud-db
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman logs nextcloud-app
 #
-# 2. Install user_oidc app and configure the Authelia provider:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:install user_oidc
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 systemctl --user start nextcloud-oidc-setup.service
+# 2. Generate previews for existing files (only needed after bulk file migrations — not on fresh deploys):
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ preview:generate-all
+#    (new files are handled automatically by the previewgenerator v5.12+ background job via cron.php)
 #
-# 2a. Re-grant admin to your admin user(s) — user_oidc has no is_admin claim mapping:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ user:add-to-group <username> admin
-#
-# 3. Install Collabora integration (if enabled):
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:install richdocuments
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ config:app:set richdocuments wopi_url --value="https://office.nmsd.xyz"
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ richdocuments:activate-config
-#
-# 4. Switch background jobs to cron mode and trigger an immediate run:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ background:cron
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-cron php -f /var/www/html/cron.php
-#
-# 5. Run maintenance, repair, and add missing DB indices:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ maintenance:repair --include-expensive
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ db:add-missing-indices
-#
-# 6. Check code integrity and Nextcloud status:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ integrity:check-core
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ status
-#
-# 7. Configure Whiteboard real-time collaboration (if enabled):
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ config:app:set whiteboard collabBackendUrl --value="https://whiteboard.nmsd.xyz"
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ config:app:set whiteboard jwt_secret_key --value="$(sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 grep JWT_SECRET_KEY /run/secrets/rendered/nextcloud-whiteboard-secrets | cut -d= -f2)"
-#
-# 8. Test OIDC login:
+# 3. Test OIDC login:
 #    Visit https://cloud.nmsd.xyz and click "Login with Authelia"
 #
-# 9. Generate previews for existing files (required for Photos app):
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:install previewgenerator
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ preview:generate-all
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ preview:pre-generate
-#
-# 10. Set up the push server (notify_push is bundled in apps/, no install needed):
-#     sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable notify_push
-#     sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:setup https://cloud.nmsd.xyz/push
-#
-# 11. Verify push server is working (nextcloud-push container self-heals on next restart):
-#     sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:self-test
+# 4. Verify push server (self-test after containers are up):
+#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:self-test
 
 # ── Major version upgrade steps (e.g. 32 → 33) ──────────────────────────
 #
@@ -650,29 +723,7 @@ in
 # 1. Finalize the upgrade (if not auto-applied by entrypoint):
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ upgrade
 #
-# 2. Update all apps to versions compatible with the new release:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:update --all
-#
-# 3. Re-enable apps that were disabled during the upgrade:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable user_oidc
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable richdocuments
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable notify_push
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable previewgenerator
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable whiteboard
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable calendar
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable contacts
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable deck
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable mail
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable notes
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:enable spreed  # Talk
-#
-# 4. Re-register the push server endpoint:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:setup https://cloud.nmsd.xyz/push
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:self-test
-#
-# 5. Run post-upgrade maintenance:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ maintenance:repair --include-expensive
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ db:add-missing-indices
+# 2-5. Handled automatically by nextcloud-app-setup and nextcloud-maintenance on reboot.
 #
 # 6. Verify:
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ status
