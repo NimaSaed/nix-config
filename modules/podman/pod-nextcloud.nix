@@ -510,7 +510,7 @@ in
                     # Whiteboard: set backend URL and JWT secret
                     occ app:enable whiteboard
                     occ config:app:set whiteboard collabBackendUrl --value "https://${cfg.whiteboard.subdomain}.${domain}"
-                    ${pkgs.podman}/bin/podman exec nextcloud-app sh -c 'php occ config:app:set whiteboard jwt_secret_key --value "$WHITEBOARD_JWT_SECRET"'
+                    occ config:app:set whiteboard jwt_secret_key --value "$(grep '^WHITEBOARD_JWT_SECRET=' ${nixosConfig.sops.templates."nextcloud-app-secrets".path} | cut -d= -f2-)"
                   ''}
                 ''}";
               };
