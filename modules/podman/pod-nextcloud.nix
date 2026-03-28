@@ -510,7 +510,7 @@ in
                     # Whiteboard: set backend URL and JWT secret
                     occ app:enable whiteboard
                     occ config:app:set whiteboard collabBackendUrl --value "https://${cfg.whiteboard.subdomain}.${domain}"
-                    occ config:app:set whiteboard jwt_secret_key --value "$(cat ${nixosConfig.sops.secrets."nextcloud/whiteboard_jwt_secret".path})"
+                    ${pkgs.podman}/bin/podman exec nextcloud-app sh -c 'php occ config:app:set whiteboard jwt_secret_key --value "$WHITEBOARD_JWT_SECRET"'
                   ''}
                 ''}";
               };
@@ -657,6 +657,7 @@ in
         SMTP_USER=${config.sops.placeholder."nextcloud/smtp_user"}
         SMTP_PASSWORD=${config.sops.placeholder."nextcloud/smtp_password"}
         SMTP_FROM_ADDRESS=${config.sops.placeholder."nextcloud/smtp_from_address"}
+        WHITEBOARD_JWT_SECRET=${config.sops.placeholder."nextcloud/whiteboard_jwt_secret"}
       '';
       owner = "poddy";
       group = "poddy";
