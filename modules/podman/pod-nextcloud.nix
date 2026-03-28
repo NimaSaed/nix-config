@@ -499,6 +499,9 @@ in
                   # Switch background jobs to OS cron
                   occ background:cron
 
+                  # Set server identifier (silences admin panel warning)
+                  occ config:system:set server_id --value "nextcloud-app"
+
                   # Collabora Office: set WOPI server URL and activate config
                   occ config:app:set richdocuments wopi_url --value "https://${cfg.collabora.subdomain}.${domain}"
                   occ richdocuments:activate-config

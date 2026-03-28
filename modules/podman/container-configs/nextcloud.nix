@@ -120,9 +120,6 @@ in
         'preview_max_y' => 2048,
         'jpeg_quality' => 60,
 
-        // Server identifier (recommended for multi-PHP-server setups)
-        'server_id' => 'nextcloud-app',
-
         // Performance and logging
         'loglevel' => 2,  // Warnings and above
         'log_type' => 'file',
