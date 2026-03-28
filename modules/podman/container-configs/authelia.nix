@@ -109,6 +109,8 @@ in
             expression: '"nextcloud-admins" in groups ? ["admin"] + groups : groups'
           immich_role:
             expression: '"immich-admins" in groups ? "admin" : "user"'
+          litellm_role:
+            expression: '"litellm-admins" in groups ? "proxy_admin" : "internal_user"'
 
       identity_providers:
         oidc:
@@ -121,6 +123,11 @@ in
                 - immich_role
               custom_claims:
                 immich_role: {}
+            litellm_policy:
+              id_token:
+                - litellm_role
+              custom_claims:
+                litellm_role: {}
           scopes:
             nextcloud_userinfo:
               claims:
@@ -128,6 +135,9 @@ in
             immich_scope:
               claims:
                 - immich_role
+            litellm_scope:
+              claims:
+                - litellm_role
 
           jwks:
             - key_id: 'authelia_key'
@@ -181,6 +191,27 @@ in
               access_token_signed_response_alg: none
               userinfo_signed_response_alg: none
               token_endpoint_auth_method: client_secret_post
+            - client_id: litellm
+              client_name: LiteLLM
+              client_secret: '{{ secret "/secrets/litellm_client_secret" }}'
+              public: false
+              authorization_policy: two_factor
+              claims_policy: litellm_policy
+              redirect_uris:
+                - "https://litellm.${domain}/sso/callback"
+              scopes:
+                - openid
+                - profile
+                - email
+                - litellm_scope
+              response_types:
+                - code
+              grant_types:
+                - authorization_code
+              consent_mode: implicit
+              access_token_signed_response_alg: none
+              userinfo_signed_response_alg: none
+              token_endpoint_auth_method: client_secret_basic
             - client_id: immich
               client_name: Immich
               client_secret: '{{ secret "/secrets/immich_client_secret" }}'
