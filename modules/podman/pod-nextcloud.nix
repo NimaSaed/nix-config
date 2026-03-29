@@ -831,7 +831,7 @@ in
         listen = 0.0.0.0:8088
 
         [app]
-        debug = false
+        debug = true
 
         [sessions]
         hashkey = ${config.sops.placeholder."nextcloud/signaling_hashkey"}
