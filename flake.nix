@@ -355,7 +355,7 @@
             targetHost = "walnut.nmsd.xyz";
             targetUser = "root";
             buildOnTarget = false;
-            buildHost = "chestnut.nmsd.xyz";
+            builder = "ssh://chestnut.nmsd.xyz";
             tags = [ "walnut" ];
           };
           imports = walnutModules;
