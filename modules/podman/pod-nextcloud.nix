@@ -694,7 +694,7 @@ in
                     --value="[{\"server\":\"turn:${cfg.talk.hpb.turnSubdomain}.${domain}:${toString cfg.talk.hpb.turnPort}\",\"secret\":\"$TURN_SECRET\",\"protocols\":\"udp,tcp\"}]"
 
                   occ config:app:set spreed signaling_servers \
-                    --value="[{\"server\":\"https://${cfg.talk.hpb.subdomain}.${domain}\",\"verify\":true,\"secret\":\"$SIGNALING_SECRET\"}]"
+                    --value="{\"servers\":[{\"server\":\"https://${cfg.talk.hpb.subdomain}.${domain}\",\"verify\":true}],\"secret\":\"$SIGNALING_SECRET\"}"
                 ''}";
               };
               Install.WantedBy = [ "default.target" ];
