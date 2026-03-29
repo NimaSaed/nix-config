@@ -45,6 +45,7 @@
     };
     nextcloud = {
       enable = true;
+      talk.hpb.enable = true;
     };
     immich = {
       enable = true;

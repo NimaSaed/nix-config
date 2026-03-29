@@ -53,6 +53,31 @@ in
       };
     };
 
+    talk = {
+      hpb = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+          description = "Enable Talk High-performance Backend (NATS + signaling on chestnut; coturn on walnut)";
+        };
+        subdomain = lib.mkOption {
+          type = lib.types.str;
+          default = "talk";
+          description = "Subdomain for the HPB signaling WebSocket server";
+        };
+        turnSubdomain = lib.mkOption {
+          type = lib.types.str;
+          default = "turn";
+          description = "Subdomain for the coturn TURN server. DNS must point to walnut's public IP.";
+        };
+        turnPort = lib.mkOption {
+          type = lib.types.port;
+          default = 3478;
+          description = "Port of the coturn TURN server";
+        };
+      };
+    };
+
     adminUser = lib.mkOption {
       type = lib.types.str;
       default = "admin";
@@ -367,6 +392,65 @@ in
               };
             };
 
+            # Container 8: NATS message broker for Talk HPB
+            containers.nextcloud-talk-nats = lib.mkIf cfg.talk.hpb.enable {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "NATS message broker for Nextcloud Talk HPB";
+                After = [ pods.nextcloud.ref ];
+              };
+
+              containerConfig = {
+                image = "docker.io/library/nats:2-alpine";
+                pod = pods.nextcloud.ref;
+                autoUpdate = "registry";
+                exec = "-js"; # enable JetStream
+                environments.TZ = "Europe/Amsterdam";
+              };
+            };
+
+            # Container 9: nextcloud-spreed-signaling HPB server
+            containers.nextcloud-talk = lib.mkIf cfg.talk.hpb.enable {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "Nextcloud Talk HPB signaling server";
+                After = [
+                  pods.nextcloud.ref
+                  "nextcloud-talk-nats.service"
+                ];
+              };
+
+              containerConfig = {
+                image = "ghcr.io/strukturag/nextcloud-spreed-signaling:latest";
+                pod = pods.nextcloud.ref;
+                autoUpdate = "registry";
+
+                labels = mkTraefikLabels {
+                  name = "talk";
+                  port = 8088;
+                  subdomain = cfg.talk.hpb.subdomain;
+                };
+
+                environments.TZ = "Europe/Amsterdam";
+
+                volumes = [
+                  "${nixosConfig.sops.templates."nextcloud-talk-signaling.conf".path}:/config/server.conf:ro"
+                ];
+              };
+            };
+
             # Container 7: Nextcloud Whiteboard WebSocket server
             containers.nextcloud-whiteboard = lib.mkIf cfg.whiteboard.enable {
               autoStart = true;
@@ -585,27 +669,65 @@ in
           }
           // lib.genAttrs
             (map (i: "nextcloud-ai-worker-${toString i}") (lib.range 1 4))
-            (_: aiWorkerService);
+            (_: aiWorkerService)
+          // lib.optionalAttrs cfg.talk.hpb.enable {
+            nextcloud-talk-setup = {
+              Unit = {
+                Description = "Configure Nextcloud Talk HPB (TURN + signaling)";
+                After = [ "nextcloud-app-setup.service" ];
+              };
+              Service = {
+                Type = "oneshot";
+                RemainAfterExit = true;
+                ExecStart = "${pkgs.writeShellScript "nextcloud-talk-setup" ''
+                  occ() { ${pkgs.podman}/bin/podman exec nextcloud-app php occ "$@"; }
+
+                  TURN_SECRET=$(${pkgs.gnugrep}/bin/grep '^TURN_SECRET=' \
+                    ${nixosConfig.sops.templates."nextcloud-talk-secrets".path} | \
+                    ${pkgs.coreutils}/bin/cut -d= -f2- | ${pkgs.coreutils}/bin/tr -d '\n\r')
+
+                  SIGNALING_SECRET=$(${pkgs.gnugrep}/bin/grep '^SIGNALING_SECRET=' \
+                    ${nixosConfig.sops.templates."nextcloud-talk-secrets".path} | \
+                    ${pkgs.coreutils}/bin/cut -d= -f2- | ${pkgs.coreutils}/bin/tr -d '\n\r')
+
+                  occ config:app:set spreed turn_servers \
+                    --value="[{\"server\":\"${cfg.talk.hpb.turnSubdomain}.${domain}:${toString cfg.talk.hpb.turnPort}\",\"secret\":\"$TURN_SECRET\",\"protocols\":\"udp,tcp\"}]"
+
+                  occ config:app:set spreed signaling_servers \
+                    --value="{\"servers\":[{\"server\":\"https://${cfg.talk.hpb.subdomain}.${domain}\",\"verify\":true}],\"secret\":\"$SIGNALING_SECRET\"}"
+                ''}";
+              };
+              Install.WantedBy = [ "default.target" ];
+            };
+          };
 
       };
 
     # Secret management using sops-nix
     sops.secrets =
       lib.genAttrs
-        [
-          "nextcloud/admin_password"
-          "nextcloud/mysql_root_password"
-          "nextcloud/mysql_password"
-          "nextcloud/redis_password"
-          "nextcloud/collabora_password"
-          "nextcloud/whiteboard_jwt_secret"
-          "nextcloud/smtp_host"
-          "nextcloud/smtp_port"
-          "nextcloud/smtp_secure"
-          "nextcloud/smtp_user"
-          "nextcloud/smtp_password"
-          "nextcloud/smtp_from_address"
-        ]
+        (
+          [
+            "nextcloud/admin_password"
+            "nextcloud/mysql_root_password"
+            "nextcloud/mysql_password"
+            "nextcloud/redis_password"
+            "nextcloud/collabora_password"
+            "nextcloud/whiteboard_jwt_secret"
+            "nextcloud/smtp_host"
+            "nextcloud/smtp_port"
+            "nextcloud/smtp_secure"
+            "nextcloud/smtp_user"
+            "nextcloud/smtp_password"
+            "nextcloud/smtp_from_address"
+          ]
+          ++ lib.optionals cfg.talk.hpb.enable [
+            "nextcloud/turn_secret"
+            "nextcloud/signaling_secret"
+            "nextcloud/signaling_hashkey"
+            "nextcloud/signaling_blockkey"
+          ]
+        )
         (_: {
           owner = "poddy";
           group = "poddy";
@@ -689,6 +811,57 @@ in
       group = "poddy";
       mode = "0400";
     };
+
+    # Talk HPB: env file read by nextcloud-talk-setup service
+    sops.templates."nextcloud-talk-secrets" = lib.mkIf cfg.talk.hpb.enable {
+      content = ''
+        TURN_SECRET=${config.sops.placeholder."nextcloud/turn_secret"}
+        SIGNALING_SECRET=${config.sops.placeholder."nextcloud/signaling_secret"}
+      '';
+      owner = "poddy";
+      group = "poddy";
+      mode = "0400";
+    };
+
+    # Talk HPB: signaling server TOML config, mounted read-only into the container
+    # mode 0444: container process runs as non-root UID, needs world-readable (same as redis.conf)
+    sops.templates."nextcloud-talk-signaling.conf" = lib.mkIf cfg.talk.hpb.enable {
+      content = ''
+        [http]
+        listen = 0.0.0.0:8088
+
+        [app]
+        debug = true
+
+        [sessions]
+        hashkey = ${config.sops.placeholder."nextcloud/signaling_hashkey"}
+        blockkey = ${config.sops.placeholder."nextcloud/signaling_blockkey"}
+
+        [clients]
+        internalsecret = ${config.sops.placeholder."nextcloud/signaling_secret"}
+
+        [backend]
+        backends = nextcloud
+        allowall = false
+        timeout = 10
+        connectionsperhost = 8
+
+        [nextcloud]
+        urls = https://${cfg.subdomain}.${domain}
+        secret = ${config.sops.placeholder."nextcloud/signaling_secret"}
+
+        [nats]
+        url = nats://127.0.0.1:4222
+
+        [turn]
+        apikey = turn
+        secret = ${config.sops.placeholder."nextcloud/turn_secret"}
+        servers = turn:${cfg.talk.hpb.turnSubdomain}.${domain}:${toString cfg.talk.hpb.turnPort}?transport=udp,turn:${cfg.talk.hpb.turnSubdomain}.${domain}:${toString cfg.talk.hpb.turnPort}?transport=tcp
+      '';
+      owner = "poddy";
+      group = "poddy";
+      mode = "0444";
+    };
   };
 }
 
@@ -707,29 +880,5 @@ in
 #
 # Manual steps still required:
 #
-# 1. Wait for database and Nextcloud initialization (before services can run):
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman logs nextcloud-db
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman logs nextcloud-app
-#
-# 2. Generate previews for existing files (only needed after bulk file migrations — not on fresh deploys):
+# 1. Generate previews for existing files (only needed after bulk file migrations — not on fresh deploys):
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ preview:generate-all
-#    (new files are handled automatically by the previewgenerator v5.12+ background job via cron.php)
-#
-# 3. Test OIDC login:
-#    Visit https://cloud.nmsd.xyz and click "Login with Authelia"
-#
-# 4. Verify push server (self-test after containers are up):
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:self-test
-
-# ── Major version upgrade steps (e.g. 32 → 33) ──────────────────────────
-#
-# After changing the image tag and running nixos-rebuild switch:
-#
-# 1. Finalize the upgrade (if not auto-applied by entrypoint):
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ upgrade
-#
-# 2-5. Handled automatically by nextcloud-app-setup and nextcloud-maintenance on reboot.
-#
-# 6. Verify:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ status
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:list

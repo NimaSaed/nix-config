@@ -349,13 +349,11 @@
         };
 
         # Walnut - VPS WireGuard relay
-        # Deploy: colmena apply --on walnut
+        # Deploy: ssh into chestnut, then run: colmena apply --on walnut
         walnut = {
           deployment = {
             targetHost = "walnut.nmsd.xyz";
             targetUser = "root";
-            buildOnTarget = false;
-            buildHost = "chestnut.nmsd.xyz";
             tags = [ "walnut" ];
           };
           imports = walnutModules;
