@@ -846,7 +846,7 @@ in
         timeout = 10
         connectionsperhost = 8
 
-        [backend "nextcloud"]
+        [nextcloud]
         urls = https://${cfg.subdomain}.${domain}
         secret = ${config.sops.placeholder."nextcloud/signaling_secret"}
 
