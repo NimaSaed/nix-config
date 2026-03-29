@@ -824,6 +824,7 @@ in
     };
 
     # Talk HPB: signaling server TOML config, mounted read-only into the container
+    # mode 0444: container process runs as non-root UID, needs world-readable (same as redis.conf)
     sops.templates."nextcloud-talk-signaling.conf" = lib.mkIf cfg.talk.hpb.enable {
       content = ''
         [http]
@@ -859,7 +860,7 @@ in
       '';
       owner = "poddy";
       group = "poddy";
-      mode = "0400";
+      mode = "0444";
     };
   };
 }
