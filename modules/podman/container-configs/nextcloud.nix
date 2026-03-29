@@ -25,6 +25,23 @@ in
     description = "Custom PHP-FPM pool overrides for performance tuning";
   };
 
+  options.services.pods.nextcloud._phpIniFile = lib.mkOption {
+    type = lib.types.package;
+    internal = true;
+    default = pkgs.writeText "zzz-nix-opcache.ini" ''
+      ; PHP OPcache tuning for Nextcloud
+      ; Host: 32GB RAM — 512MB is ~1.5% of total memory, appropriate for 20+ apps
+      opcache.enable=1
+      opcache.enable_cli=1
+      opcache.memory_consumption=512
+      opcache.interned_strings_buffer=16
+      opcache.max_accelerated_files=10000
+      opcache.revalidate_freq=60
+      opcache.save_comments=1
+    '';
+    description = "PHP INI overrides for OPcache tuning";
+  };
+
   options.services.pods.nextcloud._configFile = lib.mkOption {
     type = lib.types.package;
     internal = true;
