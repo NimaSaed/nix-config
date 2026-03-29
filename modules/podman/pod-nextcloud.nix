@@ -691,7 +691,7 @@ in
                     ${pkgs.coreutils}/bin/cut -d= -f2- | ${pkgs.coreutils}/bin/tr -d '\n\r')
 
                   occ config:app:set spreed turn_servers \
-                    --value="[{\"server\":\"turn:${cfg.talk.hpb.turnSubdomain}.${domain}:${toString cfg.talk.hpb.turnPort}\",\"secret\":\"$TURN_SECRET\",\"protocols\":\"udp,tcp\"}]"
+                    --value="[{\"server\":\"${cfg.talk.hpb.turnSubdomain}.${domain}:${toString cfg.talk.hpb.turnPort}\",\"secret\":\"$TURN_SECRET\",\"protocols\":\"udp,tcp\"}]"
 
                   occ config:app:set spreed signaling_servers \
                     --value="{\"servers\":[{\"server\":\"https://${cfg.talk.hpb.subdomain}.${domain}\",\"verify\":true}],\"secret\":\"$SIGNALING_SECRET\"}"
@@ -847,7 +847,7 @@ in
         connectionsperhost = 8
 
         [nextcloud]
-        urls = http://127.0.0.1:8080
+        urls = https://${cfg.subdomain}.${domain}
         secret = ${config.sops.placeholder."nextcloud/signaling_secret"}
 
         [nats]
