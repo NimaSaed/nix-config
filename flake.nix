@@ -354,7 +354,8 @@
           deployment = {
             targetHost = "walnut.nmsd.xyz";
             targetUser = "root";
-            buildOnTarget = true;
+            buildOnTarget = false;
+            buildHost = "chestnut.nmsd.xyz";
             tags = [ "walnut" ];
           };
           imports = walnutModules;

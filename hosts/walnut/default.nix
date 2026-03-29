@@ -113,9 +113,9 @@
     settings.PasswordAuthentication = false;
   };
 
-  users.users.root.openssh.authorizedKeys.keys = lib.splitString "\n" (
-    builtins.readFile ../../home/nima/ssh.pub
-  );
+  users.users.root.openssh.authorizedKeys.keys =
+    lib.splitString "\n" (builtins.readFile ../../home/nima/ssh.pub)
+    ++ lib.splitString "\n" (builtins.readFile ../chestnut/chestnut_ssh_pub);
 
   # ============================================================================
   # Minimal system

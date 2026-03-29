@@ -249,7 +249,19 @@
 
     # Use dedicated age key for decryption
     age.keyFile = "/var/lib/sops-nix/key.txt";
+
+    secrets."ssh/chestnut_ssh_priv" = {
+      owner = "root";
+      mode = "0600";
+    };
   };
+
+  # Use the sops-managed key when root SSHes to walnut (for colmena closure push)
+  programs.ssh.extraConfig = ''
+    Host walnut.nmsd.xyz
+      IdentityFile ${config.sops.secrets."ssh/chestnut_ssh_priv".path}
+      User root
+  '';
 
   system.stateVersion = "25.11";
 }
