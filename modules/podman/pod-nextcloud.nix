@@ -880,29 +880,5 @@ in
 #
 # Manual steps still required:
 #
-# 1. Wait for database and Nextcloud initialization (before services can run):
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman logs nextcloud-db
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman logs nextcloud-app
-#
-# 2. Generate previews for existing files (only needed after bulk file migrations — not on fresh deploys):
+# 1. Generate previews for existing files (only needed after bulk file migrations — not on fresh deploys):
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ preview:generate-all
-#    (new files are handled automatically by the previewgenerator v5.12+ background job via cron.php)
-#
-# 3. Test OIDC login:
-#    Visit https://cloud.nmsd.xyz and click "Login with Authelia"
-#
-# 4. Verify push server (self-test after containers are up):
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ notify_push:self-test
-
-# ── Major version upgrade steps (e.g. 32 → 33) ──────────────────────────
-#
-# After changing the image tag and running nixos-rebuild switch:
-#
-# 1. Finalize the upgrade (if not auto-applied by entrypoint):
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ upgrade
-#
-# 2-5. Handled automatically by nextcloud-app-setup and nextcloud-maintenance on reboot.
-#
-# 6. Verify:
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ status
-#    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman exec nextcloud-app php occ app:list
