@@ -847,7 +847,7 @@ in
         connectionsperhost = 8
 
         [nextcloud]
-        urls = https://${cfg.subdomain}.${domain}
+        urls = http://127.0.0.1:8080
         secret = ${config.sops.placeholder."nextcloud/signaling_secret"}
 
         [nats]
