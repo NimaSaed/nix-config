@@ -222,6 +222,7 @@ in
                   ENABLE_OAUTH_PERSISTENT_CONFIG = "false";
                   WEBUI_SESSION_COOKIE_SECURE = "true";
                   WEBUI_AUTH_COOKIE_SAME_SITE = "lax";
+                  CORS_ALLOW_ORIGIN = "https://${cfg.openwebui.subdomain}.${domain}";
                 };
 
                 volumes = [
