@@ -124,20 +124,25 @@ in
       font = {
         size = 18;
         normal = {
-          family = "JetBrainsMono Nerd Font Mono";
+          family = "OpenDyslexicM Nerd Font Mono";
           style = "Regular";
         };
         bold = {
-          family = "JetBrainsMono Nerd Font Mono";
+          family = "OpenDyslexicM Nerd Font Mono";
           style = "Bold";
         };
         italic = {
-          family = "JetBrainsMono Nerd Font Mono";
+          family = "OpenDyslexicM Nerd Font Mono";
           style = "Italic";
         };
         bold_italic = {
-          family = "JetBrainsMono Nerd Font Mono";
+          family = "OpenDyslexicM Nerd Font Mono";
           style = "Bold Italic";
+        };
+        # Negative values reduce spacing; y = line spacing, x = letter spacing
+        offset = {
+          x = -4;
+          y = -12;
         };
       };
 

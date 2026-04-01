@@ -74,7 +74,11 @@
   # ===========================================================================
   # Fonts
   # ===========================================================================
-  fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
+  fonts.packages = [
+    pkgs.nerd-fonts.jetbrains-mono
+    pkgs.open-dyslexic
+    pkgs.nerd-fonts.open-dyslexic
+  ];
 
   # ===========================================================================
   # Homebrew Configuration
@@ -109,8 +113,8 @@
 
     # Mac App Store applications
     masApps = {
-      "ikea desk remote" = 1509037746;
-      "1password for safari" = 1569813296;
+      #"ikea desk remote" = 1509037746;
+      #"1password for safari" = 1569813296;
     };
 
     # Activation behavior
