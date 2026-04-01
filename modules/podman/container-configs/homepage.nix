@@ -253,6 +253,13 @@ in
                   description = "LLM proxy and model management";
                 };
               }
+              {
+                "Open WebUI" = {
+                  icon = "sh-open-webui";
+                  href = "https://${aiCfg.openwebui.subdomain}.${domain}/";
+                  description = "AI chat interface";
+                };
+              }
             ])
           ];
         }
