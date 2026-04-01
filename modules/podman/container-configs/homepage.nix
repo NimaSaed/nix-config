@@ -245,12 +245,21 @@ in
         # -----------------------------------------------------------------------
         {
           AI = lib.flatten [
-            (lib.optionals aiCfg.enable [
+            (lib.optionals aiCfg.litellm.enable [
               {
                 LiteLLM = {
                   icon = "sh-litellm";
                   href = "https://${aiCfg.litellm.subdomain}.${domain}/";
                   description = "LLM proxy and model management";
+                };
+              }
+            ])
+            (lib.optionals aiCfg.openwebui.enable [
+              {
+                "Open WebUI" = {
+                  icon = "sh-open-webui";
+                  href = "https://${aiCfg.openwebui.subdomain}.${domain}/";
+                  description = "AI chat interface";
                 };
               }
             ])

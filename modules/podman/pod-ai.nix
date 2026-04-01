@@ -15,10 +15,28 @@ in
     enable = lib.mkEnableOption "AI pod";
 
     litellm = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable LiteLLM proxy container in the AI pod";
+      };
       subdomain = lib.mkOption {
         type = lib.types.str;
         default = "litellm";
         description = "Subdomain for LiteLLM proxy";
+      };
+    };
+
+    openwebui = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable Open WebUI container in the AI pod";
+      };
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "openwebui";
+        description = "Subdomain for Open WebUI";
       };
     };
   };
@@ -37,11 +55,25 @@ in
       "ai/litellm/master_key"
       "ai/litellm/db_password"
       "ai/litellm/oidc_client_secret_litellm"
+      "ai/openwebui/oidc_client_secret"
+      "ai/openwebui/secret_key"
+      "ai/openwebui/litellm_api_key"
     ] (_: { owner = "poddy"; group = "poddy"; });
 
     sops.templates."ai-litellm-db-env" = {
       content = ''
         POSTGRES_PASSWORD=${config.sops.placeholder."ai/litellm/db_password"}
+      '';
+      owner = "poddy";
+      group = "poddy";
+      mode = "0400";
+    };
+
+    sops.templates."ai-openwebui-env" = {
+      content = ''
+        WEBUI_SECRET_KEY=${config.sops.placeholder."ai/openwebui/secret_key"}
+        OAUTH_CLIENT_SECRET=${config.sops.placeholder."ai/openwebui/oidc_client_secret"}
+        OPENAI_API_KEY=${config.sops.placeholder."ai/openwebui/litellm_api_key"}
       '';
       owner = "poddy";
       group = "poddy";
@@ -81,13 +113,17 @@ in
               volumeConfig = { };
             };
 
+            volumes.ai_openwebui = {
+              volumeConfig = { };
+            };
+
             pods.ai = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
               };
             };
 
-            containers.ai-litellm-db = {
+            containers.ai-litellm-db = lib.mkIf cfg.litellm.enable {
               autoStart = true;
 
               serviceConfig = {
@@ -120,7 +156,7 @@ in
               };
             };
 
-            containers.ai-litellm = {
+            containers.ai-litellm = lib.mkIf cfg.litellm.enable {
               autoStart = true;
 
               serviceConfig = {
@@ -150,6 +186,65 @@ in
                   name = "litellm";
                   port = 4000;
                   subdomain = cfg.litellm.subdomain;
+                  middlewares = false;
+                };
+              };
+            };
+
+            containers.ai-openwebui = lib.mkIf cfg.openwebui.enable {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "Open WebUI container";
+                After = [
+                  pods.ai.ref
+                  "ai-litellm.service"
+                ];
+              };
+
+              containerConfig = {
+                image = "ghcr.io/open-webui/open-webui:main";
+                pod = pods.ai.ref;
+                autoUpdate = "registry";
+
+                environmentFiles = [ nixosConfig.sops.templates."ai-openwebui-env".path ];
+
+                environments = {
+                  WEBUI_URL = "https://${cfg.openwebui.subdomain}.${domain}";
+                  OPENAI_API_BASE_URL = "http://127.0.0.1:4000/v1";
+                  ENABLE_OLLAMA_API = "false";
+                  OAUTH_CLIENT_ID = "openwebui";
+                  OPENID_PROVIDER_URL = "https://${authCfg.authelia.subdomain}.${domain}/.well-known/openid-configuration";
+                  OAUTH_PROVIDER_NAME = "Authelia";
+                  OAUTH_SCOPES = "openid profile email groups";
+                  ENABLE_OAUTH_SIGNUP = "true";
+                  ENABLE_SIGNUP = "false";
+                  ENABLE_LOGIN_FORM = "false";
+                  ENABLE_PASSWORD_AUTH = "false";
+                  DEFAULT_USER_ROLE = "user";
+                  ENABLE_OAUTH_ROLE_MANAGEMENT = "true";
+                  OAUTH_ROLES_CLAIM = "groups";
+                  ENABLE_OAUTH_PERSISTENT_CONFIG = "false";
+                  WEBUI_SESSION_COOKIE_SECURE = "true";
+                  WEBUI_AUTH_COOKIE_SAME_SITE = "lax";
+                  CORS_ALLOW_ORIGIN = "https://${cfg.openwebui.subdomain}.${domain}";
+                };
+
+                volumes = [
+                  "${volumes.ai_openwebui.ref}:/app/backend/data"
+                ];
+
+                healthCmd = "curl -sf http://ai:8080/health || exit 1";
+
+                labels = mkTraefikLabels {
+                  name = "openwebui";
+                  port = 8080;
+                  subdomain = cfg.openwebui.subdomain;
                   middlewares = false;
                 };
               };
