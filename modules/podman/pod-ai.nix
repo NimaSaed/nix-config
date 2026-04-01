@@ -15,6 +15,11 @@ in
     enable = lib.mkEnableOption "AI pod";
 
     litellm = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable LiteLLM proxy container in the AI pod";
+      };
       subdomain = lib.mkOption {
         type = lib.types.str;
         default = "litellm";
@@ -23,6 +28,11 @@ in
     };
 
     openwebui = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable Open WebUI container in the AI pod";
+      };
       subdomain = lib.mkOption {
         type = lib.types.str;
         default = "openwebui";
@@ -113,7 +123,7 @@ in
               };
             };
 
-            containers.ai-litellm-db = {
+            containers.ai-litellm-db = lib.mkIf cfg.litellm.enable {
               autoStart = true;
 
               serviceConfig = {
@@ -146,7 +156,7 @@ in
               };
             };
 
-            containers.ai-litellm = {
+            containers.ai-litellm = lib.mkIf cfg.litellm.enable {
               autoStart = true;
 
               serviceConfig = {
@@ -181,7 +191,7 @@ in
               };
             };
 
-            containers.ai-openwebui = {
+            containers.ai-openwebui = lib.mkIf cfg.openwebui.enable {
               autoStart = true;
 
               serviceConfig = {

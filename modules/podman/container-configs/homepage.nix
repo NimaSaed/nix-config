@@ -245,7 +245,7 @@ in
         # -----------------------------------------------------------------------
         {
           AI = lib.flatten [
-            (lib.optionals aiCfg.enable [
+            (lib.optionals aiCfg.litellm.enable [
               {
                 LiteLLM = {
                   icon = "sh-litellm";
@@ -253,6 +253,8 @@ in
                   description = "LLM proxy and model management";
                 };
               }
+            ])
+            (lib.optionals aiCfg.openwebui.enable [
               {
                 "Open WebUI" = {
                   icon = "sh-open-webui";

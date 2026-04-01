@@ -51,7 +51,13 @@
       enable = true;
       machinelearning.openvino.enable = true;
     };
-    ai.enable = true;
+    ai = {
+      enable = true;
+      # Both litellm and openwebui are enabled by default.
+      # Disable individually if needed, e.g.:
+      # litellm.enable = false;
+      # openwebui.enable = false;
+    };
   };
 
   # ============================================================================
