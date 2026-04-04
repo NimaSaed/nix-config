@@ -543,8 +543,11 @@ in
                       pod = pods.nextcloud.ref;
                       autoUpdate = "registry";
 
+                      # Pass config file path as exec argument (kran0 image requirement)
+                      exec = "/davmail/davmail.properties";
+
                       volumes = [
-                        "${nixosConfig.services.pods.nextcloud.davmail._configFiles.${acct.name}}:/etc/davmail/davmail.properties:ro"
+                        "${nixosConfig.services.pods.nextcloud.davmail._configFiles.${acct.name}}:/davmail/davmail.properties:ro"
                         "${volumes."nextcloud_davmail_${acct.name}".ref}:/data:U"
                       ];
 
