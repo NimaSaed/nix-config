@@ -34,9 +34,18 @@ in
           # Server mode (no GUI)
           davmail.server=true
 
-          # Office 365 with OAuth2 (supports MFA via device code flow)
+          # Office 365 with OAuth2 device code flow (supports MFA including TOTP)
           davmail.mode=O365Modern
           davmail.url=https://outlook.office365.com/EWS/Exchange.asmx
+
+          # Use Microsoft's own Office desktop public client — no app registration or
+          # admin consent required. This client supports OAuth2 device code flow so
+          # DavMail prints a login URL + code to logs on first connect; authenticate
+          # in a browser with full MFA, token is then cached for ~90 days.
+          davmail.oauth.clientId=d3590ed6-52b3-4102-aeff-aad2292ab01c
+
+          # "Out of band" redirect URI signals device code flow to the OAuth2 server
+          davmail.oauth.redirectUri=urn:ietf:wg:oauth:2.0:oob
 
           # Restrict to this specific Azure AD tenant
           davmail.oauth.tenantId=${acct.tenantId}
