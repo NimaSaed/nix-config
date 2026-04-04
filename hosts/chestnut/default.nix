@@ -46,6 +46,14 @@
     nextcloud = {
       enable = true;
       talk.hpb.enable = true;
+      davmail = {
+        enable = true;
+        accounts = {
+          "anva".tenantId = "06404cfb-c428-41ce-b4bb-8bcefbe86200";
+          # Second company — add tenantId and uncomment when ready:
+          # "company2".tenantId = "";
+        };
+      };
     };
     immich = {
       enable = true;

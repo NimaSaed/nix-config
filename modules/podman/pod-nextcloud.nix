@@ -16,6 +16,7 @@ in
     ./container-configs/nextcloud.nix
     ./container-configs/nextcloud-mariadb.nix
     ./container-configs/nextcloud-nginx.nix
+    ./container-configs/davmail.nix
   ];
 
   options.services.pods.nextcloud = {
@@ -78,6 +79,31 @@ in
       };
     };
 
+    davmail = {
+      enable = lib.mkEnableOption "DavMail Exchange/O365 gateway (IMAP, SMTP, CalDAV, LDAP)";
+
+      accounts = lib.mkOption {
+        type = lib.types.attrsOf (
+          lib.types.submodule {
+            options = {
+              tenantId = lib.mkOption {
+                type = lib.types.str;
+                description = ''
+                  Azure AD tenant ID (GUID from Azure portal → Microsoft Entra ID → Overview).
+                  Restricts OAuth2 authentication to this specific O365 tenant.
+                  Ports are auto-assigned by account order (alphabetical key sort):
+                    account 0: IMAP 1143, SMTP 1025, CalDAV 1080, LDAP 1389
+                    account 1: IMAP 1243, SMTP 1125, CalDAV 1180, LDAP 1489
+                '';
+              };
+            };
+          }
+        );
+        default = { };
+        description = "DavMail account configurations. One entry per O365 tenant.";
+      };
+    };
+
     adminUser = lib.mkOption {
       type = lib.types.str;
       default = "admin";
@@ -112,6 +138,7 @@ in
           let
             inherit (config.virtualisation.quadlet) networks pods volumes;
           in
+          lib.recursiveUpdate
           {
             # Named volumes for persistent data
             volumes.nextcloud_data = {
@@ -485,7 +512,51 @@ in
                 };
               };
             };
-          };
+          }
+          # DavMail: one container + one token-cache volume per O365 account
+          (lib.optionalAttrs cfg.davmail.enable (
+            {
+              volumes = lib.mapAttrs' (name: _:
+                lib.nameValuePair "nextcloud_davmail_${name}" { volumeConfig = { }; }
+              ) cfg.davmail.accounts;
+            }
+            //
+            {
+              containers = builtins.listToAttrs (
+                map (acct: {
+                  name = "nextcloud-davmail-${acct.name}";
+                  value = {
+                    autoStart = true;
+
+                    serviceConfig = {
+                      Restart = "always";
+                      TimeoutStopSec = 70;
+                    };
+
+                    unitConfig = {
+                      Description = "DavMail O365 gateway for account: ${acct.name}";
+                      After = [ pods.nextcloud.ref ];
+                    };
+
+                    containerConfig = {
+                      image = "docker.io/kran0/davmail-docker:latest";
+                      pod = pods.nextcloud.ref;
+                      autoUpdate = "registry";
+
+                      volumes = [
+                        "${nixosConfig.services.pods.nextcloud.davmail._configFiles.${acct.name}}:/etc/davmail/davmail.properties:ro"
+                        "${volumes."nextcloud_davmail_${acct.name}".ref}:/data:U"
+                      ];
+
+                      environments = {
+                        TZ = "Europe/Amsterdam";
+                      };
+                    };
+                  };
+                }) nixosConfig.services.pods.nextcloud.davmail._indexedAccounts
+              );
+            }
+          ));
 
         # Cron timer: run Nextcloud background jobs every 5 minutes
         systemd.user.timers.nextcloud-cron = {
