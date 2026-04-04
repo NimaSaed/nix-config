@@ -61,8 +61,8 @@ in
           davmail.logFilePath=/dev/stdout
 
           # Log levels (DavMail uses Log4j-style syntax, not Log4j2)
-          # Keep davmail at INFO so device code flow URL remains visible
-          log4j.logger.davmail=INFO
+          # Temporarily DEBUG to diagnose OAuth flow — revert to INFO once working
+          log4j.logger.davmail=DEBUG
           log4j.logger.org.apache=WARN
           log4j.logger.httpclient=WARN
 
