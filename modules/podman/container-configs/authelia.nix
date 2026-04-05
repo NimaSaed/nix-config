@@ -74,7 +74,7 @@ in
               - "${authCfg.lldap.subdomain}.${domain}"
             policy: two_factor
             subject:
-              - 'group:lldap-admin'
+              - 'group:lldap_admin'
           - domain:
               - "${shCfg.scrypted.subdomain}.${domain}"
             policy: two_factor
