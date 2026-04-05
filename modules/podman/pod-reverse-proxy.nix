@@ -31,8 +31,8 @@ in
     sops.secrets =
       lib.genAttrs
         [
-          "reverse-proxy/cloudflare_email"
-          "reverse-proxy/cloudflare_api_token"
+          "reverse-proxy/acme_email"
+          "reverse-proxy/desec_token"
         ]
         (_: {
           owner = "poddy";
@@ -129,8 +129,8 @@ in
                   TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_TO = "websecure";
                   TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_SCHEME = "https";
                   TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_DNSCHALLENGE = "true";
-                  TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_DNSCHALLENGE_PROVIDER = "cloudflare";
-                  TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_DNSCHALLENGE_RESOLVERS = "1.1.1.1:53,1.0.0.1:53";
+                  TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_DNSCHALLENGE_PROVIDER = "desec";
+                  TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_DNSCHALLENGE_RESOLVERS = "45.54.76.1:53,157.53.224.1:53";
                   TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_STORAGE = "/data/acme.json";
                   TRAEFIK_SERVERSTRANSPORT_INSECURESKIPVERIFY = "true";
                 }
@@ -147,10 +147,9 @@ in
     sops.templates."traefik-secrets" = {
       content = ''
         TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL=${
-          config.sops.placeholder."reverse-proxy/cloudflare_email"
+          config.sops.placeholder."reverse-proxy/acme_email"
         }
-        CF_API_EMAIL=${config.sops.placeholder."reverse-proxy/cloudflare_email"}
-        CF_DNS_API_TOKEN=${config.sops.placeholder."reverse-proxy/cloudflare_api_token"}
+        DESEC_TOKEN=${config.sops.placeholder."reverse-proxy/desec_token"}
       '';
       owner = "poddy";
       group = "poddy";
