@@ -112,7 +112,7 @@ in
           immich_role:
             expression: '"immich-admins" in groups ? "admin" : "user"'
           litellm_role:
-            expression: '"litellm-admins" in groups ? "proxy_admin" : "internal_user"'
+            expression: '"litellm-admins" in groups ? "proxy_admin" : ("litellm-users" in groups ? "internal_user" : "")'
 
       identity_providers:
         oidc:
@@ -140,6 +140,15 @@ in
             litellm_scope:
               claims:
                 - litellm_role
+
+          authorization_policies:
+            litellm_access:
+              default_policy: deny
+              rules:
+                - policy: two_factor
+                  groups:
+                    - litellm-admins
+                    - litellm-users
 
           jwks:
             - key_id: 'authelia_key'
@@ -197,7 +206,7 @@ in
               client_name: LiteLLM
               client_secret: '{{ secret "/secrets/litellm_client_secret" }}'
               public: false
-              authorization_policy: two_factor
+              authorization_policy: litellm_access
               claims_policy: litellm_policy
               require_pkce: true
               pkce_challenge_method: S256

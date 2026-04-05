@@ -230,6 +230,9 @@ in
                   DEFAULT_USER_ROLE = "user";
                   ENABLE_OAUTH_ROLE_MANAGEMENT = "true";
                   OAUTH_ROLES_CLAIM = "groups";
+                  OAUTH_ALLOWED_ROLES = "openwebui-users,openwebui-admins";
+                  OAUTH_ADMIN_ROLES = "openwebui-admins";
+                  OAUTH_MERGE_ACCOUNTS_BY_EMAIL = "true";
                   ENABLE_OAUTH_PERSISTENT_CONFIG = "false";
                   OAUTH_CODE_CHALLENGE_METHOD = "S256";
                   WEBUI_SESSION_COOKIE_SECURE = "true";
