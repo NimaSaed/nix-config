@@ -156,6 +156,33 @@ in
                   subject:
                     - 'group:openwebui-admins'
                     - 'group:openwebui-users'
+            nextcloud_access:
+              default_policy: deny
+              rules:
+                - policy: two_factor
+                  subject:
+                    - 'group:nextcloud-admins'
+                    - 'group:nextcloud-users'
+            jellyfin_access:
+              default_policy: deny
+              rules:
+                - policy: one_factor
+                  subject:
+                    - 'group:jellyfin-admins'
+                    - 'group:jellyfin-users'
+            immich_access:
+              default_policy: deny
+              rules:
+                - policy: two_factor
+                  subject:
+                    - 'group:immich-admins'
+                    - 'group:immich-users'
+            vaultwarden_access:
+              default_policy: deny
+              rules:
+                - policy: two_factor
+                  subject:
+                    - 'group:vaultwarden-users'
 
           jwks:
             - key_id: 'authelia_key'
@@ -169,7 +196,7 @@ in
               # code_challenge_methods_supported. PKCE S256 replaces the client secret as
               # proof of identity — token_endpoint_auth_method=none with PKCE is secure.
               public: true
-              authorization_policy: two_factor
+              authorization_policy: nextcloud_access
               claims_policy: nextcloud_userinfo
               require_pkce: true
               pkce_challenge_method: S256
@@ -192,7 +219,7 @@ in
               client_name: Jellyfin
               client_secret: '{{ secret "/secrets/jellyfin_client_secret" }}'
               public: false
-              authorization_policy: one_factor
+              authorization_policy: jellyfin_access
               require_pkce: true
               pkce_challenge_method: S256
               redirect_uris:
@@ -236,7 +263,7 @@ in
               client_name: Immich
               client_secret: '{{ secret "/secrets/immich_client_secret" }}'
               public: false
-              authorization_policy: two_factor
+              authorization_policy: immich_access
               claims_policy: immich_policy
               redirect_uris:
                 - "https://${immichCfg.subdomain}.${domain}/auth/login"
@@ -259,7 +286,7 @@ in
               client_name: Vaultwarden
               client_secret: '{{ secret "/secrets/vaultwarden_client_secret" }}'
               public: false
-              authorization_policy: two_factor
+              authorization_policy: vaultwarden_access
               require_pkce: true
               pkce_challenge_method: S256
               redirect_uris:
