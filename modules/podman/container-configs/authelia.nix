@@ -149,6 +149,13 @@ in
                   subject:
                     - 'group:litellm-admins'
                     - 'group:litellm-users'
+            openwebui_access:
+              default_policy: deny
+              rules:
+                - policy: two_factor
+                  subject:
+                    - 'group:openwebui-admins'
+                    - 'group:openwebui-users'
 
           jwks:
             - key_id: 'authelia_key'
@@ -273,7 +280,7 @@ in
               client_name: Open WebUI
               client_secret: '{{ secret "/secrets/openwebui_client_secret" }}'
               public: false
-              authorization_policy: two_factor
+              authorization_policy: openwebui_access
               require_pkce: true
               pkce_challenge_method: S256
               redirect_uris:
