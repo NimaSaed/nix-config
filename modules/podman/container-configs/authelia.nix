@@ -67,10 +67,14 @@ in
           - domain:
               - "${rpCfg.subdomain}.${domain}"
               - "${toolsCfg.dozzle.subdomain}.${domain}"
-              - "${authCfg.lldap.subdomain}.${domain}"
             policy: two_factor
             subject:
               - 'group:admins'
+          - domain:
+              - "${authCfg.lldap.subdomain}.${domain}"
+            policy: two_factor
+            subject:
+              - 'group:lldap-admin'
           - domain:
               - "${shCfg.scrypted.subdomain}.${domain}"
             policy: two_factor
