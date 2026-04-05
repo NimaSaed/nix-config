@@ -150,17 +150,17 @@ in
         '';
 
         systemd.user.services.podman-auto-prune = {
-          description = "Podman auto prune unused images";
-          serviceConfig = {
+          Unit.Description = "Podman auto prune unused images";
+          Service = {
             Type = "oneshot";
             ExecStart = "${pkgs.podman}/bin/podman image prune --all --force";
           };
         };
 
         systemd.user.timers.podman-auto-prune = {
-          description = "Podman auto prune timer";
-          wantedBy = [ "timers.target" ];
-          timerConfig = {
+          Unit.Description = "Podman auto prune timer";
+          Install.WantedBy = [ "timers.target" ];
+          Timer = {
             OnCalendar = "daily";
             Persistent = true;
           };
