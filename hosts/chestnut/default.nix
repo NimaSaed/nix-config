@@ -58,6 +58,7 @@
       # litellm.enable = false;
       # openwebui.enable = false;
     };
+    vaultwarden.enable = true;
   };
 
   # ============================================================================

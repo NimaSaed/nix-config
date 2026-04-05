@@ -16,6 +16,7 @@ let
   shCfg = config.services.pods.smart-home;
   immichCfg = config.services.pods.immich;
   aiCfg = config.services.pods.ai;
+  vaultwardenCfg = config.services.pods.vaultwarden;
 in
 {
   options.services.pods.homepage = {
@@ -179,6 +180,15 @@ in
                   icon = "sh-dozzle";
                   href = "https://${toolsCfg.dozzle.subdomain}.${domain}/";
                   description = "Real-time Docker log viewer";
+                };
+              }
+            ])
+            (lib.optionals vaultwardenCfg.enable [
+              {
+                Vaultwarden = {
+                  icon = "sh-vaultwarden";
+                  href = "https://${vaultwardenCfg.subdomain}.${domain}/";
+                  description = "Password manager";
                 };
               }
             ])
