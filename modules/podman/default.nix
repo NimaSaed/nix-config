@@ -65,6 +65,7 @@ in
     ./pod-smart-home.nix
     ./pod-immich.nix
     ./pod-ai.nix
+    ./pod-vaultwarden.nix
   ];
 
   options.services.pods = {

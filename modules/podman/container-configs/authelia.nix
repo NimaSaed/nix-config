@@ -8,6 +8,7 @@
 let
   inherit (config.services.pods) domain;
   authCfg = config.services.pods.auth;
+  vaultwardenCfg = config.services.pods.vaultwarden;
   toolsCfg = config.services.pods.tools;
   mediaCfg = config.services.pods.media;
   rpCfg = config.services.pods.reverse-proxy;
@@ -236,6 +237,27 @@ in
               access_token_signed_response_alg: none
               userinfo_signed_response_alg: none
               token_endpoint_auth_method: client_secret_post
+            - client_id: vaultwarden
+              client_name: Vaultwarden
+              client_secret: '{{ secret "/secrets/vaultwarden_client_secret" }}'
+              public: false
+              authorization_policy: two_factor
+              require_pkce: true
+              pkce_challenge_method: S256
+              redirect_uris:
+                - "https://${vaultwardenCfg.subdomain}.${domain}/identity/connect/oidc-signin"
+              scopes:
+                - openid
+                - profile
+                - email
+              response_types:
+                - code
+              grant_types:
+                - authorization_code
+              consent_mode: implicit
+              access_token_signed_response_alg: none
+              userinfo_signed_response_alg: none
+              token_endpoint_auth_method: client_secret_basic
             - client_id: openwebui
               client_name: Open WebUI
               client_secret: '{{ secret "/secrets/openwebui_client_secret" }}'
