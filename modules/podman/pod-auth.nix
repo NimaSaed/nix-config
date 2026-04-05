@@ -191,7 +191,7 @@ in
                   name = "lldap";
                   port = 17170;
                   subdomain = cfg.lldap.subdomain;
-                  # middlewares = true;  # Uncomment to enable Authelia protection
+                  middlewares = true;
                   extraLabels = name: {
                     # TCP router for LDAPS
                     "traefik.tcp.routers.${name}.rule" = "HostSNI(`*`)";

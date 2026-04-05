@@ -50,21 +50,37 @@ in
         rules:
           - domain:
               - "${toolsCfg.itTools.subdomain}.${domain}"
-              - "${mediaCfg.seerr.subdomain}.${domain}"
             policy: bypass
           - domain:
               - "${toolsCfg.homepage.subdomain}.${domain}"
-              - "changedetection.${domain}"
+            policy: one_factor
+            subject:
+              - 'group:homepage-users'
+          - domain:
               - "${mediaCfg.sonarr.subdomain}.${domain}"
               - "${mediaCfg.radarr.subdomain}.${domain}"
               - "${mediaCfg.nzbget.subdomain}.${domain}"
+              - "${mediaCfg.seerr.subdomain}.${domain}"
             policy: one_factor
+            subject:
+              - 'group:media-admins'
           - domain:
               - "${rpCfg.subdomain}.${domain}"
               - "${toolsCfg.dozzle.subdomain}.${domain}"
               - "${authCfg.lldap.subdomain}.${domain}"
+            policy: two_factor
+            subject:
+              - 'group:admins'
+          - domain:
               - "${shCfg.scrypted.subdomain}.${domain}"
             policy: two_factor
+            subject:
+              - 'group:scrypted-users'
+          - domain:
+              - "changedetection.${domain}"
+            policy: two_factor
+            subject:
+              - 'group:changedetection-users'
 
       session:
         cookies:
@@ -91,11 +107,6 @@ in
           sender: "Authelia <authelia@${domain}>"
           disable_require_tls: false
 
-      # Using LLDAP for authentication (not local file/SQLite user DB).
-      # To switch to local file auth in the future, replace with:
-      #   authentication_backend:
-      #     file:
-      #       path: "/config/users.yml"
       authentication_backend:
         ldap:
           implementation: lldap
