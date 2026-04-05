@@ -93,6 +93,7 @@ in
         PROXY_BASE_URL=https://litellm.${domain}
         GENERIC_SCOPE=openid profile email litellm_scope
         GENERIC_USER_ROLE_ATTRIBUTE=litellm_role
+        GENERIC_CLIENT_USE_PKCE=true
         AUTO_REDIRECT_UI_LOGIN_TO_SSO=true
         PROXY_LOGOUT_URL=https://${authCfg.authelia.subdomain}.${domain}/logout
       '';
@@ -230,6 +231,7 @@ in
                   ENABLE_OAUTH_ROLE_MANAGEMENT = "true";
                   OAUTH_ROLES_CLAIM = "groups";
                   ENABLE_OAUTH_PERSISTENT_CONFIG = "false";
+                  OAUTH_CODE_CHALLENGE_METHOD = "S256";
                   WEBUI_SESSION_COOKIE_SECURE = "true";
                   WEBUI_AUTH_COOKIE_SAME_SITE = "lax";
                   CORS_ALLOW_ORIGIN = "https://${cfg.openwebui.subdomain}.${domain}";

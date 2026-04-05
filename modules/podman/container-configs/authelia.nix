@@ -199,6 +199,8 @@ in
               public: false
               authorization_policy: two_factor
               claims_policy: litellm_policy
+              require_pkce: true
+              pkce_challenge_method: S256
               redirect_uris:
                 - "https://${aiCfg.litellm.subdomain}.${domain}/sso/callback"
               scopes:
@@ -263,6 +265,8 @@ in
               client_secret: '{{ secret "/secrets/openwebui_client_secret" }}'
               public: false
               authorization_policy: two_factor
+              require_pkce: true
+              pkce_challenge_method: S256
               redirect_uris:
                 - "https://${aiCfg.openwebui.subdomain}.${domain}/oauth/oidc/callback"
               scopes:
