@@ -11,9 +11,7 @@ let
   poddyUid = 1001;
   poddyGid = 1001;
   poddyUidStr = toString poddyUid;
-  # Local storage for Podman state (images, DB) - must be local for SQLite locking
   poddyLocalRoot = "/var/lib/poddy";
-  # Network storage for volumes (app data) - can be on CIFS share
   poddyDataRoot = "/data/containers";
   anyPodEnabled = cfg._enabledPods != [ ];
 
@@ -58,9 +56,9 @@ in
   imports = [
     inputs.quadlet-nix.nixosModules.quadlet
     ./pod-reverse-proxy.nix
+    ./pod-auth.nix
     ./pod-tools.nix
     ./pod-media.nix
-    ./pod-auth.nix
     ./pod-nextcloud.nix
     ./pod-smart-home.nix
     ./pod-immich.nix
@@ -96,13 +94,6 @@ in
 
     virtualisation.podman = {
       enable = true;
-      dockerCompat = true;
-      defaultNetwork.settings.dns_enabled = true;
-
-      autoPrune = {
-        enable = true;
-        flags = [ "--all" ];
-      };
     };
 
     # Allow rootless Podman to bind to ports 80+
@@ -157,14 +148,29 @@ in
           [network]
           network_backend = "netavark"
         '';
+
+        systemd.user.services.podman-auto-prune = {
+          description = "Podman auto prune unused images";
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = "${pkgs.podman}/bin/podman image prune --all --force";
+          };
+        };
+
+        systemd.user.timers.podman-auto-prune = {
+          description = "Podman auto prune timer";
+          wantedBy = [ "timers.target" ];
+          timerConfig = {
+            OnCalendar = "daily";
+            Persistent = true;
+          };
+        };
       };
 
     systemd.tmpfiles.rules = [
-      # Local storage for Podman state (images, SQLite DB) - must be local disk
       "d ${poddyLocalRoot} 0750 poddy poddy - -"
       "d ${poddyLocalRoot}/containers 0750 poddy poddy - -"
       "d ${poddyLocalRoot}/containers/storage 0750 poddy poddy - -"
-      # Network storage for volumes (app data) - on CIFS share
       "d ${poddyDataRoot} 0755 poddy poddy - -"
       "d ${poddyDataRoot}/volumes 0755 poddy poddy - -"
     ];
