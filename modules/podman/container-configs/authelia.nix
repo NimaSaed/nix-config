@@ -146,9 +146,9 @@ in
               default_policy: deny
               rules:
                 - policy: two_factor
-                  groups:
-                    - litellm-admins
-                    - litellm-users
+                  subject:
+                    - 'group:litellm-admins'
+                    - 'group:litellm-users'
 
           jwks:
             - key_id: 'authelia_key'
