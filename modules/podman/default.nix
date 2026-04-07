@@ -99,6 +99,7 @@ in
     # Allow rootless Podman to bind to ports 80+
     boot.kernel.sysctl = {
       "net.ipv4.ip_unprivileged_port_start" = 80;
+      "vm.overcommit_memory" = 1;
     };
 
     users.users.poddy = {
