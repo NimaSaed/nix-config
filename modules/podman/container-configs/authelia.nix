@@ -315,10 +315,12 @@ in
                 - openid
                 - profile
                 - email
+                - offline_access
               response_types:
                 - code
               grant_types:
                 - authorization_code
+                - refresh_token
               consent_mode: implicit
               access_token_signed_response_alg: none
               userinfo_signed_response_alg: none

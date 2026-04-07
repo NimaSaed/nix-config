@@ -155,6 +155,7 @@ in
                   SSO_CLIENT_ID = "vaultwarden";
                   SSO_AUTHORITY = "https://${authCfg.authelia.subdomain}.${domain}";
                   SSO_PKCE = "true";
+                  SSO_SCOPES = "email profile offline_access";
                 };
 
                 environmentFiles = [ nixosConfig.sops.templates."vaultwarden-app-env".path ];
