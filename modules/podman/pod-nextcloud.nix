@@ -185,11 +185,11 @@ in
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
-                exec = "redis-server /etc/redis/redis.conf";
+                exec = "sh -c 'redis-server --requirepass \"$(cat /secrets/redis_password)\" --bind 127.0.0.1 --port 6379 --loglevel notice --maxmemory 512mb --maxmemory-policy allkeys-lru --appendonly yes --appendfsync everysec'";
 
                 volumes = [
                   "${volumes.nextcloud_redis.ref}:/data:U"
-                  "${nixosConfig.sops.templates."redis.conf".path}:/etc/redis/redis.conf:ro"
+                  "${nixosConfig.sops.secrets."nextcloud/redis_password".path}:/secrets/redis_password:ro"
                 ];
               };
             };
@@ -744,31 +744,6 @@ in
       mode = "0400";
     };
 
-    # Redis config file (with password from sops)
-    sops.templates."redis.conf" = {
-      content = ''
-        # Redis configuration for Nextcloud
-        requirepass ${config.sops.placeholder."nextcloud/redis_password"}
-
-        # Memory management
-        maxmemory 512mb
-        maxmemory-policy allkeys-lru
-
-        # Persistence (AOF)
-        appendonly yes
-        appendfsync everysec
-
-        # Network
-        bind 127.0.0.1
-        port 6379
-
-        # Logging
-        loglevel notice
-      '';
-      owner = "poddy";
-      group = "poddy";
-      mode = "0444";
-    };
 
     # Nextcloud app secrets (database, Redis, admin credentials, and SMTP)
     sops.templates."nextcloud-app-secrets" = {
