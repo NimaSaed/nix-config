@@ -321,8 +321,6 @@ in
               grant_types:
                 - authorization_code
                 - refresh_token
-              consent_mode: pre-configured
-              pre_configured_consent_duration: 1y
               access_token_signed_response_alg: none
               userinfo_signed_response_alg: none
               token_endpoint_auth_method: client_secret_basic
