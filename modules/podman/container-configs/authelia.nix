@@ -321,7 +321,7 @@ in
               grant_types:
                 - authorization_code
                 - refresh_token
-              consent_mode: implicit
+              consent_mode: pre-configured
               access_token_signed_response_alg: none
               userinfo_signed_response_alg: none
               token_endpoint_auth_method: client_secret_basic
