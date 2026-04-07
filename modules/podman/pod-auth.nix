@@ -121,7 +121,7 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/library/redis:8-alpine";
+                image = "docker.io/library/redis:8.6-alpine";
                 pod = pods.auth.ref;
                 autoUpdate = "registry";
 

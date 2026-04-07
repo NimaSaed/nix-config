@@ -181,7 +181,7 @@ in
               };
 
               containerConfig = {
-                image = "docker.io/library/redis:8.0-alpine";
+                image = "docker.io/library/redis:8.6-alpine";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
