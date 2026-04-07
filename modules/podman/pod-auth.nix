@@ -72,6 +72,7 @@ in
           "authelia/oidc_client_secret_vaultwarden"
           "authelia/smtp_address"
           "authelia/smtp_username"
+          "authelia/redis_password"
           "ldap/lldap_ldap_user_pass"
           "ldap/lldap_key_seed"
           "ldap/lldap_jwt_secret"
@@ -96,10 +97,40 @@ in
             volumes.lldap = {
               volumeConfig = { };
             };
+            volumes.auth_redis = {
+              volumeConfig = { };
+            };
 
             pods.auth = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
+              };
+            };
+
+            containers.auth-redis = {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "Authelia Redis session store container";
+                After = [ pods.auth.ref ];
+              };
+
+              containerConfig = {
+                image = "docker.io/library/redis:8-alpine";
+                pod = pods.auth.ref;
+                autoUpdate = "registry";
+
+                exec = "sh -c 'redis-server --requirepass \"$(cat /secrets/redis_password)\" --bind 127.0.0.1 --port 6379 --loglevel notice --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --appendfsync everysec'";
+
+                volumes = [
+                  "${volumes.auth_redis.ref}:/data:U"
+                  "${nixosConfig.sops.secrets."authelia/redis_password".path}:/secrets/redis_password:ro"
+                ];
               };
             };
 
@@ -113,7 +144,10 @@ in
 
               unitConfig = {
                 Description = "Authelia authentication server container";
-                After = [ pods.auth.ref ];
+                After = [
+                  pods.auth.ref
+                  "auth-redis.service"
+                ];
               };
 
               containerConfig = {
@@ -165,6 +199,7 @@ in
                   "${
                     nixosConfig.sops.secrets."authelia/oidc_client_secret_vaultwarden".path
                   }:/secrets/vaultwarden_client_secret:ro"
+                  "${nixosConfig.sops.secrets."authelia/redis_password".path}:/secrets/redis_password:ro"
                 ];
               };
             };

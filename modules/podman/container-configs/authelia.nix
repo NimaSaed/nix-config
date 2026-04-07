@@ -94,6 +94,11 @@ in
             expiration: "24 hour"
             inactivity: "24 hour"
             default_redirection_url: "https://${toolsCfg.homepage.subdomain}.${domain}"
+        redis:
+          host: '127.0.0.1'
+          port: 6379
+          password: '{{ secret "/secrets/redis_password" }}'
+          database_index: 0
 
       regulation:
         max_retries: 3
