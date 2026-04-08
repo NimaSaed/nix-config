@@ -319,6 +319,7 @@ in
                 - code
               grant_types:
                 - authorization_code
+              consent_mode: implicit
               access_token_signed_response_alg: none
               userinfo_signed_response_alg: none
               token_endpoint_auth_method: client_secret_basic
