@@ -90,6 +90,7 @@
     brews = [
       "mas"
       "coreutils"
+      "bitwarden-cli"
     ];
 
     # GUI applications
@@ -104,6 +105,7 @@
       "protonvpn" # VPN client
       "inkscape" # Vector graphics editor
       "nextcloud-vfs"
+      "bitwarden"
       "1password"
       "1password-cli"
       "firefox"

@@ -10,6 +10,7 @@
   imports = [
     ./common/core
     ./common/optional/alacritty.nix
+    ./common/optional/aerospace.nix
   ];
 
   # ===========================================================================
