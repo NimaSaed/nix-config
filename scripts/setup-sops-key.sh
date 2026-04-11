@@ -1,28 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: ./setup-sops-key.sh <remote-host> <1password-item>
-# Example: ./setup-sops-key.sh user@server.example.com "sops-age-key"
+# Usage: ./setup-sops-key.sh <remote-host> <bw-item-name>
+# Example: ./setup-sops-key.sh user@server.example.com "Chestnut SOPS Age"
 
 if [[ $# -lt 2 ]]; then
-    echo "Usage: $0 <remote-host> <1password-item>"
-    echo "Example: $0 root@myserver 'SOPS Age Key'"
+    echo "Usage: $0 <remote-host> <bw-item-name>"
+    echo "Example: $0 root@myserver 'Chestnut SOPS Age'"
     exit 1
 fi
 
 REMOTE_HOST="$1"
-OP_ITEM="$2"
+BW_ITEM="$2"
 REMOTE_DIR="/var/lib/sops-nix"
 REMOTE_FILE="${REMOTE_DIR}/key.txt"
 
-echo "Fetching secure note from 1Password..."
-KEY_VALUE=$(op item get "$OP_ITEM" --fields notesPlain)
+echo "Fetching SOPS age key from Bitwarden..."
+if [[ -z "${BW_SESSION:-}" ]]; then
+    BW_SESSION=$(bw unlock --raw)
+fi
+KEY_VALUE=$(bw list items --search "$BW_ITEM" --session "$BW_SESSION" --pretty | jq -r '.[0].notes')
 
-# Strip leading and trailing ``` from the note
+# Strip leading and trailing ``` from the note if present
 KEY_VALUE=$(echo "$KEY_VALUE" | sed '1d;$d')
 
 if [[ -z "$KEY_VALUE" ]]; then
-    echo "Error: Failed to retrieve secure note or note is empty"
+    echo "Error: Failed to retrieve key from Bitwarden or key is empty"
     exit 1
 fi
 

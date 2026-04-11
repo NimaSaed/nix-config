@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Wrapper script for SOPS_AGE_KEY_CMD using Bitwarden CLI.
+# Auto-unlocks the vault if BW_SESSION is not set.
+if [ -z "${BW_SESSION:-}" ]; then
+  BW_SESSION=$(bw unlock --raw)
+fi
+
+bw get item 729c67c1-e6a8-4b7f-8ca5-fa2a9439d698 --session "$BW_SESSION" | jq -r .login.password

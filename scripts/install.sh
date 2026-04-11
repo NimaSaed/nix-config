@@ -44,9 +44,9 @@ fi
 HOST_PART="${REMOTE_HOST#*@}"
 HOSTNAME="${HOST_PART%%.*}"
 
-# Derive 1Password item name from hostname (e.g., chestnut -> Chestnut SOPS Age)
+# Derive Bitwarden item name from hostname (e.g., chestnut -> Chestnut SOPS Age)
 HOSTNAME_CAPITALIZED="$(echo "${HOSTNAME:0:1}" | tr '[:lower:]' '[:upper:]')${HOSTNAME:1}"
-OP_ITEM="${HOSTNAME_CAPITALIZED} SOPS Age"
+BW_ITEM="${HOSTNAME_CAPITALIZED} SOPS Age"
 
 FLAKE_TARGET="$HOSTNAME"
 
@@ -72,15 +72,18 @@ trap cleanup EXIT
 # Create sops-nix directory structure
 install -d -m755 "$temp/var/lib/sops-nix"
 
-# Fetch age key from 1Password
-echo "Fetching SOPS age key from 1Password..."
-KEY_VALUE=$(op item get "$OP_ITEM" --fields notesPlain)
+# Fetch age key from Bitwarden
+echo "Fetching SOPS age key from Bitwarden..."
+if [[ -z "${BW_SESSION:-}" ]]; then
+    BW_SESSION=$(bw unlock --raw)
+fi
+KEY_VALUE=$(bw list items --search "$BW_ITEM" --session "$BW_SESSION" --pretty | jq -r '.[0].notes')
 
-# Strip leading and trailing ``` from the note (first and last lines)
+# Strip leading and trailing ``` from the note (first and last lines) if present
 KEY_VALUE=$(echo "$KEY_VALUE" | sed '1d;$d')
 
 if [[ -z "$KEY_VALUE" ]]; then
-    echo "Error: Failed to retrieve key from 1Password or key is empty"
+    echo "Error: Failed to retrieve key from Bitwarden or key is empty"
     exit 1
 fi
 

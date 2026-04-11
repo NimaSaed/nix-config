@@ -148,10 +148,10 @@
             fi
 
             # =======================================================================
-            # 1Password Integration
+            # Bitwarden Integration
             # =======================================================================
-            if command -v op &>/dev/null; then
-                export SOPS_AGE_KEY_CMD="op item get 'SOPS Age Private Key' --fields password --reveal"
+            if command -v bw &>/dev/null; then
+                export SOPS_AGE_KEY_CMD="bw-sops-key"
             fi
 
             # =======================================================================
@@ -316,45 +316,6 @@
                 done < /etc/passwd
             }
 
-            # Parallels VM SSH helper (macOS)
-            function vmssh(){
-                all_vm=($(prlctl list -a 2>/dev/null | sed -E 's|([a-zA-Z0-9]) ([a-zA-Z0-9])|\1_\2|g' | sed 1d | awk '{print $1,$2,$4}' | sed 's/ /,/g' | sed 's/[{}]//g'))
-
-                PS3="Select a VM: [none = 0] "
-                select vm in ''${all_vm[@]}; do
-                    selected=$vm
-                    break
-                done
-                unset $PS3
-
-                if [ ! -z ''${vm} ]; then
-                    vm_info=($(echo $vm | sed 's/,/ /g'))
-                    vm_uuid=''${vm_info[0]}
-                    vm_status=''${vm_info[1]}
-                    vm_name=''${vm_info[2]}
-
-                    if [ $vm_status = "paused" ] || [ $vm_status = "stopped" ] || [ $vm_status = "suspended" ]; then
-                        prlctl start $vm_uuid
-                    fi
-
-                    while [ $vm_status != "running" ]; do
-                        echo $vm_info $vm_uuid $vm_status $vm_name
-                        vm_status="$(prlctl status $vm_uuid | cut -d " " -f 4)"
-                    done
-
-                    prlctl exec $vm_uuid systemctl start ssh
-                    sshkey=$(op read "op://Private/bd2up2giqd3pkzrtt6csqy24qa/public key" 2>/dev/null || cat ~/.ssh/id_ed25519.pub)
-                    prlctl exec $vm_uuid "if [ -d \"/home/parallels/.ssh\" ]; then echo \"$sshkey\" > /home/parallels/.ssh/authorized_keys; else mkdir /home/parallels/.ssh; echo \"$sshkey\" > /home/parallels/.ssh/authorized_keys; fi; chown parallels:parallels -R /home/parallels/.ssh"
-
-                    vm_ip=$(prlctl list -f $vm_uuid | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}')
-
-                    if [ ! -z $vm_ip ]; then
-                        ssh parallels@''${vm_ip}
-                    else
-                        echo "no IP is available"
-                    fi
-                fi
-            }
 
             # YouTube transcript helper
             #yt() {

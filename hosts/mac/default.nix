@@ -107,7 +107,7 @@
       "nextcloud-vfs"
       "bitwarden"
       "1password"
-      "1password-cli"
+
       "firefox"
       "logseq"
       "zoom"
