@@ -59,7 +59,7 @@
       fi
       if [ -z "''${BW_SESSION:-}" ]; then
         if [ "$status" = "locked" ]; then
-          BW_SESSION=$(bw unlock --raw)
+          BW_SESSION=$(bw unlock --raw </dev/tty)
         fi
       fi
       bw get item 729c67c1-e6a8-4b7f-8ca5-fa2a9439d698 --session "$BW_SESSION" | ${pkgs.jq}/bin/jq -r .login.password
