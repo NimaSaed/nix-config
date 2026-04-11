@@ -59,6 +59,7 @@
       fi
       if [ -z "''${BW_SESSION:-}" ]; then
         if [ "$status" = "locked" ]; then
+          echo "Bitwarden vault is locked. Enter master password to unlock:" >/dev/tty
           BW_SESSION=$(bw unlock --raw </dev/tty)
         fi
       fi
