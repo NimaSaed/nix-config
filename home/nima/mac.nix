@@ -70,5 +70,15 @@
   home.sessionVariables = {
     # Ensure Homebrew paths are available
     HOMEBREW_PREFIX = "/opt/homebrew";
+    # Bitwarden SSH agent for git commit signing
+    SSH_AUTH_SOCK = "${config.home.homeDirectory}/.bitwarden-ssh-agent.sock";
+  };
+
+  programs.ssh = {
+    enable = true;
+    enableDefaultConfig = false;
+    matchBlocks."*".extraOptions = {
+      IdentityAgent = "~/.bitwarden-ssh-agent.sock";
+    };
   };
 }
