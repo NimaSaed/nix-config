@@ -9,6 +9,10 @@ let
   cfg = config.services.haos;
   domain = config.services.pods.domain;
   bridgeName = "br-haos";
+  # When vlanId is set, bridge the VLAN sub-interface (e.g. eno1.3) instead of
+  # the physical NIC — host NIC keeps its own DHCP lease, VM gets the VLAN IP.
+  bridgeMember =
+    if cfg.vlanId != null then "${cfg.bridge}.${toString cfg.vlanId}" else cfg.bridge;
 in
 {
   options.services.haos = {
@@ -33,7 +37,19 @@ in
 
     bridge = lib.mkOption {
       type = lib.types.str;
-      description = "Host physical NIC to bridge the VM onto (e.g. enp1s0)";
+      description = "Host physical NIC to bridge the VM onto (e.g. eno1)";
+    };
+
+    vlanId = lib.mkOption {
+      type = lib.types.nullOr lib.types.int;
+      default = null;
+      description = ''
+        When set, create a VLAN sub-interface (e.g. eno1.3 for vlanId=3) and
+        bridge that instead of the raw physical NIC. The physical NIC stays
+        managed by NetworkManager for host networking. Required when the VM
+        must live on a different VLAN than the host (e.g. Thread Border Router
+        IPv6 RAs only propagate on the BR's local LAN segment).
+      '';
     };
 
     macAddress = lib.mkOption {
@@ -81,15 +97,32 @@ in
     # ============================================================================
     # Bridge Networking
     # The VM gets a real LAN interface (required for mDNS/Thread discovery).
-    # br-haos inherits the physical NIC's MAC so chestnut's existing DHCP lease
-    # is unaffected. The VM uses a fixed MAC (cfg.macAddress) with its own
-    # DHCP reservation.
+    #
+    # vlanId=null (simple mode): br-haos enslaves the physical NIC directly.
+    #   br-haos inherits the NIC's MAC → same DHCP lease. VM uses cfg.macAddress.
+    #
+    # vlanId=N (VLAN mode): a VLAN sub-interface (e.g. eno1.3) is created and
+    #   enslaved to br-haos instead. The physical NIC keeps its own DHCP lease
+    #   for host networking. br-haos is a pure L2 passthrough — no host IP.
+    #   VM gets its DHCP address on the target VLAN via cfg.macAddress.
     # ============================================================================
-    networking.bridges."${bridgeName}".interfaces = [ cfg.bridge ];
-    # Stop NetworkManager from fighting the enslaved physical NIC
-    networking.networkmanager.unmanaged = [ "interface-name:${cfg.bridge}" ];
-    # Bridge takes over the host's LAN IP via DHCP
-    networking.interfaces."${bridgeName}".useDHCP = true;
+
+    # Create VLAN sub-interface when vlanId is set
+    networking.vlans = lib.mkIf (cfg.vlanId != null) {
+      "${bridgeMember}" = {
+        id = cfg.vlanId;
+        interface = cfg.bridge;
+      };
+    };
+
+    networking.bridges."${bridgeName}".interfaces = [ bridgeMember ];
+
+    # Stop NetworkManager from fighting the bridge member
+    networking.networkmanager.unmanaged = [ "interface-name:${bridgeMember}" ];
+
+    # In simple mode: bridge takes over the host's LAN IP via DHCP.
+    # In VLAN mode:  physical NIC keeps its own IP; bridge is L2-only.
+    networking.interfaces."${bridgeName}".useDHCP = lib.mkIf (cfg.vlanId == null) true;
 
     # Allow bridge networking in QEMU (required by qemu-bridge-helper)
     environment.etc."qemu/bridge.conf".text = ''
@@ -168,7 +201,7 @@ in
       after = [
         "haos-image-setup.service"
         "network-online.target"
-        "sys-subsystem-net-devices-${bridgeName}.device"
+        "sys-subsystem-net-devices-${lib.replaceStrings ["."] ["-"] bridgeName}.device"
       ];
 
       serviceConfig = {

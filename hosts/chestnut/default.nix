@@ -64,9 +64,10 @@
   services.haos = {
     enable = true;
     subdomain = "ha";
-    vmIp = "10.10.10.4";
+    vmIp = "10.11.10.4"; # Main VLAN — UniFi DHCP reservation for macAddress
     dataDir = "/data/haos";
     bridge = "eno1";
+    vlanId = 3; # Main VLAN (tagged) — VM bridges eno1.3, host eno1 keeps Server VLAN IP
     macAddress = "52:54:00:87:89:6B";
     haosVersion = "17.2";
     haosHash = "474b8f2e657f697c7a226acd5b6d0b8f74b2dfd19f71487a18238d8b36a3604f";
