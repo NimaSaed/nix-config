@@ -43,7 +43,6 @@ in
       allowedTCPPorts = [
         80
         443
-        45888
       ];
     };
 
@@ -73,7 +72,6 @@ in
                   "443:443"
                   "8080:8080"
                   "636:636"
-                  "45888:45888"
                 ];
               };
             };
@@ -125,7 +123,6 @@ in
                   TRAEFIK_ENTRYPOINTS_WEB_ADDRESS = ":80";
                   TRAEFIK_ENTRYPOINTS_WEBSECURE_ADDRESS = ":443";
                   TRAEFIK_ENTRYPOINTS_LLDAPSECURE_ADDRESS = ":636";
-                  TRAEFIK_ENTRYPOINTS_SCRYPTEDHOMEKIT_ADDRESS = ":45888";
                   TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_TO = "websecure";
                   TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_SCHEME = "https";
                   TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_DNSCHALLENGE = "true";
