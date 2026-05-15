@@ -203,6 +203,13 @@ in
                 - policy: two_factor
                   subject:
                     - 'group:vaultwarden-users'
+            homeassistant_access:
+              default_policy: deny
+              rules:
+                - policy: two_factor
+                  subject:
+                    - 'group:ha-admins'
+                    - 'group:ha-users'
 
           jwks:
             - key_id: 'authelia_key'
@@ -345,6 +352,25 @@ in
               access_token_signed_response_alg: none
               userinfo_signed_response_alg: none
               token_endpoint_auth_method: client_secret_basic
+            - client_id: home-assistant
+              client_name: Home Assistant
+              client_secret: '{{ secret "/secrets/homeassistant_client_secret" }}'
+              public: false
+              authorization_policy: homeassistant_access
+              require_pkce: true
+              pkce_challenge_method: S256
+              redirect_uris:
+                - "https://${config.services.haos.subdomain}.${domain}/auth/oidc/callback"
+              scopes:
+                - openid
+                - profile
+                - groups
+              response_types:
+                - code
+              grant_types:
+                - authorization_code
+              consent_mode: implicit
+              token_endpoint_auth_method: client_secret_post
     '';
     description = "Generated Authelia configuration.yml";
   };

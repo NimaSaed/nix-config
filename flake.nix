@@ -103,6 +103,7 @@
         ./hosts/common/home-manager.nix
         { home-manager.users.nima = import ./home/nima/chestnut.nix; }
         ./modules/podman
+        ./modules/haos
       ];
 
       # Shared modules for nutcracker host - used by both nixosConfigurations and colmena

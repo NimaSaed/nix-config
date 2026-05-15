@@ -112,6 +112,15 @@
             mountpoint = "/data/containers";
             options.recordsize = "128K";
           };
+
+          # HAOS VM disk — recordsize=1M is good for large qcow2 sequential I/O
+          # Auto-snapshot inherited from pool root (com.sun:auto-snapshot=true)
+          "data/haos" = {
+            type = "zfs_fs";
+            options.mountpoint = "legacy";
+            mountpoint = "/data/haos";
+            options.recordsize = "1M";
+          };
         };
       };
     };
