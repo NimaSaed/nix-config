@@ -109,6 +109,19 @@
             "${mod}+Ctrl+l" = "exec ${config.my.sway.lockCommand}";
             "${mod}+comma" = "move workspace to output left";
             "${mod}+period" = "move workspace to output right";
+
+            # Laptop media-key row. XF86 keysyms only fire on keyboards that
+            # have them, so these are harmless on desktops with plain keyboards.
+            # pamixer talks to the system PipeWire via the pulse-compat socket;
+            # brightnessctl uses logind so no setuid/udev rules needed.
+            "XF86AudioMute" = "exec ${pkgs.pamixer}/bin/pamixer -t";
+            "XF86AudioLowerVolume" = "exec ${pkgs.pamixer}/bin/pamixer -d 5";
+            "XF86AudioRaiseVolume" = "exec ${pkgs.pamixer}/bin/pamixer -i 5";
+            "XF86AudioMicMute" = "exec ${pkgs.pamixer}/bin/pamixer --default-source -t";
+            "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set 5%-";
+            "XF86MonBrightnessUp" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set +5%";
+            # Full-screen screenshot to clipboard (Mod+Shift+s is region-select).
+            "Print" = "exec ${pkgs.grim}/bin/grim - | ${pkgs.wl-clipboard}/bin/wl-copy";
           };
       };
     };
@@ -151,6 +164,12 @@
       fuzzel # Application launcher
       swaylock # Screen locker
       i3status # Status bar content
+
+      # Media-key helpers
+      pamixer # Audio volume / mute via pulse/pipewire
+      brightnessctl # Backlight control via systemd-logind
+      wlr-randr # Wayland output config (display switching)
+      wev # Wayland event viewer — use to discover unknown keysyms
 
       # Desktop tools
       pavucontrol # PulseAudio volume control (works with PipeWire)
