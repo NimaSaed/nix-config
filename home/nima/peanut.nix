@@ -15,6 +15,7 @@
     ./common/optional/alacritty.nix
     ./common/optional/sway.nix
     ./common/optional/bitwarden.nix
+    ./common/optional/bitwarden-ssh-agent.nix
   ];
 
   # ===========================================================================
