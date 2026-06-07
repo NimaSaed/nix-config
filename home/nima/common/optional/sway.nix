@@ -107,8 +107,8 @@
             "${mod}+Shift+s" =
               "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
             "${mod}+Ctrl+l" = "exec ${config.my.sway.lockCommand}";
-            "${mod}+comma" = "move workspace to output prev";
-            "${mod}+period" = "move workspace to output next";
+            "${mod}+comma" = "move workspace to output left";
+            "${mod}+period" = "move workspace to output right";
           };
       };
     };
