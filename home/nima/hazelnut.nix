@@ -10,6 +10,7 @@
   imports = [
     ./common/core
     ./common/optional/alacritty.nix
+    ./common/optional/sway.nix
   ];
 
   # ===========================================================================
@@ -22,56 +23,16 @@
   };
 
   # ===========================================================================
-  # Hazelnut-Specific Packages
+  # Hazelnut-Specific Sway Configuration
   # ===========================================================================
-  home.packages = with pkgs; [
-    # Sway utilities
-    wl-clipboard # Wayland clipboard (wl-copy / wl-paste)
-    grim # Screenshot tool
-    slurp # Region selection for screenshots
-    mako # Notification daemon
-    fuzzel # Application launcher
-
-    # Desktop tools
-    pavucontrol # PulseAudio volume control (works with PipeWire)
-    networkmanagerapplet # Network manager tray applet
-  ];
-
-  # ===========================================================================
-  # Sway Window Manager
-  # ===========================================================================
-  wayland.windowManager.sway = {
-    enable = true;
-    config = {
-      modifier = "Mod4"; # Super key
-      terminal = "alacritty";
-      menu = "fuzzel";
-
-      # Input configuration for Goodix touchscreen
-      input = {
-        "type:touch" = {
-          tap = "enabled";
-        };
+  # Common sway config + utilities come from ./common/optional/sway.nix.
+  # Only host-specific bits live here.
+  wayland.windowManager.sway.config = {
+    # Input configuration for Goodix touchscreen
+    input = {
+      "type:touch" = {
+        tap = "enabled";
       };
-
-      # Status bar
-      bars = [
-        {
-          position = "top";
-          statusCommand = "${pkgs.i3status}/bin/i3status";
-        }
-      ];
-
-      # Basic keybindings (sway defaults + custom)
-      keybindings =
-        let
-          mod = config.wayland.windowManager.sway.config.modifier;
-        in
-        lib.mkOptionDefault {
-          "${mod}+Shift+s" =
-            "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
-          "${mod}+l" = "exec swaylock -f -c 000000";
-        };
     };
   };
 
