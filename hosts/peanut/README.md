@@ -64,6 +64,17 @@ Alternatively, test first from a TTY (Ctrl+Alt+F3, log in, then run `start-sway`
 path uses sway's DRM backend + logind seat — this is the real test. Launching sway from inside
 GNOME only nests it as a client and exercises a different code path.
 
+### 4. Install the lock screen (apt)
+
+The `Mod+l` binding uses Ubuntu's swaylock (`/usr/bin/swaylock`). The Nix swaylock can't
+authenticate via PAM on a non-NixOS distro — it loads PAM modules from `/nix/store`, where
+there's no setuid helper to read `/etc/shadow`, so the password is never accepted. The distro
+build is wired into the system PAM stack:
+
+```bash
+sudo apt install swaylock
+```
+
 ## Verification
 
 ```bash

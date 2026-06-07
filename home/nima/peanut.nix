@@ -32,6 +32,20 @@
   # that file, so the sway process — and apps launched from it — get it too.
   targets.genericLinux.enable = true;
 
+  # Use Ubuntu's swaylock for the lock screen. The Nix swaylock can't
+  # authenticate via PAM on a non-NixOS distro (it loads PAM modules from
+  # /nix/store, where there's no setuid helper to read /etc/shadow), so the
+  # password is never accepted. The distro build is wired into the system PAM
+  # stack. Install it with `sudo apt install swaylock` (see hosts/peanut/README.md).
+  # This overrides the Mod+l binding from common/optional/sway.nix.
+  wayland.windowManager.sway.config.keybindings =
+    let
+      mod = config.wayland.windowManager.sway.config.modifier;
+    in
+    {
+      "${mod}+l" = "exec /usr/bin/swaylock -f -c 000000";
+    };
+
   # ===========================================================================
   # Peanut-Specific Packages
   # ===========================================================================
