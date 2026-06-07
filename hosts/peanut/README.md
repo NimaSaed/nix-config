@@ -5,10 +5,11 @@ package manager on top of Ubuntu:
 
 - **`homeConfigurations.peanut`** (home-manager) manages the user environment — shell, CLI tools,
   sway, and GUI apps (`home/nima/peanut.nix`).
-- **`systemConfigs.peanut`** (system-manager) manages a thin slice of system state — it uses
-  [`nix-system-graphics`](https://github.com/soupglasses/nix-system-graphics) to populate
-  `/run/opengl-driver` so Nix-built GL/Vulkan apps use the Intel Arc GPU instead of software
-  rendering (`hosts/peanut/default.nix`).
+- **`systemConfigs.peanut`** (system-manager) manages a thin slice of system state
+  (`hosts/peanut/default.nix`): [`nix-system-graphics`](https://github.com/soupglasses/nix-system-graphics)
+  populates `/run/opengl-driver` so Nix-built GL/Vulkan apps use the Intel Arc GPU instead of
+  software rendering, and a sysctl drop-in re-enables unprivileged user namespaces so
+  Chromium/Electron apps (Slack, Bitwarden) can sandbox themselves on Ubuntu 24.04.
 
 > **Why two activations?** Ubuntu owns the base OS, so system state (`/run/opengl-driver`, system
 > systemd) and user state (`$HOME`) are managed by two different tools running as two different
@@ -20,10 +21,10 @@ package manager on top of Ubuntu:
 
 Prerequisites: Nix installed with flakes enabled, and this repo cloned to `~/.nix-config`.
 
-### 1. Enable system graphics (root — rare)
+### 1. Apply the system-manager config (root — rare)
 
-Only needs re-running when the Mesa/driver input changes. Creates a persistent systemd service
-that populates `/run/opengl-driver`:
+Only needs re-running when `hosts/peanut/default.nix` or its inputs change. Sets up
+`/run/opengl-driver` (graphics) and the unprivileged-userns sysctl (Electron sandbox):
 
 ```bash
 cd ~/.nix-config
