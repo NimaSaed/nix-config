@@ -76,6 +76,12 @@
     zoom-us # Video conferencing
     bitwarden-desktop # Password manager (GUI)
 
+    # Power management CLI. The boot-time `--auto-tune` runs as a root systemd
+    # service in system-manager (hosts/peanut/default.nix), since auto-tune
+    # writes /sys power knobs that home-manager's unprivileged user services
+    # can't touch. This package is just for interactive use (`sudo powertop`).
+    powertop
+
     # Fonts (matching the alacritty config / mac setup)
     nerd-fonts.open-dyslexic
     open-dyslexic

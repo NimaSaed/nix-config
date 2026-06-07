@@ -90,6 +90,16 @@ In a sway session, confirm: alacritty opens, `fuzzel` launches apps, `Super+Shif
 (grim+slurp), `mako` shows notifications, and Firefox `about:support` reports `WebRender`
 (not `WebRender (Software)`).
 
+```bash
+# PowerTOP auto-tune ran at boot (oneshot, stays "active (exited)"):
+systemctl status powertop.service
+```
+
+> The `powertop.service` auto-tune unit lives in system-manager (`hosts/peanut/default.nix`)
+> because it needs root to write `/sys` power knobs. Re-run `sudo nix run
+> github:numtide/system-manager -- switch --flake '.#peanut'` (step 1) to install it — a plain
+> `home-manager switch` won't activate it.
+
 ## Optional follow-ups
 
 Add to `home/nima/peanut.nix` once the base session is confirmed:

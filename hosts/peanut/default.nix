@@ -43,6 +43,22 @@
     session include    common-session
   '';
 
+  # PowerTOP auto-tuning. Applies powertop's recommended power-saving settings
+  # (PCIe ASPM, USB autosuspend, SATA link power management, etc.) on every
+  # boot. These write to /sys and need root, so this is a system service rather
+  # than a home-manager user service. oneshot + RemainAfterExit: it runs once,
+  # the kernel keeps the settings, and the unit shows active afterward.
+  systemd.services.powertop = {
+    description = "PowerTOP auto-tuning for power saving";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.powertop}/bin/powertop --auto-tune";
+    };
+  };
+
   # systemd-sysctl only reads the drop-in at boot; apply it on activation too.
   systemd.services.apparmor-userns-sysctl = {
     description = "Re-enable unprivileged user namespaces (Electron sandbox)";
