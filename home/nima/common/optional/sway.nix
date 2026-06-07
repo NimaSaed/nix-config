@@ -39,6 +39,34 @@
         terminal = lib.getExe pkgs.alacritty;
         menu = lib.getExe pkgs.fuzzel;
 
+        # Focus workspace 1 on sway start (instead of whichever workspace the
+        # first spawned window happens to land on).
+        defaultWorkspace = "workspace number 1";
+
+        # Assign applications to workspaces. Native-Wayland apps match on
+        # `app_id`; XWayland apps match on `class`. For apps that may run
+        # either way (Electron under different flag sets) we list both —
+        # entries within a workspace's list are OR'd.
+        assigns = {
+          "1" = [ { app_id = "Alacritty"; } ];
+          "2" = [
+            { app_id = "firefox"; }
+            { class = "Firefox"; }
+          ];
+          "3" = [
+            { app_id = "Slack"; }
+            { class = "Slack"; }
+            { app_id = "Zoom"; }
+            { class = "zoom"; }
+          ];
+        };
+
+        # Bitwarden always floats, regardless of workspace.
+        floating.criteria = [
+          { app_id = "Bitwarden"; }
+          { class = "Bitwarden"; }
+        ];
+
         # Status bar
         bars = [
           {
