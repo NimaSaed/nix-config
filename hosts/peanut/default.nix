@@ -31,6 +31,18 @@
     kernel.apparmor_restrict_unprivileged_userns = 0
   '';
 
+  # PAM stack for swaylock — defers to Ubuntu's common-* stack so the lock
+  # screen authenticates exactly like sudo and gdm-password. Once
+  # `pam_fprintd.so` is in common-auth (enabled via `sudo pam-auth-update`
+  # alongside GNOME's fingerprint setup), swaylock prompts for fingerprint
+  # first and falls back to password. The Ubuntu swaylock apt package ships
+  # its own minimal PAM file; system-manager replaces it with this one.
+  environment.etc."pam.d/swaylock".text = ''
+    auth    include    common-auth
+    account include    common-account
+    session include    common-session
+  '';
+
   # systemd-sysctl only reads the drop-in at boot; apply it on activation too.
   systemd.services.apparmor-userns-sysctl = {
     description = "Re-enable unprivileged user namespaces (Electron sandbox)";
