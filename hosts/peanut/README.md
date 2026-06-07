@@ -50,15 +50,19 @@ GDM reads session entries from a system path, so this can't be managed by home-m
 ```ini
 [Desktop Entry]
 Name=Sway (Nix)
-Exec=/home/nima/.nix-profile/bin/sway
+Exec=/home/nima/.nix-profile/bin/start-sway
 Type=Application
 ```
 
-Verify the binary path after the home-manager switch with `which sway`.
+Use `start-sway`, **not** `sway` directly: GDM execs the session command without a login shell,
+so `~/.nix-profile/bin` and the home-manager session vars aren't on the environment. The
+`start-sway` wrapper (defined in `home/nima/peanut.nix`) sources those first, otherwise sway
+starts but `Mod+Enter` / `Mod+D` silently fail (it can't find `alacritty`/`fuzzel` on `PATH`).
+Verify the path after the home-manager switch with `which start-sway`.
 
-Alternatively, test first from a TTY (Ctrl+Alt+F3, log in, then run `sway`). The TTY/GDM path
-uses sway's DRM backend + logind seat — this is the real test. Launching sway from inside GNOME
-only nests it as a client and exercises a different code path.
+Alternatively, test first from a TTY (Ctrl+Alt+F3, log in, then run `start-sway`). The TTY/GDM
+path uses sway's DRM backend + logind seat — this is the real test. Launching sway from inside
+GNOME only nests it as a client and exercises a different code path.
 
 ## Verification
 

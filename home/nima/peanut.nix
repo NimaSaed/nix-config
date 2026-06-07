@@ -31,6 +31,20 @@
   # ===========================================================================
   # Sway essentials and the bw-sops-key helper come from the imported modules.
   home.packages = with pkgs; [
+    # Sway session launcher.
+    # GDM execs the session command directly (not via a login shell), so the
+    # home-manager environment (PATH, XDG_DATA_DIRS, session vars) isn't loaded
+    # and apps launched from sway can't be found. This wrapper sources the
+    # home-manager session vars first, then starts sway. Point the GDM
+    # wayland-session entry at ~/.nix-profile/bin/start-sway (see hosts/peanut/README.md).
+    (writeShellScriptBin "start-sway" ''
+      if [ -e "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" ]; then
+        . "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
+      fi
+      export PATH="$HOME/.nix-profile/bin:$PATH"
+      exec sway "$@"
+    '')
+
     # Desktop applications (GL handled globally via /run/opengl-driver)
     firefox # Web browser
     slack # Team chat

@@ -21,8 +21,10 @@
     enable = true;
     config = {
       modifier = "Mod4"; # Super key
-      terminal = "alacritty";
-      menu = "fuzzel";
+      # Absolute store paths so terminal/menu work even when sway is launched
+      # from a display manager that doesn't put ~/.nix-profile/bin on PATH.
+      terminal = lib.getExe pkgs.alacritty;
+      menu = lib.getExe pkgs.fuzzel;
 
       # Status bar
       bars = [
