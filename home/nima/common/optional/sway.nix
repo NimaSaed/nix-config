@@ -43,6 +43,14 @@
         # first spawned window happens to land on).
         defaultWorkspace = "workspace number 1";
 
+        # 10px gap around every window (between neighbours and between window
+        # and screen edge).
+        gaps.inner = 10;
+
+        # Drop titlebars on both tiled and floating windows for a cleaner look.
+        window.titlebar = false;
+        floating.titlebar = false;
+
         # Assign applications to workspaces. Native-Wayland apps match on
         # `app_id`; XWayland apps match on `class`. For apps that may run
         # either way (Electron under different flag sets) we list both —
