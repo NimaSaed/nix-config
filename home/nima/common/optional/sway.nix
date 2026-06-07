@@ -17,7 +17,7 @@
   # handled by the system; on a non-NixOS host (e.g. peanut) `/run/opengl-driver`
   # is populated by nix-system-graphics, so no nixGL wrapping is needed.
 
-  # Lock command bound to <modifier>+l. Declared as an option so the keybinding
+  # Lock command bound to <modifier>+Ctrl+l. Declared as an option so the keybinding
   # can be defined once here while each host overrides only the command when
   # needed — e.g. peanut points it at the system swaylock because the Nix
   # swaylock can't authenticate via PAM on a non-NixOS distro. Hosts that work
@@ -106,7 +106,7 @@
           lib.mkOptionDefault {
             "${mod}+Shift+s" =
               "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
-            "${mod}+l" = "exec ${config.my.sway.lockCommand}";
+            "${mod}+Ctrl+l" = "exec ${config.my.sway.lockCommand}";
           };
       };
     };
