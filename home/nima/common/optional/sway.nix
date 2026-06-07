@@ -67,6 +67,20 @@
           { class = "Bitwarden"; }
         ];
 
+        # Size Bitwarden to 50%×70% of the output and center it. `ppt` is
+        # sway's percent-points unit; `move position center` runs after the
+        # resize so the window is centered at its final size.
+        window.commands = [
+          {
+            criteria.app_id = "Bitwarden";
+            command = "resize set 50 ppt 70 ppt, move position center";
+          }
+          {
+            criteria.class = "Bitwarden";
+            command = "resize set 50 ppt 70 ppt, move position center";
+          }
+        ];
+
         # Status bar
         bars = [
           {
