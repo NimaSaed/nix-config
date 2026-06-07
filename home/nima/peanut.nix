@@ -26,6 +26,12 @@
     stateVersion = "25.11";
   };
 
+  # Running home-manager on a non-NixOS distro (Ubuntu). Makes home-manager
+  # export XDG_DATA_DIRS (including the Nix profile) into hm-session-vars.sh, so
+  # launchers like fuzzel discover .desktop apps. The start-sway wrapper sources
+  # that file, so the sway process — and apps launched from it — get it too.
+  targets.genericLinux.enable = true;
+
   # ===========================================================================
   # Peanut-Specific Packages
   # ===========================================================================
