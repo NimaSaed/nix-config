@@ -120,8 +120,16 @@
             "XF86AudioMicMute" = "exec ${pkgs.pamixer}/bin/pamixer --default-source -t";
             "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set 5%-";
             "XF86MonBrightnessUp" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set +5%";
-            # Full-screen screenshot to clipboard (Mod+Shift+s is region-select).
+            # Full-screen screenshot to clipboard. F9 (PrtSc) emits Print.
             "Print" = "exec ${pkgs.grim}/bin/grim - | ${pkgs.wl-clipboard}/bin/wl-copy";
+            # ThinkPad F10 emits XF86Launch2 — alias to region-select (same as
+            # Mod+Shift+s) so the hardware key matches the chord shortcut.
+            "XF86Launch2" =
+              "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
+            # ThinkPad F7 (monitor icon) — pop up a GUI display picker for
+            # layout / mirror / extend. Hand-rolled wlr-randr scripts break when
+            # ports change, so we lean on wdisplays.
+            "XF86Display" = "exec ${lib.getExe pkgs.wdisplays}";
           };
       };
     };
@@ -169,6 +177,7 @@
       pamixer # Audio volume / mute via pulse/pipewire
       brightnessctl # Backlight control via systemd-logind
       wlr-randr # Wayland output config (display switching)
+      wdisplays # GUI for output layout (bound to F7 / XF86Display)
       wev # Wayland event viewer — use to discover unknown keysyms
 
       # Desktop tools

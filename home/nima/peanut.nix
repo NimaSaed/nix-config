@@ -39,6 +39,14 @@
   # stack. Install it with `sudo apt install swaylock` (see hosts/peanut/README.md).
   my.sway.lockCommand = "/usr/bin/swaylock -f -c 000000";
 
+  # ThinkPad F12 "star" key — emits XF86Favorites. Open the Bitwarden GUI.
+  # Lives here (not in common/optional/sway.nix) because bitwarden-desktop is
+  # only installed on peanut; binding it in shared config would force the
+  # package onto every sway host.
+  wayland.windowManager.sway.config.keybindings = {
+    "XF86Favorites" = "exec ${lib.getExe pkgs.bitwarden-desktop}";
+  };
+
   # ===========================================================================
   # Peanut-Specific Packages
   # ===========================================================================
