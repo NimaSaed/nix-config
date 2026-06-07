@@ -42,8 +42,11 @@
   # ThinkPad F12 "star" key — emits XF86Favorites. Open the Bitwarden GUI.
   # Lives here (not in common/optional/sway.nix) because bitwarden-desktop is
   # only installed on peanut; binding it in shared config would force the
-  # package onto every sway host.
-  wayland.windowManager.sway.config.keybindings = {
+  # package onto every sway host. `mkOptionDefault` is essential — without it
+  # this definition would have higher priority than the shared bindings
+  # (which use mkOptionDefault) and clobber every other keybinding,
+  # including sway's built-in defaults.
+  wayland.windowManager.sway.config.keybindings = lib.mkOptionDefault {
     "XF86Favorites" = "exec ${lib.getExe pkgs.bitwarden-desktop}";
   };
 
