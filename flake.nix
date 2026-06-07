@@ -112,6 +112,12 @@
       peanutPkgs = import nixpkgs {
         system = "x86_64-linux";
         config.allowUnfree = true;
+        # bitwarden-desktop (the GUI) is built against Electron 39, which
+        # nixpkgs now flags as EOL. 39.8.10 is the latest 39.x patch (no open
+        # CVEs, just no future fixes), and Bitwarden upstream still pins
+        # Electron 39 — so swapping in a newer Electron fails the build's
+        # version-mismatch assertion. Permit it so home-manager switch succeeds.
+        config.permittedInsecurePackages = [ "electron-39.8.10" ];
         overlays = [
           outputs.overlays.default
           (final: prev: {
