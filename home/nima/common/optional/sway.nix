@@ -114,6 +114,33 @@
     };
 
     # =========================================================================
+    # swayidle — lock before suspend
+    # =========================================================================
+    # Without an idle daemon listening on logind's PrepareForSleep signal,
+    # closing the lid suspends straight to a logged-in session. swayidle holds
+    # a systemd inhibit lock until the lock command returns, so the screen is
+    # guaranteed locked before the kernel actually suspends.
+    #
+    # `-w` (wait mode) is critical: it makes swayidle wait for the lock
+    # command to finish before releasing the inhibit. Up to home-manager
+    # 24.11 the module added it automatically; from 24.11 onwards it has to
+    # be passed via extraArgs. Drop this and suspend can race past the lock.
+    services.swayidle = {
+      enable = true;
+      extraArgs = [ "-w" ];
+      events = [
+        {
+          event = "before-sleep";
+          command = config.my.sway.lockCommand;
+        }
+        {
+          event = "lock";
+          command = config.my.sway.lockCommand;
+        }
+      ];
+    };
+
+    # =========================================================================
     # Sway / Wayland utilities
     # =========================================================================
     home.packages = with pkgs; [
