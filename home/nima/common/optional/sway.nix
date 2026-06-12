@@ -171,10 +171,15 @@ in
 
         # Status bar — deep-blue bar with the focused workspace highlighted
         # in lime (dark text for contrast on the bright background).
+        # Status line content comes from i3status-rust (configured below).
         bars = [
           {
             position = "top";
-            statusCommand = "${pkgs.i3status}/bin/i3status";
+            statusCommand = "${pkgs.i3status-rust}/bin/i3status-rs ${config.xdg.configHome}/i3status-rust/config-top.toml";
+            # Breathing room around tray icons (Slack, Bitwarden, nm-applet);
+            # the sway default of 2px leaves them nearly touching the screen
+            # edge. Padding applies per icon, so it also spaces them apart.
+            trayPadding = 10;
             colors = {
               background = nebius.deepBlue;
               statusline = nebius.lightBlue;
@@ -237,6 +242,103 @@ in
             # ports change, so we lean on wdisplays.
             "XF86Display" = "exec ${lib.getExe pkgs.wdisplays}";
           };
+      };
+    };
+
+    # =========================================================================
+    # i3status-rust — status line content
+    # =========================================================================
+    # Block set carried over from the pre-nix i3blocks bar (NimaSaed/dotfiles):
+    # wifi signal + bandwidth, memory, disk, temperature, cpu, battery,
+    # Tehran/Kuala-Lumpur clocks plus a local week clock, and speaker + mic
+    # volume. Unlike the old shell blocklets, sound and net blocks are
+    # event-driven (PipeWire / netlink), so no pkill -RTMIN refresh hacks.
+    #
+    # The blocks themselves color by state (good/warning/critical), themed to
+    # the Nebius palette: lime for good, violet for warning, inverted violet
+    # for critical.
+    programs.i3status-rust = {
+      enable = true;
+      bars.top = {
+        # Material Design icons; glyphs come from the Nerd Font symbols
+        # package in home.packages via fontconfig fallback.
+        icons = "material-nf";
+        settings.theme = {
+          theme = "plain";
+          overrides = {
+            idle_bg = nebius.deepBlue;
+            idle_fg = nebius.lightBlue;
+            info_bg = nebius.deepBlue;
+            info_fg = nebius.lavender;
+            good_bg = nebius.deepBlue;
+            good_fg = nebius.lime;
+            warning_bg = nebius.deepBlue;
+            warning_fg = nebius.violet;
+            critical_bg = nebius.violet;
+            critical_fg = nebius.lightBlue;
+            separator_bg = nebius.deepBlue;
+            separator_fg = nebius.lavender;
+          };
+        };
+        blocks = [
+          {
+            # Wifi quality + ssid when wireless, plus live up/down rates.
+            # Hidden entirely when there is no default route, matching the
+            # old wifi blocklet's behavior on wired desktops.
+            block = "net";
+            format = " $icon {$signal_strength $ssid |}^icon_net_down $speed_down.eng(prefix:K) ^icon_net_up $speed_up.eng(prefix:K) ";
+            missing_format = "";
+          }
+          {
+            block = "memory";
+            format = " $icon $mem_avail.eng(prefix:Gi) ";
+            interval = 60;
+          }
+          {
+            # Free space on the filesystem holding $HOME; the default
+            # thresholds turn it red below 10% free like the old blocklet.
+            block = "disk_space";
+            path = config.home.homeDirectory;
+            interval = 300;
+          }
+          {
+            block = "temperature";
+            format = " $icon $max ";
+            interval = 60;
+            warning = 70;
+          }
+          {
+            block = "cpu";
+            interval = 1;
+          }
+          {
+            block = "battery";
+            format = " $icon $percentage {$time |}";
+          }
+          # Secondary timezones (old bar's IR/MY clocks), then the local
+          # clock with ISO week number.
+          {
+            block = "time";
+            format = " IR$timestamp.datetime(f:'%H%M') ";
+            timezone = "Asia/Tehran";
+          }
+          {
+            block = "time";
+            format = " MY$timestamp.datetime(f:'%H%M') ";
+            timezone = "Asia/Kuala_Lumpur";
+          }
+          {
+            block = "time";
+            format = " $icon Week: $timestamp.datetime(f:'%V %A %d %B %H:%M') ";
+          }
+          # Speaker, then microphone. Left-click toggles mute, scroll
+          # adjusts volume; both update instantly on PipeWire events.
+          { block = "sound"; }
+          {
+            block = "sound";
+            device_kind = "source";
+          }
+        ];
       };
     };
 
@@ -358,7 +460,7 @@ in
       mako # Notification daemon
       fuzzel # Application launcher
       swaylock # Screen locker
-      i3status # Status bar content
+      nerd-fonts.symbols-only # Icon glyphs for the i3status-rust bar
 
       # Media-key helpers
       pamixer # Audio volume / mute via pulse/pipewire
@@ -371,5 +473,9 @@ in
       pavucontrol # PulseAudio volume control (works with PipeWire)
       networkmanagerapplet # Network manager tray applet
     ];
+
+    # Make fonts from home.packages (the Nerd Font symbols above) visible to
+    # fontconfig, so swaybar can fall back to them for the bar icons.
+    fonts.fontconfig.enable = lib.mkDefault true;
   };
 }
