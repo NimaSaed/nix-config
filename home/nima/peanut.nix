@@ -38,7 +38,16 @@
   # /nix/store, where there's no setuid helper to read /etc/shadow), so the
   # password is never accepted. The distro build is wired into the system PAM
   # stack. Install it with `sudo apt install swaylock` (see hosts/peanut/README.md).
-  my.sway.lockCommand = "/usr/bin/swaylock -f -c 000000";
+  my.sway.lockCommand = "/usr/bin/swaylock -f -c 052B42"; # Nebius deep blue
+
+  # Built-in panel: 14.5" 1920x1200 (310x200 mm) = 157 DPI — nearly the same
+  # pixel density as the 27" 4K LG (163 DPI), so the DPI formula in
+  # common/optional/sway.nix would give it the same scale, 1.75. But at 1.75
+  # the laptop's logical space would be a cramped ~1097x686. Since a laptop
+  # screen is viewed up close, smaller text is fine: pin 1.25 (logical
+  # 1536x960). External monitors (home LG 4K, whatever the office dock has)
+  # keep the automatic physical-size-based scale.
+  my.sway.autoscale.overrides."eDP-1" = "1.25";
 
   # ThinkPad F12 "star" key — emits XF86Favorites. Open the Bitwarden GUI.
   # Lives here (not in common/optional/sway.nix) because bitwarden-desktop is
@@ -73,7 +82,7 @@
     # Desktop applications (GL handled globally via /run/opengl-driver)
     firefox # Web browser
     slack # Team chat
-    zoom-us # Video conferencing
+    unstable.zoom-us # Video conferencing
     bitwarden-desktop # Password manager (GUI)
 
     # Power management CLI. The boot-time `--auto-tune` runs as a root systemd
@@ -86,6 +95,9 @@
     nerd-fonts.open-dyslexic
     open-dyslexic
     nerd-fonts.jetbrains-mono
+
+    # Dev tools
+    github-cli
   ];
 
   # ===========================================================================
