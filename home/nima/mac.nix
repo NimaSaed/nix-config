@@ -34,7 +34,6 @@
   home.packages = with pkgs; [
     # Development Tools
     nodejs_22 # Node.js runtime
-    unstable.claude-code # Anthropic's CLI tool
     unstable.opencode # Code editor
     openfga # Authorization framework
     openfga-cli # OpenFGA CLI
