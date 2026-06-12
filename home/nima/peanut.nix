@@ -49,15 +49,14 @@
   # keep the automatic physical-size-based scale.
   my.sway.autoscale.overrides."eDP-1" = "1.25";
 
-  # ThinkPad F12 "star" key — emits XF86Favorites. Open the Bitwarden GUI.
-  # Lives here (not in common/optional/sway.nix) because bitwarden-desktop is
-  # only installed on peanut; binding it in shared config would force the
-  # package onto every sway host. `mkOptionDefault` is essential — without it
-  # this definition would have higher priority than the shared bindings
-  # (which use mkOptionDefault) and clobber every other keybinding,
+  # ThinkPad F12 "star" key — emits XF86Favorites. Toggle media play/pause.
+  # playerctl talks MPRIS over D-Bus, so it controls whatever player is
+  # active (Firefox, Spotify, mpv, …). `mkOptionDefault` is essential —
+  # without it this definition would have higher priority than the shared
+  # bindings (which use mkOptionDefault) and clobber every other keybinding,
   # including sway's built-in defaults.
   wayland.windowManager.sway.config.keybindings = lib.mkOptionDefault {
-    "XF86Favorites" = "exec ${lib.getExe pkgs.bitwarden-desktop}";
+    "XF86Favorites" = "exec ${lib.getExe pkgs.playerctl} play-pause";
   };
 
   # ===========================================================================
@@ -84,6 +83,7 @@
     slack # Team chat
     unstable.zoom-us # Video conferencing
     bitwarden-desktop # Password manager (GUI)
+    playerctl # MPRIS media control (play/pause on F12 / XF86Favorites)
 
     # Power management CLI. The boot-time `--auto-tune` runs as a root systemd
     # service in system-manager (hosts/peanut/default.nix), since auto-tune
