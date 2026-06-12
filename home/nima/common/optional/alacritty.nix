@@ -122,7 +122,7 @@ in
       };
 
       font = {
-        size = 18;
+        size = 14;
         normal = {
           family = "OpenDyslexicM Nerd Font Mono";
           style = "Regular";
