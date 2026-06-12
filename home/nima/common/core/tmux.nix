@@ -65,6 +65,16 @@
       }
 
       # =========================================================================
+      # Session Environment
+      # =========================================================================
+      # Refresh Wayland variables from the attaching client. tmux's default
+      # update-environment list covers DISPLAY but not WAYLAND_DISPLAY /
+      # SWAYSOCK, so a tmux server that outlives the compositor it was started
+      # under keeps handing the old socket to new panes, and Wayland apps
+      # (fuzzel, wl-copy, swaymsg) fail with "failed to connect to wayland".
+      set-option -ga update-environment "WAYLAND_DISPLAY SWAYSOCK"
+
+      # =========================================================================
       # Pane Styling
       # =========================================================================
       set -g pane-border-style fg=colour15
