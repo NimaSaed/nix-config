@@ -5,6 +5,16 @@
   ...
 }:
 
+let
+  # Nebius brand palette (see ~/.claude/CLAUDE.md for the full set).
+  nebius = {
+    deepBlue = "#052B42"; # primary dark / backgrounds
+    lime = "#DAFF33"; # primary accent
+    violet = "#5D52F6"; # secondary accent — used for urgent states
+    lavender = "#C1C1FF"; # soft accent — muted/inactive text
+    lightBlue = "#F0F8FF"; # light foreground on dark backgrounds
+  };
+in
 {
   # ===========================================================================
   # Sway Window Manager (shared, host-agnostic)
@@ -24,9 +34,39 @@
   # with the Nix swaylock (NixOS) need to set nothing.
   options.my.sway.lockCommand = lib.mkOption {
     type = lib.types.str;
-    default = "${lib.getExe pkgs.swaylock} -f -c 000000";
-    defaultText = lib.literalExpression ''"''${lib.getExe pkgs.swaylock} -f -c 000000"'';
+    default = "${lib.getExe pkgs.swaylock} -f -c ${lib.removePrefix "#" nebius.deepBlue}";
+    defaultText = lib.literalExpression ''"''${lib.getExe pkgs.swaylock} -f -c 052B42"'';
     description = "Command bound to <modifier>+l to lock the screen.";
+  };
+
+  # Automatic per-output scaling from the panel's physical dimensions (EDID).
+  # Docks and office monitors vary, so instead of hardcoding scales per output
+  # name we compute DPI = pixels / physical-width and pick the scale that gets
+  # text to a comfortable size, rounded to quarter steps (1.0, 1.25, 1.5, …).
+  # Outputs whose size or scale shouldn't follow the formula (e.g. the built-in
+  # laptop panel, where a personal preference wins) go in `overrides`.
+  options.my.sway.autoscale = {
+    enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Automatically set output scale based on physical DPI.";
+    };
+    targetDpi = lib.mkOption {
+      type = lib.types.int;
+      # Effective (post-scale) DPI to aim for. 96 is the classic desktop DPI;
+      # with it a 27" 4K LG (163 DPI) lands on scale 1.75, a 27" 1440p office
+      # monitor (~109 DPI) on 1.25, and a 24" 1080p (~92 DPI) on 1.0.
+      default = 96;
+      description = "Target effective DPI; scale = panel DPI / targetDpi, rounded to 0.25.";
+    };
+    overrides = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = { };
+      example = {
+        "eDP-1" = "1.75";
+      };
+      description = "Fixed scale per output name, bypassing the DPI formula.";
+    };
   };
 
   config = {
@@ -51,6 +91,44 @@
         window.titlebar = false;
         floating.titlebar = false;
 
+        # Solid Nebius deep-blue desktop on every output.
+        output."*".bg = "${nebius.deepBlue} solid_color";
+
+        # Window decoration colors. Titlebars are off, so in practice these
+        # paint borders and the split indicator: lime marks the focused
+        # window, unfocused borders match the background so only gaps
+        # separate them, and violet flags urgency.
+        colors = {
+          focused = {
+            border = nebius.lime;
+            background = nebius.deepBlue;
+            text = nebius.lightBlue;
+            indicator = nebius.violet;
+            childBorder = nebius.lime;
+          };
+          focusedInactive = {
+            border = nebius.deepBlue;
+            background = nebius.deepBlue;
+            text = nebius.lavender;
+            indicator = nebius.deepBlue;
+            childBorder = nebius.deepBlue;
+          };
+          unfocused = {
+            border = nebius.deepBlue;
+            background = nebius.deepBlue;
+            text = nebius.lavender;
+            indicator = nebius.deepBlue;
+            childBorder = nebius.deepBlue;
+          };
+          urgent = {
+            border = nebius.violet;
+            background = nebius.violet;
+            text = nebius.lightBlue;
+            indicator = nebius.violet;
+            childBorder = nebius.violet;
+          };
+        };
+
         # Assign applications to workspaces. Native-Wayland apps match on
         # `app_id`; XWayland apps match on `class`. For apps that may run
         # either way (Electron under different flag sets) we list both —
@@ -64,6 +142,8 @@
           "3" = [
             { app_id = "Slack"; }
             { class = "Slack"; }
+          ];
+          "4" = [
             { app_id = "Zoom"; }
             { class = "zoom"; }
           ];
@@ -89,11 +169,37 @@
           }
         ];
 
-        # Status bar
+        # Status bar — deep-blue bar with the focused workspace highlighted
+        # in lime (dark text for contrast on the bright background).
         bars = [
           {
             position = "top";
             statusCommand = "${pkgs.i3status}/bin/i3status";
+            colors = {
+              background = nebius.deepBlue;
+              statusline = nebius.lightBlue;
+              separator = nebius.lavender;
+              focusedWorkspace = {
+                border = nebius.lime;
+                background = nebius.lime;
+                text = nebius.deepBlue;
+              };
+              activeWorkspace = {
+                border = nebius.deepBlue;
+                background = nebius.deepBlue;
+                text = nebius.lime;
+              };
+              inactiveWorkspace = {
+                border = nebius.deepBlue;
+                background = nebius.deepBlue;
+                text = nebius.lavender;
+              };
+              urgentWorkspace = {
+                border = nebius.violet;
+                background = nebius.violet;
+                text = nebius.lightBlue;
+              };
+            };
           }
         ];
 
@@ -160,6 +266,87 @@
         }
       ];
     };
+
+    # =========================================================================
+    # sway-autoscale — DPI-based output scaling
+    # =========================================================================
+    # Runs once at session start and then re-applies on every output hotplug
+    # event (dock/undock, plugging a different office monitor). Idempotent:
+    # only calls `swaymsg output … scale` when the computed value differs from
+    # the current one, so the output events its own changes trigger converge
+    # instead of looping.
+    systemd.user.services.sway-autoscale =
+      let
+        cfg = config.my.sway.autoscale;
+        # Fixed-scale outputs become case branches ahead of the DPI formula.
+        overrideCases = lib.concatStrings (
+          lib.mapAttrsToList (name: scale: ''
+            ${name}) scale=${scale} ;;
+          '') cfg.overrides
+        );
+        sway-autoscale = pkgs.writeShellApplication {
+          name = "sway-autoscale";
+          runtimeInputs = [
+            pkgs.wlr-randr
+            pkgs.jq
+            pkgs.gawk
+            pkgs.sway # swaymsg
+          ];
+          text = ''
+            apply() {
+              wlr-randr --json | jq -c '.[] | select(.enabled)' | while IFS= read -r out; do
+                name=$(jq -r '.name' <<<"$out")
+                cur=$(jq -r '.scale' <<<"$out")
+                px=$(jq -r '[.modes[] | select(.current)][0].width // 0' <<<"$out")
+                mm=$(jq -r '.physical_size.width // 0' <<<"$out")
+
+                case "$name" in
+                  ${overrideCases}
+                  *)
+                    # No physical size in EDID (projectors, some TVs): leave alone.
+                    if [ "$px" -le 0 ] || [ "$mm" -le 0 ]; then
+                      continue
+                    fi
+                    scale=$(awk -v px="$px" -v mm="$mm" -v t="${toString cfg.targetDpi}" 'BEGIN {
+                      dpi = px / (mm / 25.4)
+                      s = int(dpi / t * 4 + 0.5) / 4   # round to nearest 0.25
+                      if (s < 1) s = 1
+                      if (s > 3) s = 3
+                      printf "%g", s
+                    }')
+                    ;;
+                esac
+
+                if awk -v a="$cur" -v b="$scale" 'BEGIN { d = a - b; if (d < 0) d = -d; exit (d > 0.01) ? 0 : 1 }'; then
+                  echo "$name: ''${px}px / ''${mm}mm -> scale $scale (was $cur)"
+                  swaymsg output "$name" scale "$scale"
+                fi
+              done
+            }
+
+            apply
+            if [ "''${1:-}" = "--watch" ]; then
+              swaymsg -t subscribe -m '["output"]' | while IFS= read -r _; do
+                sleep 0.5
+                apply
+              done
+            fi
+          '';
+        };
+      in
+      lib.mkIf cfg.enable {
+        Unit = {
+          Description = "Set sway output scale from physical panel DPI";
+          PartOf = [ "sway-session.target" ];
+          After = [ "sway-session.target" ];
+        };
+        Service = {
+          ExecStart = "${lib.getExe sway-autoscale} --watch";
+          Restart = "on-failure";
+          RestartSec = 1;
+        };
+        Install.WantedBy = [ "sway-session.target" ];
+      };
 
     # =========================================================================
     # Sway / Wayland utilities
