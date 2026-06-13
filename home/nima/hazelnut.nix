@@ -12,6 +12,8 @@
     ./common/core/fonts.nix
     ./common/optional/alacritty.nix
     ./common/optional/sway.nix
+    ./common/optional/bitwarden.nix
+    ./common/optional/bitwarden-ssh-agent.nix
   ];
 
   # ===========================================================================
@@ -36,6 +38,12 @@
       };
     };
   };
+
+  home.packages = with pkgs; [
+    firefox
+    bitwarden-desktop
+    playerctl
+  ];
 
   # ===========================================================================
   # Program Configurations
