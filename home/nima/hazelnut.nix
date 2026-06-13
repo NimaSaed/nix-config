@@ -9,6 +9,7 @@
   # Import shared core configurations
   imports = [
     ./common/core
+    ./common/core/fonts.nix
     ./common/optional/alacritty.nix
     ./common/optional/sway.nix
   ];

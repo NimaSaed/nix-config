@@ -12,6 +12,7 @@
 
   imports = [
     ./common/core
+    ./common/core/fonts.nix
     ./common/optional/alacritty.nix
     ./common/optional/sway.nix
     ./common/optional/bitwarden.nix
@@ -91,19 +92,9 @@
     # can't touch. This package is just for interactive use (`sudo powertop`).
     powertop
 
-    # Fonts (matching the alacritty config / mac setup)
-    nerd-fonts.open-dyslexic
-    open-dyslexic
-    nerd-fonts.jetbrains-mono
-
     # Dev tools
     github-cli
   ];
-
-  # ===========================================================================
-  # Fonts
-  # ===========================================================================
-  fonts.fontconfig.enable = true;
 
   # ===========================================================================
   # Program Configurations
