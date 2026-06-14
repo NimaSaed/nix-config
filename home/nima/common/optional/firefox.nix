@@ -28,6 +28,9 @@
         "sidebar.verticalTabs" = true;
         # Hide the sidebar launcher strip; expand-on-hover is the alternative.
         "sidebar.visibility" = "hide-sidebar";
+        # Remove the sidebar tool icons (history, bookmarks, synced tabs,
+        # AI chat) that the revamped vertical-tabs sidebar shows.
+        "sidebar.main.tools" = "";
 
         # --- Allow userChrome.css to take effect -------------------------
         "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
