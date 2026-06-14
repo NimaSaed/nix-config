@@ -17,6 +17,7 @@
     ./common/optional/sway.nix
     ./common/optional/bitwarden.nix
     ./common/optional/bitwarden-ssh-agent.nix
+    ./common/optional/firefox.nix
   ];
 
   # ===========================================================================
@@ -80,7 +81,6 @@
     '')
 
     # Desktop applications (GL handled globally via /run/opengl-driver)
-    firefox # Web browser
     slack # Team chat
     unstable.zoom-us # Video conferencing
     bitwarden-desktop # Password manager (GUI)

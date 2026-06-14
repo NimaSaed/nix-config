@@ -14,6 +14,7 @@
     ./common/optional/sway.nix
     ./common/optional/bitwarden.nix
     ./common/optional/bitwarden-ssh-agent.nix
+    ./common/optional/firefox.nix
   ];
 
   # ===========================================================================
@@ -40,7 +41,6 @@
   };
 
   home.packages = with pkgs; [
-    firefox
     bitwarden-desktop
     playerctl
   ];
