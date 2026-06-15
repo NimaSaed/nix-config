@@ -11,12 +11,21 @@
     vimAlias = true;
     viAlias = true;
 
+    # Node.js runtime needed by markdown-preview.nvim's preview server
+    extraPackages = with pkgs; [ nodejs ];
+
     plugins = with pkgs.vimPlugins; [
       # To align text using tabs automatically
       tabular
 
       # Use gx to open links in browser
       open-browser-vim
+
+      # Render markdown inline in the buffer (read mode, toggle with <leader>r)
+      render-markdown-nvim
+
+      # Live markdown preview in the browser (<leader>v)
+      markdown-preview-nvim
 
       # Treesitter: accurate syntax highlighting for all used languages
       (nvim-treesitter.withPlugins (p: with p; [
@@ -102,11 +111,12 @@
       " Disables automatic commenting on newline
       autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 
-      " Bacon ipsum
-      function Ipsum()
-          execute 'read' . '!curl -s "https://baconipsum.com/api/?start-with-lorem=1&type=all-meat&format=text&paras='.v:count1.'"'
+      " Bacon ipsum — :Ipsum or :3Ipsum (count = number of paragraphs)
+      " (a command, not a 'ipsum' keymap, so it doesn't delay entering insert mode)
+      function Ipsum(count) abort
+          execute 'read !curl -s "https://baconipsum.com/api/?start-with-lorem=1&type=all-meat&format=text&paras=' . a:count . '"'
       endfunction
-      map ipsum :<C-U>call Ipsum()<CR>o
+      command! -count=1 Ipsum call Ipsum(<count>)
 
       " Turn off the beep sounds
       set visualbell
@@ -118,9 +128,7 @@
       augroup markdownSpell
           autocmd!
           autocmd FileType markdown setlocal spell
-          autocmd BufRead,BufNewFile *.md setlocal spell
           autocmd FileType text setlocal spell
-          autocmd BufRead,BufNewFile *.txt setlocal spell
           autocmd FileType gitcommit setlocal spell
       augroup END
       set spelllang=en
@@ -186,9 +194,14 @@
 
       " Markdown preview {{{
 
-      map <leader>v : ! ~/.scripts/md_convert.sh '%'<bar> xargs -I {} bash -c "open '{}'; sleep 1; rm '{}'"<CR><CR>
-      map <leader>p : ! ~/.scripts/makeslides '%'<bar> xargs -I {} bash -c "open '{}'; sleep 1; rm '{}'"<CR><CR>
+      " Toggle in-buffer rendered markdown (render-markdown.nvim)
+      map <leader>r :RenderMarkdown toggle<CR>
 
+      " Live rendered preview in Firefox (markdown-preview.nvim)
+      " Map to the Ex command, not <Plug>(MarkdownPreviewToggle): the nixpkgs
+      " build ships the commands but not the <Plug> mappings.
+      let g:mkdp_browser = 'firefox'
+      nnoremap <leader>v :MarkdownPreviewToggle<CR>
       " }}}
 
       " Markdown Snippets {{{
