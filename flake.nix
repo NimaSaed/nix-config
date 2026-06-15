@@ -55,6 +55,20 @@
 
     # nix-homebrew - Declarative Homebrew management for macOS
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+
+    # system-manager - Manage system-level config on non-NixOS distros (e.g. Ubuntu)
+    # Used by peanut to drive nix-system-graphics.
+    system-manager = {
+      url = "github:numtide/system-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # nix-system-graphics - Populate /run/opengl-driver on non-NixOS so Nix-built
+    # GL/Vulkan apps get hardware acceleration (peanut work laptop).
+    nix-system-graphics = {
+      url = "github:soupglasses/nix-system-graphics";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   # ============================================================================
@@ -92,6 +106,28 @@
             })
           ];
         };
+
+      # pkgs for peanut (standalone home-manager on Ubuntu). Built explicitly
+      # since standalone home-manager doesn't get pkgs from a NixOS/darwin system.
+      peanutPkgs = import nixpkgs {
+        system = "x86_64-linux";
+        config.allowUnfree = true;
+        # bitwarden-desktop (the GUI) is built against Electron 39, which
+        # nixpkgs now flags as EOL. 39.8.10 is the latest 39.x patch (no open
+        # CVEs, just no future fixes), and Bitwarden upstream still pins
+        # Electron 39 — so swapping in a newer Electron fails the build's
+        # version-mismatch assertion. Permit it so home-manager switch succeeds.
+        config.permittedInsecurePackages = [ "electron-39.8.10" ];
+        overlays = [
+          outputs.overlays.default
+          (final: prev: {
+            unstable = import nixpkgs-unstable {
+              system = prev.system;
+              config.allowUnfree = true;
+            };
+          })
+        ];
+      };
 
       # Shared modules for chestnut host - used by both nixosConfigurations and colmena
       chestnutModules = [
@@ -303,6 +339,33 @@
             }
           ];
           specialArgs = { inherit inputs outputs; };
+        };
+      };
+
+      # =========================================================================
+      # Home Manager Configurations - standalone (non-NixOS/non-darwin hosts)
+      # =========================================================================
+      homeConfigurations = {
+        # Peanut - work laptop (Lenovo P14s Gen 5) running Ubuntu 24.04.
+        # Apply: home-manager switch --flake .#peanut
+        peanut = home-manager.lib.homeManagerConfiguration {
+          pkgs = peanutPkgs;
+          extraSpecialArgs = { inherit inputs outputs; };
+          modules = [ ./home/nima/peanut.nix ];
+        };
+      };
+
+      # =========================================================================
+      # system-manager Configurations - system-level config on non-NixOS distros
+      # =========================================================================
+      systemConfigs = {
+        # Peanut - graphics drivers for Nix apps via nix-system-graphics.
+        # Apply: sudo nix run github:numtide/system-manager -- switch --flake '.#peanut'
+        peanut = inputs.system-manager.lib.makeSystemConfig {
+          modules = [
+            inputs.nix-system-graphics.systemModules.default
+            ./hosts/peanut
+          ];
         };
       };
 

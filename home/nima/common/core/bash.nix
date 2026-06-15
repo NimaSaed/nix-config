@@ -74,6 +74,9 @@
       vi3c = "vim ~/.config/i3/config";
       vi3b = "vim ~/.config/i3/i3blocks.conf";
 
+      # Claude Code - always latest from npm (nixpkgs package lags behind)
+      claude = "nix shell nixpkgs#nodejs --command npx -y @anthropic-ai/claude-code@latest";
+
       # Notes shortcuts
       en = "cd $n && vim note_index.md && cd";
       gn = "ranger ~/Dropbox/Notes";

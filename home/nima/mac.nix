@@ -9,8 +9,11 @@
   # Import shared core configurations
   imports = [
     ./common/core
+    ./common/core/fonts.nix
     ./common/optional/alacritty.nix
     ./common/optional/aerospace.nix
+    ./common/optional/bitwarden.nix
+    ./common/optional/bitwarden-ssh-agent.nix
   ];
 
   # ===========================================================================
@@ -32,7 +35,6 @@
   home.packages = with pkgs; [
     # Development Tools
     nodejs_22 # Node.js runtime
-    unstable.claude-code # Anthropic's CLI tool
     unstable.opencode # Code editor
     openfga # Authorization framework
     openfga-cli # OpenFGA CLI
@@ -49,22 +51,7 @@
     openscad # 3D CAD software
     gnused # GNU sed (macOS sed is BSD)
 
-    # Bitwarden SOPS key helper — used as SOPS_AGE_KEY_CMD
-    (pkgs.writeShellScriptBin "bw-sops-key" ''
-      set -euo pipefail
-      status=$(bw status | ${pkgs.jq}/bin/jq -r .status)
-      if [ "$status" = "unauthenticated" ]; then
-        echo "bw-sops-key: Bitwarden is not logged in. Run: bw login" >&2
-        exit 1
-      fi
-      if [ -z "''${BW_SESSION:-}" ]; then
-        if [ "$status" = "locked" ]; then
-          echo "Bitwarden vault is locked. Enter master password to unlock:" >/dev/tty
-          BW_SESSION=$(bw unlock --raw </dev/tty)
-        fi
-      fi
-      bw get item 729c67c1-e6a8-4b7f-8ca5-fa2a9439d698 --session "$BW_SESSION" | ${pkgs.jq}/bin/jq -r .login.password
-    '')
+    # Note: bw-sops-key helper comes from ./common/optional/bitwarden.nix
 
     # Desktop Applications (alacritty configured via programs.alacritty)
     aerospace # Window manager for macOS
@@ -87,15 +74,7 @@
   home.sessionVariables = {
     # Ensure Homebrew paths are available
     HOMEBREW_PREFIX = "/opt/homebrew";
-    # Bitwarden SSH agent for git commit signing
-    SSH_AUTH_SOCK = "${config.home.homeDirectory}/.bitwarden-ssh-agent.sock";
   };
-
-  programs.ssh = {
-    enable = true;
-    enableDefaultConfig = false;
-    matchBlocks."*".extraOptions = {
-      IdentityAgent = "~/.bitwarden-ssh-agent.sock";
-    };
-  };
+  # Bitwarden SSH agent (SSH_AUTH_SOCK + programs.ssh) comes from
+  # ./common/optional/bitwarden-ssh-agent.nix
 }
