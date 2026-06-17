@@ -69,6 +69,14 @@
       url = "github:soupglasses/nix-system-graphics";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # firefox-addons - Firefox extensions packaged for Nix (rycee's NUR set,
+    # just the addons subdir). Lets Firefox extensions be managed declaratively
+    # via programs.firefox.profiles.<name>.extensions.packages.
+    firefox-addons = {
+      url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   # ============================================================================
