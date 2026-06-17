@@ -11,6 +11,7 @@
     ./common/core
     ./common/core/fonts.nix
     ./common/optional/alacritty.nix
+    ./common/optional/claude-code.nix
     ./common/optional/sway.nix
     ./common/optional/bitwarden.nix
     ./common/optional/bitwarden-ssh-agent.nix

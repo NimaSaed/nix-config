@@ -149,26 +149,26 @@
           " enable syntax highlighting
           colorscheme habamax
           syntax enable
-          highlight Normal guibg=NONE ctermbg=NONE
+          highlight Normal guifg=NONE guibg=NONE ctermfg=NONE ctermbg=NONE
 
 
-          " Numbers color
+          " Numbers color — current line in Nebius lime (ANSI slot 11)
           highlight LineNr ctermfg=NONE ctermbg=NONE
-          highlight CursorLineNr ctermfg=9 ctermbg=NONE
+          highlight CursorLineNr ctermfg=11 ctermbg=NONE
 
-          " Menu color (auto complete)
-          highlight Pmenu ctermfg=0 ctermbg=12
-          highlight PmenuSel ctermfg=0 ctermbg=9
+          " Menu color (auto complete) — muted surface (8), lime-selected (11)
+          highlight Pmenu ctermfg=15 ctermbg=8
+          highlight PmenuSel ctermfg=0 ctermbg=11
 
-          " Status line and wild menu colors
-          highlight StatusLine ctermbg=15 ctermfg=0
-          highlight WildMenu ctermbg=12 ctermfg=0
+          " Status line (muted surface bar) and wild menu (lime selection)
+          highlight StatusLine ctermbg=8 ctermfg=15
+          highlight WildMenu ctermbg=11 ctermfg=0
 
-          " Selected text in visual mode
-          highlight Visual ctermbg=15
+          " Selected text in visual mode — muted bg keeps syntax colors readable
+          highlight Visual ctermbg=8
 
-          " Folded Color
-          highlight Folded ctermfg=0 ctermbg=12
+          " Folded Color — muted surface
+          highlight Folded ctermfg=15 ctermbg=8
 
           " Spelling Color
           highlight SpellBad term=reverse cterm=undercurl ctermbg=224 gui=undercurl guisp=#dc322f
