@@ -1,6 +1,20 @@
-{ ... }:
+{ pkgs, ... }:
 
+let
+  # IS_DEMO=1 = skip the onboarding banner in every dir; nodejs = npx on claude's
+  # PATH for npx-based MCP plugins (context7). Scoped to claude only.
+  claude-code = pkgs.runCommand "claude-code-${pkgs.unstable.claude-code.version}"
+    { nativeBuildInputs = [ pkgs.makeBinaryWrapper ]; }
+    ''
+      mkdir -p $out/bin
+      makeWrapper ${pkgs.unstable.claude-code}/bin/claude $out/bin/claude \
+        --set IS_DEMO 1 \
+        --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.nodejs ]}
+    '';
+in
 {
+  home.packages = [ claude-code ];
+
   # Claude Code custom theme — Nebius brand palette.
   #
   # Based on the built-in "dark" (truecolor) theme rather than "dark-ansi":
