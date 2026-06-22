@@ -401,46 +401,84 @@ in
     };
 
     # =========================================================================
-    # mako — notification daemon (Nebius-themed)
+    # dunst — notification daemon (Nebius-themed)
     # =========================================================================
-    # mako is the handler for org.freedesktop.Notifications. The module installs
-    # it and registers the D-Bus service file, so it auto-starts on the first
-    # notification (no systemd unit) — same launch behaviour as before, but now
-    # with a declarative config instead of mako's plain defaults. Colors track
-    # the rest of the desktop: deep-blue surface, lime border, light-blue text;
-    # high-urgency notifications flip to violet and never auto-dismiss, matching
-    # the bar's urgent state.
-    services.mako = {
+    # Replaces mako. mako looks up an icon only from a notification's own
+    # app_icon field, so apps that send none (Slack sends app_icon="") can never
+    # get a logo. dunst can match on the desktop-entry hint and supply an icon
+    # via per-app rules (below), so Slack/Zoom get their logos. The module owns
+    # org.freedesktop.Notifications via a D-Bus-activated systemd service, so —
+    # like mako — it starts on the first notification.
+    #
+    # iconTheme wires up icon_path to Papirus's per-category dirs at one size:
+    # Papirus keeps numeric size dirs (e.g. 48x48/apps/slack.svg) that dunst's
+    # name lookup needs, and bundles app-specific logos. Pulled from nixpkgs, so
+    # it resolves on peanut (Ubuntu) without depending on distro icon paths.
+    services.dunst = {
       enable = true;
+      iconTheme = {
+        name = "Papirus";
+        package = pkgs.papirus-icon-theme;
+        size = "48x48";
+      };
       settings = {
-        background-color = nebius.deepBlue;
-        text-color = nebius.lightBlue;
-        border-color = nebius.lime;
-        border-size = 2;
-        border-radius = 5;
-        padding = 8;
-        margin = 10;
-        default-timeout = 5000;
-        # Lead with the sending app in bold, then summary and body, so a glance
-        # tells you which app pinged (verified against a real notification:
-        # Slack sets app_name="Slack"). This is the reliable source indicator:
-        # mako can't always show an app icon — it looks up icons solely from the
-        # notification's app_icon field (never app_name/desktop-entry), and Slack
-        # sends an empty app_icon, so Slack notifications stay icon-less.
-        # `\n` is mako's literal newline escape in the config.
-        format = "<b>%a</b>  %s\\n%b";
-        # Resolve named icons (app_icon="phone", "slack", ...) from Papirus.
-        # mako parses the icon-size from each theme subdirectory name, so it only
-        # finds icons under numeric dirs like 48x48/ — Adwaita 49 ships its icons
-        # scalable-only and resolves nothing, whereas Papirus keeps numeric size
-        # dirs (and app-specific icons). Pulled from nixpkgs so it works on both
-        # peanut (Ubuntu) and NixOS without depending on distro icon paths.
-        icon-path = "${pkgs.papirus-icon-theme}/share/icons/Papirus";
-        "urgency=high" = {
-          background-color = nebius.violet;
-          border-color = nebius.violet;
-          text-color = nebius.lightBlue;
-          default-timeout = 0;
+        global = {
+          # Nebius palette: deep-blue surface, lime frame, light-blue text.
+          background = nebius.deepBlue;
+          foreground = nebius.lightBlue;
+          frame_color = nebius.lime;
+          separator_color = "frame";
+          frame_width = 2;
+          corner_radius = 5;
+          padding = 8;
+          horizontal_padding = 8;
+          origin = "top-right";
+          offset = "(10,10)";
+          markup = "full"; # required for the <b> in format to render
+          # Lead with the sending app in bold (verified: Slack sets
+          # app_name="Slack"), then summary and body. `\n` is dunst's newline
+          # escape in the quoted config value.
+          format = "<b>%a</b>  %s\\n%b";
+        };
+        urgency_low.timeout = 5;
+        urgency_normal.timeout = 5;
+        # High urgency flips to violet and never auto-dismisses, matching the bar.
+        urgency_critical = {
+          background = nebius.violet;
+          foreground = nebius.lightBlue;
+          frame_color = nebius.violet;
+          timeout = 0;
+        };
+        # Per-app icons for senders that ship none. default_icon only fills in
+        # when the notification carries no icon of its own, so it never clobbers
+        # a real avatar/image the app might include. Matched on the desktop-entry
+        # hint; names resolve against Papirus (48x48/apps/{slack,zoom-desktop}).
+        slack = {
+          desktop_entry = "Slack"; # verified via dbus-monitor
+          default_icon = "slack";
+        };
+        zoom = {
+          desktop_entry = "Zoom"; # best guess — confirm against a real Zoom notification
+          default_icon = "zoom-desktop";
+        };
+        # Slack/calendar/etc. delivered through the browser arrive as Firefox
+        # web-push: appname="Firefox", no desktop-entry, no icon (confirmed via
+        # dunst history). Badge them with the Firefox logo — the honest "came
+        # from the browser" marker, since the notification carries no signal of
+        # which site sent it. Matched on appname, the field Firefox actually sets.
+        firefox = {
+          appname = "Firefox";
+          default_icon = "firefox";
+        };
+        # Terminal/CLI notifications (notify-send & friends) report appname
+        # "notify-send" with no icon — the emulator doesn't stamp them, so this
+        # is the only handle (confirmed via dunst history). Badge them with the
+        # Alacritty logo, the terminal in use. Note this marks ALL notify-send
+        # notifications, not only those launched from Alacritty: nothing in the
+        # notification identifies the originating terminal.
+        terminal = {
+          appname = "notify-send";
+          default_icon = "Alacritty";
         };
       };
     };
