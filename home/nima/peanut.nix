@@ -62,6 +62,31 @@
     "XF86Favorites" = "exec ${lib.getExe pkgs.playerctl} play-pause";
   };
 
+  # Clamshell mode: disable the built-in panel when the lid closes so windows
+  # move to the external monitor (which becomes primary); re-enable on open.
+  # --locked keeps it working over the lock screen; --reload re-applies the
+  # state on config reload. eDP-1 is the laptop panel (see autoscale override
+  # above). logind leaves the machine awake when docked and still suspends on
+  # lid close when no external monitor is connected.
+  wayland.windowManager.sway.extraConfig = ''
+    bindswitch --reload --locked lid:on output eDP-1 disable
+    bindswitch --reload --locked lid:off output eDP-1 enable
+  '';
+
+  # Touchpad behaviour for the built-in trackpad. Without this sway falls back
+  # to libinput defaults (no tap-to-click, traditional scroll direction), which
+  # feel wrong on a laptop. `dwt` (disable-while-typing) suppresses stray cursor
+  # jumps from the palm while typing; `clickfinger` makes a two-finger press the
+  # right-click instead of carving out a bottom-right button zone. Lives here
+  # rather than the shared module because it's per-device — desktops have no
+  # touchpad, and hazelnut configures its touchscreen the same host-local way.
+  wayland.windowManager.sway.config.input."type:touchpad" = {
+    tap = "enabled";
+    natural_scroll = "enabled";
+    dwt = "enabled";
+    click_method = "clickfinger";
+  };
+
   # ===========================================================================
   # Peanut-Specific Packages
   # ===========================================================================

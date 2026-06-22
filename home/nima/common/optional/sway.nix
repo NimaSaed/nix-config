@@ -167,6 +167,20 @@ in
             criteria.class = "Bitwarden";
             command = "resize set 50 ppt 70 ppt, move position center";
           }
+          # Hold off the idle timeouts (below) whenever a window is fullscreen —
+          # fullscreen video and Zoom screen-share/calls shouldn't blank or lock
+          # the screen mid-stream. Browsers already inhibit idle via the Wayland
+          # idle-inhibit protocol when playing video; these rules cover apps that
+          # don't (e.g. Zoom) by keying off fullscreen state. `.*` matches every
+          # window — app_id for native Wayland, class for XWayland.
+          {
+            criteria.app_id = ".*";
+            command = "inhibit_idle fullscreen";
+          }
+          {
+            criteria.class = ".*";
+            command = "inhibit_idle fullscreen";
+          }
         ];
 
         # Status bar — deep-blue bar with the focused workspace highlighted
@@ -343,7 +357,7 @@ in
     };
 
     # =========================================================================
-    # swayidle — lock before suspend
+    # swayidle — idle lock, display power-off, and lock before suspend
     # =========================================================================
     # Without an idle daemon listening on logind's PrepareForSleep signal,
     # closing the lid suspends straight to a logged-in session. swayidle holds
@@ -354,9 +368,26 @@ in
     # command to finish before releasing the inhibit. Up to home-manager
     # 24.11 the module added it automatically; from 24.11 onwards it has to
     # be passed via extraArgs. Drop this and suspend can race past the lock.
+    #
+    # The `timeouts` add inactivity handling, lacking before: lock the session
+    # after 5 min (so an unattended work laptop doesn't stay open), then power
+    # the outputs off two minutes later to save the panel/battery, powering
+    # them back on the moment there's activity. Fullscreen windows hold these
+    # off via the `inhibit_idle` rules above, so calls/video aren't interrupted.
     services.swayidle = {
       enable = true;
       extraArgs = [ "-w" ];
+      timeouts = [
+        {
+          timeout = 300;
+          command = config.my.sway.lockCommand;
+        }
+        {
+          timeout = 420;
+          command = "${pkgs.sway}/bin/swaymsg 'output * power off'";
+          resumeCommand = "${pkgs.sway}/bin/swaymsg 'output * power on'";
+        }
+      ];
       events = [
         {
           event = "before-sleep";
@@ -367,6 +398,51 @@ in
           command = config.my.sway.lockCommand;
         }
       ];
+    };
+
+    # =========================================================================
+    # mako — notification daemon (Nebius-themed)
+    # =========================================================================
+    # mako is the handler for org.freedesktop.Notifications. The module installs
+    # it and registers the D-Bus service file, so it auto-starts on the first
+    # notification (no systemd unit) — same launch behaviour as before, but now
+    # with a declarative config instead of mako's plain defaults. Colors track
+    # the rest of the desktop: deep-blue surface, lime border, light-blue text;
+    # high-urgency notifications flip to violet and never auto-dismiss, matching
+    # the bar's urgent state.
+    services.mako = {
+      enable = true;
+      settings = {
+        background-color = nebius.deepBlue;
+        text-color = nebius.lightBlue;
+        border-color = nebius.lime;
+        border-size = 2;
+        border-radius = 5;
+        padding = 8;
+        margin = 10;
+        default-timeout = 5000;
+        # Lead with the sending app in bold, then summary and body, so a glance
+        # tells you which app pinged (verified against a real notification:
+        # Slack sets app_name="Slack"). This is the reliable source indicator:
+        # mako can't always show an app icon — it looks up icons solely from the
+        # notification's app_icon field (never app_name/desktop-entry), and Slack
+        # sends an empty app_icon, so Slack notifications stay icon-less.
+        # `\n` is mako's literal newline escape in the config.
+        format = "<b>%a</b>  %s\\n%b";
+        # Resolve named icons (app_icon="phone", "slack", ...) from Papirus.
+        # mako parses the icon-size from each theme subdirectory name, so it only
+        # finds icons under numeric dirs like 48x48/ — Adwaita 49 ships its icons
+        # scalable-only and resolves nothing, whereas Papirus keeps numeric size
+        # dirs (and app-specific icons). Pulled from nixpkgs so it works on both
+        # peanut (Ubuntu) and NixOS without depending on distro icon paths.
+        icon-path = "${pkgs.papirus-icon-theme}/share/icons/Papirus";
+        "urgency=high" = {
+          background-color = nebius.violet;
+          border-color = nebius.violet;
+          text-color = nebius.lightBlue;
+          default-timeout = 0;
+        };
+      };
     };
 
     # =========================================================================
@@ -457,7 +533,6 @@ in
       wl-clipboard # Wayland clipboard (wl-copy / wl-paste)
       grim # Screenshot tool
       slurp # Region selection for screenshots
-      mako # Notification daemon
       fuzzel # Application launcher
       swaylock # Screen locker
       nerd-fonts.symbols-only # Icon glyphs for the i3status-rust bar
