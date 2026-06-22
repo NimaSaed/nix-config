@@ -55,6 +55,23 @@
     org.freedesktop.impl.portal.Screenshot=wlr
   '';
 
+  # List only Nix-installed apps in the launcher. fuzzel scans every
+  # applications dir on XDG_DATA_DIRS; on Ubuntu that pulls in ~80 distro
+  # entries, many of which don't work under sway. Point fuzzel's scan at just
+  # the Nix profile (XDG_DATA_HOME is still read, e.g. for the Yazi launcher),
+  # and use --launch-prefix to restore the full XDG_DATA_DIRS for whatever it
+  # launches so those apps keep system icons/schemas. Anything I actually want
+  # in the launcher gets installed via Nix.
+  wayland.windowManager.sway.config.menu =
+    let
+      fuzzel-nix = pkgs.writeShellScript "fuzzel-nix-apps" ''
+        full="$XDG_DATA_DIRS"
+        export XDG_DATA_DIRS="$HOME/.nix-profile/share"
+        exec ${lib.getExe pkgs.fuzzel} --launch-prefix="${pkgs.coreutils}/bin/env XDG_DATA_DIRS=$full "
+      '';
+    in
+    "${fuzzel-nix}";
+
   # Use Ubuntu's swaylock for the lock screen. The Nix swaylock can't
   # authenticate via PAM on a non-NixOS distro (it loads PAM modules from
   # /nix/store, where there's no setuid helper to read /etc/shadow), so the

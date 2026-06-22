@@ -74,7 +74,9 @@ in
         # Absolute store paths so terminal/menu work even when sway is launched
         # from a display manager that doesn't put ~/.nix-profile/bin on PATH.
         terminal = lib.getExe pkgs.alacritty;
-        menu = lib.getExe pkgs.fuzzel;
+        # mkDefault so a host can swap the launcher command (peanut wraps it to
+        # list only Nix-installed apps — see home/nima/peanut.nix).
+        menu = lib.mkDefault (lib.getExe pkgs.fuzzel);
 
         # Focus workspace 1 on sway start (instead of whichever workspace the
         # first spawned window happens to land on).
@@ -368,6 +370,11 @@ in
           # icon (Slack, Zoom) show blank. Point it at Papirus (same theme the
           # rest of the desktop uses), which has matching app icons.
           icon-theme = "Papirus";
+          # Command used to launch Terminal=true apps (nvim, htop, btop, …).
+          # Alacritty with a distinct app_id so they open in the focused
+          # workspace rather than being pinned to workspace 1 by the assign rule;
+          # fuzzel appends the program after this. (yazi has its own entry above.)
+          terminal = "${lib.getExe pkgs.alacritty} --class fuzzel-term -e";
         };
         border = {
           width = 2;
@@ -383,6 +390,27 @@ in
           border = fz ui.accent;
         };
       };
+    };
+
+    # =========================================================================
+    # yazi — terminal file manager (launched from fuzzel)
+    # =========================================================================
+    # yazi is a TUI, so it runs inside a terminal. Launching it in a normal
+    # Alacritty window would inherit app_id "Alacritty" and get pinned to
+    # workspace 1 by the assign rule above. The desktop entry instead starts
+    # Alacritty with a distinct app_id ("yazi"), so fuzzel opens it in whatever
+    # workspace is focused. Vim keybindings (hjkl, gg/G, /, …) are yazi's default.
+    programs.yazi.enable = true;
+    xdg.desktopEntries.yazi = {
+      name = "Yazi";
+      comment = "Terminal file manager";
+      exec = "${lib.getExe pkgs.alacritty} --class yazi -e ${lib.getExe pkgs.yazi}";
+      terminal = false;
+      icon = "system-file-manager";
+      categories = [
+        "Utility"
+        "System"
+      ];
     };
 
     # =========================================================================
