@@ -16,6 +16,7 @@
     ./common/optional/alacritty.nix
     ./common/optional/claude-code.nix
     ./common/optional/sway.nix
+    ./common/optional/gtk.nix
     ./common/optional/bitwarden.nix
     ./common/optional/bitwarden-ssh-agent.nix
     ./common/optional/firefox.nix
@@ -35,6 +36,24 @@
   # launchers like fuzzel discover .desktop apps. The start-sway wrapper sources
   # that file, so the sway process — and apps launched from it — get it too.
   targets.genericLinux.enable = true;
+
+  # System-wide colour theme (terminal, sway, notifications). See
+  # home/nima/common/core/theme.nix for the palette set.
+  my.activeTheme = "nebius";
+
+  # Route the desktop portal's Settings interface to the gtk backend under sway.
+  # Without this, XDG_CURRENT_DESKTOP=sway leaves no backend serving
+  # org.freedesktop.portal.Settings, so GTK4/libadwaita (Nautilus) and
+  # Electron/Chromium (Slack, Bitwarden) can't read color-scheme and fall back
+  # to light. Screencast/screenshot stay on wlr (the sway-native backend).
+  # On NixOS this is done via xdg.portal.config (see hosts/hazelnut); Ubuntu
+  # has no such layer, so we drop the per-user config file directly.
+  xdg.configFile."xdg-desktop-portal/sway-portals.conf".text = ''
+    [preferred]
+    default=gtk
+    org.freedesktop.impl.portal.ScreenCast=wlr
+    org.freedesktop.impl.portal.Screenshot=wlr
+  '';
 
   # Use Ubuntu's swaylock for the lock screen. The Nix swaylock can't
   # authenticate via PAM on a non-NixOS distro (it loads PAM modules from

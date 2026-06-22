@@ -10,6 +10,11 @@ let
   # rycee's NUR addon set, scoped to this system's architecture.
   addons = inputs.firefox-addons.packages.${pkgs.system};
 
+  # Semantic UI colours from the active system theme (see
+  # home/nima/common/core/theme.nix); interpolated into the chrome CSS below so
+  # the browser follows my.activeTheme like the terminal, sway and notifications.
+  ui = config.my.ui;
+
   # Bundled (app-provided) search engines to hide. eBay ships region-specific
   # ids (ebay-de, ebay-nl, …) and only the active one matters, so hide them
   # all — hiding an inactive id is a harmless no-op.
@@ -151,11 +156,15 @@ in
         "browser.aboutwelcome.enabled" = false; # no onboarding tour
         "browser.urlbar.suggest.searches" = false; # no search-engine suggestions
 
-        # --- Dark base theme ---------------------------------------------
+        # --- Base theme (follows the active theme's polarity) ------------
         # Makes the surfaces userChrome.css doesn't reach (context menus, the
-        # urlbar dropdown, popups) render dark so they don't clash with the
-        # Deep Blue chrome.
-        "extensions.activeThemeID" = "firefox-compact-dark@mozilla.org";
+        # urlbar dropdown, popups) render in the right light/dark variant so
+        # they don't clash with the themed chrome.
+        "extensions.activeThemeID" =
+          if config.my.polarity == "light" then
+            "firefox-compact-light@mozilla.org"
+          else
+            "firefox-compact-dark@mozilla.org";
 
         # --- Misc cleanup ------------------------------------------------
         "browser.shell.checkDefaultBrowser" = false; # no "make default" nag
@@ -246,14 +255,17 @@ in
           display: none !important;
         }
 
-        /* ===== Nebius color theme (browser chrome) ================== */
+        /* ===== System theme (browser chrome) ======================= */
+        /* Values interpolated from config.my.ui (Nix) — they follow whichever
+           theme my.activeTheme selects. Variable names kept for brevity. */
         :root {
-          --nb-deep-blue: #052B42;   /* primary chrome background      */
-          --nb-surface:   #0A3B58;   /* lifted surface (fields / tabs) */
-          --nb-lime:      #DAFF33;   /* primary accent (active state)  */
-          --nb-violet:    #5D52F6;   /* secondary accent               */
-          --nb-lavender:  #C1C1FF;   /* soft accent (hover)            */
-          --nb-light-blue: #F0F8FF;  /* foreground text / icons        */
+          --nb-deep-blue: ${ui.surface};    /* primary chrome background      */
+          --nb-surface:   ${ui.surfaceAlt}; /* lifted surface (fields / tabs) */
+          --nb-lime:      ${ui.accent};     /* primary accent (active state)  */
+          --nb-violet:    ${ui.indicator};  /* secondary accent               */
+          --nb-lavender:  ${ui.muted};      /* soft accent (hover)            */
+          --nb-light-blue: ${ui.onSurface}; /* foreground text / icons        */
+          --nb-on-accent: ${ui.onAccent};   /* legible text on accent fills   */
 
           /* Theme variables consumed by toolbars, fields and sidebar. */
           --lwt-accent-color: var(--nb-deep-blue) !important;
@@ -271,7 +283,7 @@ in
 
           /* Text-selection highlight inside the address/search bar. */
           --lwt-toolbar-field-highlight: var(--nb-lime) !important;
-          --lwt-toolbar-field-highlight-text: var(--nb-deep-blue) !important;
+          --lwt-toolbar-field-highlight-text: var(--nb-on-accent) !important;
 
           --sidebar-background-color: var(--nb-deep-blue) !important;
           --sidebar-text-color: var(--nb-light-blue) !important;
@@ -317,7 +329,7 @@ in
         #urlbar .urlbar-input::selection,
         #searchbar .searchbar-textbox::selection {
           background-color: var(--nb-lime) !important;
-          color: var(--nb-deep-blue) !important;
+          color: var(--nb-on-accent) !important;
         }
       '';
 
@@ -332,8 +344,8 @@ in
         @-moz-document url("about:home"), url("about:newtab") {
           html,
           body {
-            background-color: #052B42 !important;
-            color: #F0F8FF !important;
+            background-color: ${ui.surface} !important;
+            color: ${ui.onSurface} !important;
           }
           main,
           .personalize-button,

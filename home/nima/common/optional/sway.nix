@@ -6,14 +6,9 @@
 }:
 
 let
-  # Nebius brand palette (see ~/.claude/CLAUDE.md for the full set).
-  nebius = {
-    deepBlue = "#052B42"; # primary dark / backgrounds
-    lime = "#DAFF33"; # primary accent
-    violet = "#5D52F6"; # secondary accent — used for urgent states
-    lavender = "#C1C1FF"; # soft accent — muted/inactive text
-    lightBlue = "#F0F8FF"; # light foreground on dark backgrounds
-  };
+  # UI colours come from the active system theme's semantic map (my.ui, derived
+  # from my.activeTheme — see home/nima/common/core/theme.nix).
+  ui = config.my.ui;
 in
 {
   # ===========================================================================
@@ -34,7 +29,7 @@ in
   # with the Nix swaylock (NixOS) need to set nothing.
   options.my.sway.lockCommand = lib.mkOption {
     type = lib.types.str;
-    default = "${lib.getExe pkgs.swaylock} -f -c ${lib.removePrefix "#" nebius.deepBlue}";
+    default = "${lib.getExe pkgs.swaylock} -f -c ${lib.removePrefix "#" ui.surface}";
     defaultText = lib.literalExpression ''"''${lib.getExe pkgs.swaylock} -f -c 052B42"'';
     description = "Command bound to <modifier>+l to lock the screen.";
   };
@@ -91,41 +86,41 @@ in
         window.titlebar = false;
         floating.titlebar = false;
 
-        # Solid Nebius deep-blue desktop on every output.
-        output."*".bg = "${nebius.deepBlue} solid_color";
+        # Solid themed desktop background on every output.
+        output."*".bg = "${ui.surface} solid_color";
 
         # Window decoration colors. Titlebars are off, so in practice these
-        # paint borders and the split indicator: lime marks the focused
-        # window, unfocused borders match the background so only gaps
-        # separate them, and violet flags urgency.
+        # paint borders and the split indicator: the accent marks the focused
+        # window, unfocused borders match the background so only gaps separate
+        # them, and the urgent colour flags urgency.
         colors = {
           focused = {
-            border = nebius.lime;
-            background = nebius.deepBlue;
-            text = nebius.lightBlue;
-            indicator = nebius.violet;
-            childBorder = nebius.lime;
+            border = ui.accent;
+            background = ui.surface;
+            text = ui.onSurface;
+            indicator = ui.indicator;
+            childBorder = ui.accent;
           };
           focusedInactive = {
-            border = nebius.deepBlue;
-            background = nebius.deepBlue;
-            text = nebius.lavender;
-            indicator = nebius.deepBlue;
-            childBorder = nebius.deepBlue;
+            border = ui.surface;
+            background = ui.surface;
+            text = ui.muted;
+            indicator = ui.surface;
+            childBorder = ui.surface;
           };
           unfocused = {
-            border = nebius.deepBlue;
-            background = nebius.deepBlue;
-            text = nebius.lavender;
-            indicator = nebius.deepBlue;
-            childBorder = nebius.deepBlue;
+            border = ui.surface;
+            background = ui.surface;
+            text = ui.muted;
+            indicator = ui.surface;
+            childBorder = ui.surface;
           };
           urgent = {
-            border = nebius.violet;
-            background = nebius.violet;
-            text = nebius.lightBlue;
-            indicator = nebius.violet;
-            childBorder = nebius.violet;
+            border = ui.urgent;
+            background = ui.urgent;
+            text = ui.onUrgent;
+            indicator = ui.urgent;
+            childBorder = ui.urgent;
           };
         };
 
@@ -183,8 +178,8 @@ in
           }
         ];
 
-        # Status bar — deep-blue bar with the focused workspace highlighted
-        # in lime (dark text for contrast on the bright background).
+        # Status bar — themed bar with the focused workspace highlighted in the
+        # accent colour (text auto-contrasted via onAccent for readability).
         # Status line content comes from i3status-rust (configured below).
         bars = [
           {
@@ -195,28 +190,28 @@ in
             # edge. Padding applies per icon, so it also spaces them apart.
             trayPadding = 10;
             colors = {
-              background = nebius.deepBlue;
-              statusline = nebius.lightBlue;
-              separator = nebius.lavender;
+              background = ui.surface;
+              statusline = ui.onSurface;
+              separator = ui.muted;
               focusedWorkspace = {
-                border = nebius.lime;
-                background = nebius.lime;
-                text = nebius.deepBlue;
+                border = ui.accent;
+                background = ui.accent;
+                text = ui.onAccent;
               };
               activeWorkspace = {
-                border = nebius.deepBlue;
-                background = nebius.deepBlue;
-                text = nebius.lime;
+                border = ui.surface;
+                background = ui.surface;
+                text = ui.accent;
               };
               inactiveWorkspace = {
-                border = nebius.deepBlue;
-                background = nebius.deepBlue;
-                text = nebius.lavender;
+                border = ui.surface;
+                background = ui.surface;
+                text = ui.muted;
               };
               urgentWorkspace = {
-                border = nebius.violet;
-                background = nebius.violet;
-                text = nebius.lightBlue;
+                border = ui.urgent;
+                background = ui.urgent;
+                text = ui.onUrgent;
               };
             };
           }
@@ -268,8 +263,8 @@ in
     # volume. Unlike the old shell blocklets, sound and net blocks are
     # event-driven (PipeWire / netlink), so no pkill -RTMIN refresh hacks.
     #
-    # The blocks themselves color by state (good/warning/critical), themed to
-    # the Nebius palette: lime for good, violet for warning, inverted violet
+    # The blocks themselves color by state (good/warning/critical), themed from
+    # the active palette: accent for good, urgent for warning, inverted urgent
     # for critical.
     programs.i3status-rust = {
       enable = true;
@@ -280,18 +275,18 @@ in
         settings.theme = {
           theme = "plain";
           overrides = {
-            idle_bg = nebius.deepBlue;
-            idle_fg = nebius.lightBlue;
-            info_bg = nebius.deepBlue;
-            info_fg = nebius.lavender;
-            good_bg = nebius.deepBlue;
-            good_fg = nebius.lime;
-            warning_bg = nebius.deepBlue;
-            warning_fg = nebius.violet;
-            critical_bg = nebius.violet;
-            critical_fg = nebius.lightBlue;
-            separator_bg = nebius.deepBlue;
-            separator_fg = nebius.lavender;
+            idle_bg = ui.surface;
+            idle_fg = ui.onSurface;
+            info_bg = ui.surface;
+            info_fg = ui.muted;
+            good_bg = ui.surface;
+            good_fg = ui.accent;
+            warning_bg = ui.surface;
+            warning_fg = ui.urgent;
+            critical_bg = ui.urgent;
+            critical_fg = ui.onUrgent;
+            separator_bg = ui.surface;
+            separator_fg = ui.muted;
           };
         };
         blocks = [
@@ -401,7 +396,7 @@ in
     };
 
     # =========================================================================
-    # dunst — notification daemon (Nebius-themed)
+    # dunst — notification daemon (theme-driven)
     # =========================================================================
     # Replaces mako. mako looks up an icon only from a notification's own
     # app_icon field, so apps that send none (Slack sends app_icon="") can never
@@ -423,30 +418,34 @@ in
       };
       settings = {
         global = {
-          # Nebius palette: deep-blue surface, lime frame, light-blue text.
-          background = nebius.deepBlue;
-          foreground = nebius.lightBlue;
-          frame_color = nebius.lime;
-          separator_color = "frame";
-          frame_width = 2;
-          corner_radius = 5;
-          padding = 8;
-          horizontal_padding = 8;
+          # Solid accent-coloured card (lime under nebius), no border, with dark
+          # text auto-picked for contrast (onAccent) so it stays legible under
+          # any theme. Borderless but roomy; separate notifications get their own
+          # box via gap_size rather than a divider line.
+          background = ui.accent;
+          foreground = ui.onAccent;
+          frame_width = 0;
+          corner_radius = 10;
+          padding = 14;
+          horizontal_padding = 16;
+          gap_size = 8;
+          separator_height = 0;
           origin = "top-right";
-          offset = "(10,10)";
+          # Float the card well clear of the top-right screen corner.
+          offset = "(24,24)";
           markup = "full"; # required for the <b> in format to render
-          # Lead with the sending app in bold (verified: Slack sets
-          # app_name="Slack"), then summary and body. `\n` is dunst's newline
-          # escape in the quoted config value.
-          format = "<b>%a</b>  %s\\n%b";
+          # App name bold on its own line, then summary and body. `\n` is dunst's
+          # newline escape in the quoted config value.
+          format = "<b>%a</b>\\n%s\\n%b";
         };
         urgency_low.timeout = 5;
         urgency_normal.timeout = 5;
-        # High urgency flips to violet and never auto-dismisses, matching the bar.
+        # Critical flips the card to the urgent colour (red) with auto-contrasted
+        # text and never auto-dismisses, matching the bar's urgent state.
         urgency_critical = {
-          background = nebius.violet;
-          foreground = nebius.lightBlue;
-          frame_color = nebius.violet;
+          background = ui.urgent;
+          foreground = ui.onUrgent;
+          frame_width = 0;
           timeout = 0;
         };
         # Per-app icons for senders that ship none. default_icon only fills in

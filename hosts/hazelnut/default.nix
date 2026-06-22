@@ -102,6 +102,14 @@
     enable = true;
     wlr.enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    # Route the Settings interface (color-scheme) to the gtk backend; without a
+    # backend serving it under sway, GTK4/libadwaita and Electron apps can't
+    # read light/dark and default to light. Screencast/screenshot stay on wlr.
+    config.sway = {
+      default = [ "gtk" ];
+      "org.freedesktop.impl.portal.ScreenCast" = [ "wlr" ];
+      "org.freedesktop.impl.portal.Screenshot" = [ "wlr" ];
+    };
   };
 
   # Fonts

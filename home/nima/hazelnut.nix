@@ -13,6 +13,7 @@
     ./common/optional/alacritty.nix
     ./common/optional/claude-code.nix
     ./common/optional/sway.nix
+    ./common/optional/gtk.nix
     ./common/optional/bitwarden.nix
     ./common/optional/bitwarden-ssh-agent.nix
     ./common/optional/firefox.nix

@@ -3,6 +3,7 @@
 {
   # Import all core application configurations
   imports = [
+    ./theme.nix
     ./git.nix
     ./bash.nix
     ./tmux.nix
