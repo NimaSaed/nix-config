@@ -146,7 +146,6 @@
     slack # Team chat
     unstable.zoom-us # Video conferencing
     bitwarden-desktop # Password manager (GUI)
-    playerctl # MPRIS media control (play/pause on F12 / XF86Favorites)
 
     # Power management CLI. The boot-time `--auto-tune` runs as a root systemd
     # service in system-manager (hosts/peanut/default.nix), since auto-tune

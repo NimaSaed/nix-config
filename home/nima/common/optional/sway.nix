@@ -242,6 +242,9 @@ in
             "XF86AudioLowerVolume" = "exec ${pkgs.pamixer}/bin/pamixer -d 5";
             "XF86AudioRaiseVolume" = "exec ${pkgs.pamixer}/bin/pamixer -i 5";
             "XF86AudioMicMute" = "exec ${pkgs.pamixer}/bin/pamixer --default-source -t";
+            # Media play/pause via MPRIS (browsers, Spotify, mpv, …). Bound to
+            # the XF86AudioPlay keysym my ZSA keyboard emits, used across hosts.
+            "XF86AudioPlay" = "exec ${lib.getExe pkgs.playerctl} play-pause";
             "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set 5%-";
             "XF86MonBrightnessUp" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set +5%";
             # Full-screen screenshot to clipboard. F9 (PrtSc) emits Print.
@@ -637,6 +640,7 @@ in
 
       # Media-key helpers
       pamixer # Audio volume / mute via pulse/pipewire
+      playerctl # MPRIS media control (XF86AudioPlay play/pause)
       brightnessctl # Backlight control via systemd-logind
       wlr-randr # Wayland output config (display switching)
       wdisplays # GUI for output layout (bound to F7 / XF86Display)
