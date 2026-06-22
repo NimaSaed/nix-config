@@ -9,6 +9,8 @@ let
   # UI colours come from the active system theme's semantic map (my.ui, derived
   # from my.activeTheme — see home/nima/common/core/theme.nix).
   ui = config.my.ui;
+  # fuzzel expects colours as RRGGBBAA hex with no leading '#'.
+  fz = c: "${lib.toLower (lib.removePrefix "#" c)}ff";
 in
 {
   # ===========================================================================
@@ -352,6 +354,38 @@ in
     };
 
     # =========================================================================
+    # fuzzel — application launcher (theme-driven)
+    # =========================================================================
+    # The sway menu (bound to Mod+d). Colours follow the active theme via my.ui:
+    # accent border, accent-filled selection with auto-contrasted text, and the
+    # accent used to highlight the matched substring.
+    programs.fuzzel = {
+      enable = true;
+      settings = {
+        main = {
+          # fuzzel resolves .desktop Icon= names against its own icon-theme (not
+          # the GTK one), defaulting to the sparse hicolor — so apps that ship no
+          # icon (Slack, Zoom) show blank. Point it at Papirus (same theme the
+          # rest of the desktop uses), which has matching app icons.
+          icon-theme = "Papirus";
+        };
+        border = {
+          width = 2;
+          radius = 10;
+        };
+        colors = {
+          background = fz ui.surface;
+          text = fz ui.onSurface;
+          match = fz ui.accent;
+          selection = fz ui.accent;
+          selection-text = fz ui.onAccent;
+          selection-match = fz ui.onAccent;
+          border = fz ui.accent;
+        };
+      };
+    };
+
+    # =========================================================================
     # swayidle — idle lock, display power-off, and lock before suspend
     # =========================================================================
     # Without an idle daemon listening on logind's PrepareForSleep signal,
@@ -570,7 +604,6 @@ in
       wl-clipboard # Wayland clipboard (wl-copy / wl-paste)
       grim # Screenshot tool
       slurp # Region selection for screenshots
-      fuzzel # Application launcher
       swaylock # Screen locker
       nerd-fonts.symbols-only # Icon glyphs for the i3status-rust bar
 
