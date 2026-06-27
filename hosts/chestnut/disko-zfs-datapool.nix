@@ -121,6 +121,15 @@
             mountpoint = "/data/haos";
             options.recordsize = "1M";
           };
+
+          # Scans - Paperless consume dir; small files, transient (no snapshots)
+          "data/scans" = {
+            type = "zfs_fs";
+            options.mountpoint = "legacy";
+            mountpoint = "/data/scans";
+            options.recordsize = "128K";
+            options."com.sun:auto-snapshot" = "false";
+          };
         };
       };
     };

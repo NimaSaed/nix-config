@@ -33,8 +33,24 @@ in
     gid = 1002;
   };
 
-  # Decrypt the Samba password from sops
+  # Scanner user for the scans share (locked system account, group poddy for Paperless)
+  users.users.scanner = {
+    isSystemUser = true;
+    group = "scanner";
+    extraGroups = [ "poddy" ];
+    shell = "${pkgs.shadow}/bin/nologin";
+  };
+
+  users.groups.scanner = { };
+
+  # Decrypt the Samba passwords from sops
   sops.secrets.samba_password = {
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
+  sops.secrets.samba_scanner_password = {
     owner = "root";
     group = "root";
     mode = "0400";
@@ -125,6 +141,20 @@ in
         # VFS modules for extended attributes (useful for some apps)
         "vfs objects" = "streams_xattr";
       };
+
+      # Scan share for Brother MFC-L8390CDW; consumed by Paperless (group poddy)
+      "scans" = {
+        "path" = "/data/scans";
+        "browseable" = "no";
+        "read only" = "no";
+        "guest ok" = "no";
+        "valid users" = "scanner";
+        "force group" = "poddy";
+        "create mask" = "0660";
+        "force create mode" = "0660";
+        "directory mask" = "2770";
+        "force directory mode" = "2770";
+      };
     };
   };
 
@@ -134,8 +164,11 @@ in
     openFirewall = true;
   };
 
-  # Ensure Samba log directory exists
-  systemd.tmpfiles.rules = [ "d /var/log/samba 0755 root root - -" ];
+  # Ensure Samba log directory exists; scans dir setgid poddy for Paperless access
+  systemd.tmpfiles.rules = [
+    "d /var/log/samba 0755 root root - -"
+    "d /data/scans 2770 root poddy - -"
+  ];
 
   # Automatically set up Samba user password from sops secret
   # This runs after samba-smbd starts and reads the password from sops
@@ -156,6 +189,23 @@ in
     script = ''
       PASSWORD=$(cat ${config.sops.secrets.samba_password.path} | tr -d '\n')
       (echo "$PASSWORD"; echo "$PASSWORD") | ${samba}/bin/smbpasswd -s -a samby
+    '';
+  };
+
+  systemd.services.samba-scanner-setup = {
+    description = "Set up Samba user password for scanner";
+    after = [ "samba-smbd.service" ];
+    requires = [ "samba-smbd.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+
+    script = ''
+      PASSWORD=$(cat ${config.sops.secrets.samba_scanner_password.path} | tr -d '\n')
+      (echo "$PASSWORD"; echo "$PASSWORD") | ${samba}/bin/smbpasswd -s -a scanner
     '';
   };
 }
