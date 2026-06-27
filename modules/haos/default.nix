@@ -152,6 +152,10 @@ in
       requires = [ "network-online.target" ];
       after = [ "network-online.target" ];
 
+      # Refuse to (re)create the image unless the data mount is active, so a slow
+      # ZFS import can never make the missing-file check regenerate a blank disk.
+      unitConfig.RequiresMountsFor = cfg.dataDir;
+
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
@@ -197,12 +201,15 @@ in
     systemd.services.haos-vm = {
       description = "Home Assistant OS QEMU/KVM VM";
       wantedBy = [ "multi-user.target" ];
+      wants = [ "network-online.target" ];
       requires = [ "haos-image-setup.service" ];
       after = [
         "haos-image-setup.service"
         "network-online.target"
         "sys-subsystem-net-devices-${lib.replaceStrings ["."] ["-"] bridgeName}.device"
       ];
+
+      unitConfig.RequiresMountsFor = cfg.dataDir;
 
       serviceConfig = {
         Type = "simple";
