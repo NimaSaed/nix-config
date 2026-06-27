@@ -17,6 +17,187 @@ let
   immichCfg = config.services.pods.immich;
   aiCfg = config.services.pods.ai;
   baseDN = authCfg._baseDN;
+
+  # Emit an OIDC client only when its backing service is enabled, so a host that
+  # runs Authelia without a given pod (or without the haos module) still evaluates.
+  mkOidcClient =
+    enabled: body:
+    lib.optionalString enabled (
+      "\n"
+      + lib.concatMapStringsSep "\n" (line: if line == "" then "" else "      " + line) (
+        lib.splitString "\n" (lib.removeSuffix "\n" body)
+      )
+    );
+
+  oidcClients =
+    (mkOidcClient nextcloudCfg.enable ''
+      - client_id: nextcloud
+        client_name: NextCloud
+        # Public client: user_oidc auto-enables PKCE when the discovery doc advertises
+        # code_challenge_methods_supported. PKCE S256 replaces the client secret as
+        # proof of identity — token_endpoint_auth_method=none with PKCE is secure.
+        public: true
+        authorization_policy: nextcloud_access
+        claims_policy: nextcloud_userinfo
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - "https://${nextcloudCfg.subdomain}.${domain}/apps/user_oidc/code"
+        scopes:
+          - openid
+          - profile
+          - email
+          - groups
+          - nextcloud_userinfo
+        response_types:
+          - code
+        grant_types:
+          - authorization_code
+        consent_mode: implicit
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+    '')
+    + (mkOidcClient mediaCfg.jellyfin.enable ''
+      - client_id: jellyfin
+        client_name: Jellyfin
+        client_secret: '{{ secret "/secrets/jellyfin_client_secret" }}'
+        public: false
+        authorization_policy: jellyfin_access
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - "https://${mediaCfg.jellyfin.subdomain}.${domain}/sso/OID/redirect/authelia"
+        scopes:
+          - openid
+          - profile
+          - groups
+        response_types:
+          - code
+        grant_types:
+          - authorization_code
+        consent_mode: implicit
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: client_secret_post
+    '')
+    + (mkOidcClient aiCfg.litellm.enable ''
+      - client_id: litellm
+        client_name: LiteLLM
+        client_secret: '{{ secret "/secrets/litellm_client_secret" }}'
+        public: false
+        authorization_policy: litellm_access
+        claims_policy: litellm_policy
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - "https://${aiCfg.litellm.subdomain}.${domain}/sso/callback"
+        scopes:
+          - openid
+          - profile
+          - email
+          - litellm_scope
+        response_types:
+          - code
+        grant_types:
+          - authorization_code
+        consent_mode: implicit
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: client_secret_basic
+    '')
+    + (mkOidcClient immichCfg.enable ''
+      - client_id: immich
+        client_name: Immich
+        client_secret: '{{ secret "/secrets/immich_client_secret" }}'
+        public: false
+        authorization_policy: immich_access
+        claims_policy: immich_policy
+        redirect_uris:
+          - "https://${immichCfg.subdomain}.${domain}/auth/login"
+          - "https://${immichCfg.subdomain}.${domain}/user-settings"
+          - "app.immich:///oauth-callback"
+        scopes:
+          - openid
+          - profile
+          - email
+          - immich_scope
+        response_types:
+          - code
+        grant_types:
+          - authorization_code
+        consent_mode: implicit
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: client_secret_post
+    '')
+    + (mkOidcClient vaultwardenCfg.enable ''
+      - client_id: vaultwarden
+        client_name: Vaultwarden
+        client_secret: '{{ secret "/secrets/vaultwarden_client_secret" }}'
+        public: false
+        authorization_policy: vaultwarden_access
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - "https://${vaultwardenCfg.subdomain}.${domain}/identity/connect/oidc-signin"
+        scopes:
+          - openid
+          - profile
+          - email
+        response_types:
+          - code
+        grant_types:
+          - authorization_code
+        consent_mode: implicit
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: client_secret_basic
+    '')
+    + (mkOidcClient aiCfg.openwebui.enable ''
+      - client_id: openwebui
+        client_name: Open WebUI
+        client_secret: '{{ secret "/secrets/openwebui_client_secret" }}'
+        public: false
+        authorization_policy: openwebui_access
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - "https://${aiCfg.openwebui.subdomain}.${domain}/oauth/oidc/callback"
+        scopes:
+          - openid
+          - profile
+          - email
+          - groups
+        response_types:
+          - code
+        grant_types:
+          - authorization_code
+        consent_mode: implicit
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: client_secret_basic
+    '')
+    + (mkOidcClient (config.services.haos.enable or false) ''
+      - client_id: home-assistant
+        client_name: Home Assistant
+        client_secret: '{{ secret "/secrets/homeassistant_client_secret" }}'
+        public: false
+        authorization_policy: homeassistant_access
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - "https://${config.services.haos.subdomain}.${domain}/auth/oidc/callback"
+        scopes:
+          - openid
+          - profile
+          - groups
+        response_types:
+          - code
+        grant_types:
+          - authorization_code
+        consent_mode: implicit
+        token_endpoint_auth_method: client_secret_post
+    '');
 in
 {
   options.services.pods.auth.authelia.configFile = lib.mkOption {
@@ -216,161 +397,7 @@ in
               key: {{ secret "/secrets/oidc_jwks_key" | mindent 10 "|" | msquote }}
               certificate_chain: {{ secret "/secrets/oidc_jwks_cert" | mindent 10 "|" | msquote }}
 
-          clients:
-            - client_id: nextcloud
-              client_name: NextCloud
-              # Public client: user_oidc auto-enables PKCE when the discovery doc advertises
-              # code_challenge_methods_supported. PKCE S256 replaces the client secret as
-              # proof of identity — token_endpoint_auth_method=none with PKCE is secure.
-              public: true
-              authorization_policy: nextcloud_access
-              claims_policy: nextcloud_userinfo
-              require_pkce: true
-              pkce_challenge_method: S256
-              redirect_uris:
-                - "https://${nextcloudCfg.subdomain}.${domain}/apps/user_oidc/code"
-              scopes:
-                - openid
-                - profile
-                - email
-                - groups
-                - nextcloud_userinfo
-              response_types:
-                - code
-              grant_types:
-                - authorization_code
-              consent_mode: implicit
-              access_token_signed_response_alg: none
-              userinfo_signed_response_alg: none
-            - client_id: jellyfin
-              client_name: Jellyfin
-              client_secret: '{{ secret "/secrets/jellyfin_client_secret" }}'
-              public: false
-              authorization_policy: jellyfin_access
-              require_pkce: true
-              pkce_challenge_method: S256
-              redirect_uris:
-                - "https://${mediaCfg.jellyfin.subdomain}.${domain}/sso/OID/redirect/authelia"
-              scopes:
-                - openid
-                - profile
-                - groups
-              response_types:
-                - code
-              grant_types:
-                - authorization_code
-              consent_mode: implicit
-              access_token_signed_response_alg: none
-              userinfo_signed_response_alg: none
-              token_endpoint_auth_method: client_secret_post
-            - client_id: litellm
-              client_name: LiteLLM
-              client_secret: '{{ secret "/secrets/litellm_client_secret" }}'
-              public: false
-              authorization_policy: litellm_access
-              claims_policy: litellm_policy
-              require_pkce: true
-              pkce_challenge_method: S256
-              redirect_uris:
-                - "https://${aiCfg.litellm.subdomain}.${domain}/sso/callback"
-              scopes:
-                - openid
-                - profile
-                - email
-                - litellm_scope
-              response_types:
-                - code
-              grant_types:
-                - authorization_code
-              consent_mode: implicit
-              access_token_signed_response_alg: none
-              userinfo_signed_response_alg: none
-              token_endpoint_auth_method: client_secret_basic
-            - client_id: immich
-              client_name: Immich
-              client_secret: '{{ secret "/secrets/immich_client_secret" }}'
-              public: false
-              authorization_policy: immich_access
-              claims_policy: immich_policy
-              redirect_uris:
-                - "https://${immichCfg.subdomain}.${domain}/auth/login"
-                - "https://${immichCfg.subdomain}.${domain}/user-settings"
-                - "app.immich:///oauth-callback"
-              scopes:
-                - openid
-                - profile
-                - email
-                - immich_scope
-              response_types:
-                - code
-              grant_types:
-                - authorization_code
-              consent_mode: implicit
-              access_token_signed_response_alg: none
-              userinfo_signed_response_alg: none
-              token_endpoint_auth_method: client_secret_post
-            - client_id: vaultwarden
-              client_name: Vaultwarden
-              client_secret: '{{ secret "/secrets/vaultwarden_client_secret" }}'
-              public: false
-              authorization_policy: vaultwarden_access
-              require_pkce: true
-              pkce_challenge_method: S256
-              redirect_uris:
-                - "https://${vaultwardenCfg.subdomain}.${domain}/identity/connect/oidc-signin"
-              scopes:
-                - openid
-                - profile
-                - email
-              response_types:
-                - code
-              grant_types:
-                - authorization_code
-              consent_mode: implicit
-              access_token_signed_response_alg: none
-              userinfo_signed_response_alg: none
-              token_endpoint_auth_method: client_secret_basic
-            - client_id: openwebui
-              client_name: Open WebUI
-              client_secret: '{{ secret "/secrets/openwebui_client_secret" }}'
-              public: false
-              authorization_policy: openwebui_access
-              require_pkce: true
-              pkce_challenge_method: S256
-              redirect_uris:
-                - "https://${aiCfg.openwebui.subdomain}.${domain}/oauth/oidc/callback"
-              scopes:
-                - openid
-                - profile
-                - email
-                - groups
-              response_types:
-                - code
-              grant_types:
-                - authorization_code
-              consent_mode: implicit
-              access_token_signed_response_alg: none
-              userinfo_signed_response_alg: none
-              token_endpoint_auth_method: client_secret_basic
-            - client_id: home-assistant
-              client_name: Home Assistant
-              client_secret: '{{ secret "/secrets/homeassistant_client_secret" }}'
-              public: false
-              authorization_policy: homeassistant_access
-              require_pkce: true
-              pkce_challenge_method: S256
-              redirect_uris:
-                - "https://${config.services.haos.subdomain}.${domain}/auth/oidc/callback"
-              scopes:
-                - openid
-                - profile
-                - groups
-              response_types:
-                - code
-              grant_types:
-                - authorization_code
-              consent_mode: implicit
-              token_endpoint_auth_method: client_secret_post
+          clients:${oidcClients}
     '';
     description = "Generated Authelia configuration.yml";
   };
