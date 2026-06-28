@@ -8,7 +8,7 @@
 
 let
   # rycee's NUR addon set, scoped to this system's architecture.
-  addons = inputs.firefox-addons.packages.${pkgs.system};
+  addons = inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system};
 
   # Semantic UI colours from the active system theme (see
   # home/nima/common/core/theme.nix); interpolated into the chrome CSS below so
@@ -58,9 +58,18 @@ in
   programs.firefox = {
     enable = true;
 
+    # On Darwin, don't let Nix install Firefox — Homebrew provides the .app
+    # (see hosts/mac/default.nix) and `pkgs.firefox` would be a slow from-source
+    # build (firefox-bin is Linux-only). `package = null` makes Home Manager
+    # manage only the profile (settings, search, extensions, userChrome/Content),
+    # which it writes to ~/Library/Application Support/Firefox on macOS.
+    package = if pkgs.stdenv.isDarwin then null else pkgs.firefox;
+
     # Let the Bitwarden browser extension talk to the bitwarden-desktop app
-    # (browser unlock / autofill via the native messaging bridge).
-    nativeMessagingHosts = [ pkgs.bitwarden-desktop ];
+    # (browser unlock / autofill via the native messaging bridge). Skipped on
+    # Darwin: the manifest is only wired through a Nix-wrapped Firefox, and the
+    # Homebrew Bitwarden app registers its own native-messaging bridge there.
+    nativeMessagingHosts = lib.optionals (!pkgs.stdenv.isDarwin) [ pkgs.bitwarden-desktop ];
 
     profiles.default = {
       isDefault = true;
@@ -120,11 +129,12 @@ in
         "browser.aboutConfig.showWarning" = false;
         "datareporting.healthreport.uploadEnabled" = false;
         "browser.newtabpage.activity-stream.feeds.section.topstories" = false;
-        # New tab / home stay on about:newtab / about:home (NOT about:blank,
-        # which userContent.css can't recolor — it always shows Firefox's
-        # default near-black canvas). The userContent rule below paints these
-        # Deep Blue and hides all their content, so they look blank but themed.
         "browser.startup.homepage" = "about:home";
+        "browser.newtabpage.enabled" = true;
+        "browser.newtabpage.activity-stream.newtabWallpapers.enabled" = true;
+        "browser.newtabpage.activity-stream.newtabWallpapers.user.enabled" = true;
+        "browser.newtabpage.activity-stream.newtabWallpapers.customColor.enabled" = true;
+        "browser.newtabpage.activity-stream.newtabWallpapers.wallpaper" = "solid-color-picker-${ui.surface}";
 
         # --- Telemetry / data collection ---------------------------------
         "toolkit.telemetry.enabled" = false;
@@ -139,6 +149,11 @@ in
         "browser.newtabpage.activity-stream.showSponsoredTopSites" = false;
         "browser.newtabpage.activity-stream.feeds.topsites" = false;
         "browser.newtabpage.activity-stream.feeds.section.highlights" = false;
+        "browser.newtabpage.activity-stream.showSearch" = false;
+        "browser.newtabpage.activity-stream.showWeather" = false;
+        "browser.newtabpage.activity-stream.system.showWeather" = false;
+        "browser.newtabpage.activity-stream.widgets.system.enabled" = false;
+        "browser.newtabpage.activity-stream.logowordmark.alwaysVisible" = false;
 
         # --- Form autofill (Bitwarden handles logins; kill the rest) -----
         "extensions.formautofill.addresses.enabled" = false;

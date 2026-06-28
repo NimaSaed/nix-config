@@ -15,6 +15,7 @@
     ./common/optional/aerospace.nix
     ./common/optional/bitwarden.nix
     ./common/optional/bitwarden-ssh-agent.nix
+    ./common/optional/firefox.nix
   ];
 
   # ===========================================================================
