@@ -71,6 +71,7 @@ in
           "authelia/oidc_client_secret_openwebui"
           "authelia/oidc_client_secret_vaultwarden"
           "authelia/oidc_client_secret_homeassistant"
+          "authelia/oidc_client_secret_paperless"
           "authelia/smtp_address"
           "authelia/smtp_username"
           "authelia/redis_password"
@@ -203,6 +204,9 @@ in
                   "${
                     nixosConfig.sops.secrets."authelia/oidc_client_secret_homeassistant".path
                   }:/secrets/homeassistant_client_secret:ro"
+                  "${
+                    nixosConfig.sops.secrets."authelia/oidc_client_secret_paperless".path
+                  }:/secrets/paperless_client_secret:ro"
                   "${nixosConfig.sops.secrets."authelia/redis_password".path}:/secrets/redis_password:ro"
                 ];
               };
