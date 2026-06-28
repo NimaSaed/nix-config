@@ -201,14 +201,15 @@ in
                 };
               }
             ])
-            # (lib.optionals toolsCfg.changeDetection.enable [
-            #   {
-            #     "Change Detection" = {
-            #       icon = "sh-changedetection";
-            #       href = "https://${toolsCfg.changeDetection.subdomain}.${domain}/";
-            #     };
-            #   }
-            # ])
+            (lib.optionals toolsCfg.changedetection.enable [
+              {
+                "Change Detection" = {
+                  icon = "sh-changedetection";
+                  href = "https://${toolsCfg.changedetection.subdomain}.${domain}/";
+                  description = "Website change monitor and alerting";
+                };
+              }
+            ])
           ];
         }
 

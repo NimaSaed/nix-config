@@ -262,7 +262,7 @@ in
             subject:
               - 'group:scrypted-users'
           - domain:
-              - "changedetection.${domain}"
+              - "${toolsCfg.changedetection.subdomain}.${domain}"
             policy: two_factor
             subject:
               - 'group:changedetection-users'
