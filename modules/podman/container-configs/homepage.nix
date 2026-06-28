@@ -16,6 +16,7 @@ let
   shCfg = config.services.pods.smart-home;
   immichCfg = config.services.pods.immich;
   aiCfg = config.services.pods.ai;
+  paperlessCfg = config.services.pods.paperless;
   vaultwardenCfg = config.services.pods.vaultwarden;
 in
 {
@@ -157,6 +158,15 @@ in
                 };
               }
             ])
+            (lib.optionals paperlessCfg.enable [
+              {
+                Paperless = {
+                  icon = "sh-paperless-ngx";
+                  href = "https://${paperlessCfg.subdomain}.${domain}/";
+                  description = "Document management and OCR archive";
+                };
+              }
+            ])
           ];
         }
 
@@ -271,6 +281,24 @@ in
                   icon = "sh-open-webui";
                   href = "https://${aiCfg.openwebui.subdomain}.${domain}/";
                   description = "AI chat interface";
+                };
+              }
+            ])
+            (lib.optionals paperlessCfg.ai.enable [
+              {
+                "Paperless AI" = {
+                  icon = "sh-paperless-ngx";
+                  href = "https://${paperlessCfg.ai.subdomain}.${domain}/";
+                  description = "LLM document analysis and chat";
+                };
+              }
+            ])
+            (lib.optionals paperlessCfg.gpt.enable [
+              {
+                "Paperless GPT" = {
+                  icon = "sh-paperless-ngx";
+                  href = "https://${paperlessCfg.gpt.subdomain}.${domain}/";
+                  description = "LLM tagging and title generation";
                 };
               }
             ])
