@@ -53,6 +53,32 @@ in
         description = "Subdomain for Dozzle log viewer";
       };
     };
+
+    changedetection = {
+      enable = lib.mkEnableOption "changedetection.io website change monitor in the tools pod";
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "changedetection";
+        description = "Subdomain for changedetection.io";
+      };
+      browser = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = ''
+          Run the sockpuppetbrowser sidecar so changedetection.io can fetch
+          JavaScript-rendered pages. Costs extra memory (a Chromium process per
+          concurrent browser-backed fetch); disable for plain HTTP fetching only.
+        '';
+      };
+      fetchWorkers = lib.mkOption {
+        type = lib.types.ints.positive;
+        default = 10;
+        description = ''
+          Number of parallel fetchers (FETCH_WORKERS). Lower this on
+          resource-constrained hosts, especially when the browser sidecar is on.
+        '';
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -70,9 +96,13 @@ in
       {
         virtualisation.quadlet =
           let
-            inherit (config.virtualisation.quadlet) networks pods;
+            inherit (config.virtualisation.quadlet) networks pods volumes;
           in
           {
+            volumes.tools_changedetection = lib.mkIf cfg.changedetection.enable {
+              volumeConfig = { };
+            };
+
             pods.tools = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
@@ -184,6 +214,81 @@ in
                 ];
               };
             };
+
+            containers.tools-changedetection = lib.mkIf cfg.changedetection.enable {
+              autoStart = true;
+
+              serviceConfig = {
+                Restart = "always";
+                TimeoutStopSec = 70;
+              };
+
+              unitConfig = {
+                Description = "changedetection.io website change monitor container";
+                After = [ pods.tools.ref ];
+              };
+
+              containerConfig = {
+                image = "ghcr.io/dgtlmoon/changedetection.io:latest";
+                pod = pods.tools.ref;
+                autoUpdate = "registry";
+
+                labels = mkTraefikLabels {
+                  name = "changedetection";
+                  port = 5000;
+                  subdomain = cfg.changedetection.subdomain;
+                  middlewares = true;
+                };
+
+                environments = {
+                  BASE_URL = "https://${cfg.changedetection.subdomain}.${domain}";
+                  # Honour X-Forwarded-* headers from Traefik.
+                  USE_X_SETTINGS = "1";
+                  FETCH_WORKERS = toString cfg.changedetection.fetchWorkers;
+                  DISABLE_VERSION_CHECK = "true";
+                }
+                // lib.optionalAttrs cfg.changedetection.browser {
+                  # Sidecar shares the pod's network namespace, reachable on localhost.
+                  PLAYWRIGHT_DRIVER_URL = "ws://127.0.0.1:3000";
+                };
+
+                volumes = [
+                  "${volumes.tools_changedetection.ref}:/datastore"
+                ];
+              };
+            };
+
+            containers.tools-changedetection-browser =
+              lib.mkIf (cfg.changedetection.enable && cfg.changedetection.browser)
+                {
+                  autoStart = true;
+
+                  serviceConfig = {
+                    Restart = "always";
+                    TimeoutStopSec = 70;
+                  };
+
+                  unitConfig = {
+                    Description = "Sockpuppet browser for changedetection.io";
+                    After = [ pods.tools.ref ];
+                  };
+
+                  containerConfig = {
+                    image = "docker.io/dgtlmoon/sockpuppetbrowser:latest";
+                    pod = pods.tools.ref;
+                    autoUpdate = "registry";
+
+                    # Chromium needs a larger /dev/shm than the default 64M.
+                    shmSize = "2g";
+
+                    environments = {
+                      SCREEN_WIDTH = "1920";
+                      SCREEN_HEIGHT = "1024";
+                      SCREEN_DEPTH = "16";
+                      MAX_CONCURRENT_CHROME_PROCESSES = toString cfg.changedetection.fetchWorkers;
+                    };
+                  };
+                };
           };
       };
 

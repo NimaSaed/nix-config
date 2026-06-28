@@ -31,6 +31,10 @@
       homepage.enable = true;
       itTools.enable = true;
       dozzle.enable = true;
+      changedetection = {
+        enable = true;
+        subdomain = "detection";
+      };
     };
     media = {
       enable = true;
