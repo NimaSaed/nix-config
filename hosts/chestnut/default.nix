@@ -63,6 +63,13 @@
       # openwebui.enable = false;
     };
     vaultwarden.enable = true;
+    paperless = {
+      enable = true;
+      ocrLanguage = "eng+nld";
+      ocrLanguages = "nld";
+      ai.enable = true;
+      gpt.enable = true;
+    };
   };
 
   services.haos = {
