@@ -249,7 +249,8 @@ in
                 }
                 // lib.optionalAttrs cfg.changedetection.browser {
                   # Sidecar shares the pod's network namespace, reachable on localhost.
-                  PLAYWRIGHT_DRIVER_URL = "ws://127.0.0.1:3000";
+                  # Non-default port avoids clashing with Homepage (3000) in the pod.
+                  PLAYWRIGHT_DRIVER_URL = "ws://127.0.0.1:3001";
                 };
 
                 volumes = [
@@ -277,6 +278,16 @@ in
                     image = "docker.io/dgtlmoon/sockpuppetbrowser:latest";
                     pod = pods.tools.ref;
                     autoUpdate = "registry";
+
+                    # Move the websocket (3000) and stats (8080) ports off the
+                    # defaults so they don't clash with Homepage and Dozzle, which
+                    # share this pod's single network namespace.
+                    exec = [
+                      "--port"
+                      "3001"
+                      "--sport"
+                      "8001"
+                    ];
 
                     # Chromium needs a larger /dev/shm than the default 64M.
                     shmSize = "2g";
