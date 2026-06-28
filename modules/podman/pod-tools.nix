@@ -281,8 +281,11 @@ in
 
                     # Move the websocket (3000) and stats (8080) ports off the
                     # defaults so they don't clash with Homepage and Dozzle, which
-                    # share this pod's single network namespace.
+                    # share this pod's single network namespace. The image's
+                    # entrypoint is tini, so the CMD (the server launcher script)
+                    # must be repeated before the flags it forwards to server.py.
                     exec = [
+                      "/usr/local/bin/entrypoint.sh"
                       "--port"
                       "3001"
                       "--sport"
