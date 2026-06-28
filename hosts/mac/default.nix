@@ -96,7 +96,7 @@
     # GUI applications
     casks = [
       "basictex" # LaTeX distribution
-      "burp-suite-professional" # Security testing
+      "burp-suite" # Security testing (renamed from burp-suite-professional)
       "grammarly-desktop" # Writing assistant
       "font-jetbrains-mono" # Font (backup via Homebrew)
       "bambu-studio" # 3D printing slicer
@@ -124,6 +124,9 @@
       cleanup = "zap"; # Remove unlisted packages
       autoUpdate = true; # Auto-update Homebrew
       upgrade = true; # Auto-upgrade packages
+      # Pass --force so `brew bundle --cleanup --zap` runs non-interactively
+      # (current Homebrew otherwise prompts "proceed with the cleanup? [y/n]").
+      extraFlags = [ "--force" ];
     };
   };
 
