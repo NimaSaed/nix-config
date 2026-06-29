@@ -378,6 +378,17 @@ in
                 pod = pods.paperless.ref;
                 autoUpdate = "registry";
 
+                # Rootless: run the web container directly as gid 0, which inside the
+                # user namespace maps back to host poddy (1001) — the owning group of
+                # the bind-mounted consume dir (/data/scans, mode 2770 rwxrws---), so
+                # consumed files can be deleted after import. Paperless's blessed
+                # rootless path is the user: directive, NOT USERMAP_*. Per-container
+                # userns is impossible here (pod members share one namespace, which is
+                # why pod-wide keep-id broke Postgres). The :U on the named volumes
+                # below chowns them to 1000:0 so the non-root process can write them.
+                user = "1000";
+                group = "0";
+
                 environmentFiles = [ nixosConfig.sops.templates."paperless-env".path ];
 
                 environments = {
@@ -414,9 +425,10 @@ in
                 };
 
                 volumes = [
-                  "${volumes.paperless_data.ref}:/usr/src/paperless/data"
-                  "${volumes.paperless_media.ref}:/usr/src/paperless/media"
-                  "${volumes.paperless_export.ref}:/usr/src/paperless/export"
+                  "${volumes.paperless_data.ref}:/usr/src/paperless/data:U"
+                  "${volumes.paperless_media.ref}:/usr/src/paperless/media:U"
+                  "${volumes.paperless_export.ref}:/usr/src/paperless/export:U"
+                  # No :U here — that would chown the live Samba scan share on the host.
                   "${cfg.consumeDir}:/usr/src/paperless/consume:rw"
                 ];
 
