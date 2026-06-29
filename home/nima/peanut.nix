@@ -83,10 +83,10 @@
   # pixel density as the 27" 4K LG (163 DPI), so the DPI formula in
   # common/optional/sway.nix would give it the same scale, 1.75. But at 1.75
   # the laptop's logical space would be a cramped ~1097x686. Since a laptop
-  # screen is viewed up close, smaller text is fine: pin 1.25 (logical
+  # screen is viewed up close, smaller text is fine: pin 1.15 (logical
   # 1536x960). External monitors (home LG 4K, whatever the office dock has)
   # keep the automatic physical-size-based scale.
-  my.sway.autoscale.overrides."eDP-1" = "1.25";
+  my.sway.autoscale.overrides."eDP-1" = "1.15";
 
   # ThinkPad F12 "star" key — emits XF86Favorites. Toggle media play/pause.
   # playerctl talks MPRIS over D-Bus, so it controls whatever player is
