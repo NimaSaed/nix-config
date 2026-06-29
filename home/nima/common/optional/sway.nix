@@ -182,6 +182,13 @@ in
           }
         ];
 
+        # Mic and speaker start muted but pre-set to sensible levels, so the
+        # first unmute lands at 70%/50% rather than wherever they were left.
+        startup = [
+          { command = "${pkgs.pamixer}/bin/pamixer --set-volume 50 --mute"; }
+          { command = "${pkgs.pamixer}/bin/pamixer --default-source --set-volume 70 --mute"; }
+        ];
+
         # Status bar — themed bar with the focused workspace highlighted in the
         # accent colour (text auto-contrasted via onAccent for readability).
         # Status line content comes from i3status-rust (configured below).
@@ -259,6 +266,20 @@ in
             "XF86Display" = "exec ${lib.getExe pkgs.wdisplays}";
           };
       };
+
+      extraConfig = ''
+        seat * hide_cursor 1500
+        seat * hide_cursor when-typing enable
+
+        mode "Power: (s) shutdown  (r) reboot  (l) logout" {
+            bindsym s exec systemctl poweroff
+            bindsym r exec systemctl reboot
+            bindsym l exec ${pkgs.sway}/bin/swaymsg exit
+            bindsym Return mode default
+            bindsym Escape mode default
+        }
+        bindsym --no-warn Mod4+Shift+e mode "Power: (s) shutdown  (r) reboot  (l) logout"
+      '';
     };
 
     # =========================================================================
