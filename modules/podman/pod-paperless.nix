@@ -225,11 +225,6 @@ in
             pods.paperless = {
               podConfig = {
                 networks = [ networks.reverse_proxy.ref ];
-                # Map host poddy (1001) to the image's paperless user (1000) so the
-                # bind-mounted consume dir (group poddy, mode 2770) is readable and
-                # consumed files can be deleted after import. Must live on the pod —
-                # podman rejects --userns together with --pod on a container.
-                userns = "keep-id:uid=1000,gid=1000";
               };
             };
 
