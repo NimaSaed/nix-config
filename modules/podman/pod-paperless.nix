@@ -170,10 +170,10 @@ in
             RemainAfterExit = true;
             ExecStart = pkgs.writeShellScript "paperless-token-seed" ''
               set -euo pipefail
-              TOKEN=$(cat ${nixosConfig.sops.secrets."paperless/api_token".path})
-              for _ in $(seq 1 60); do
+              TOKEN=$(${pkgs.coreutils}/bin/cat ${nixosConfig.sops.secrets."paperless/api_token".path})
+              for _ in $(${pkgs.coreutils}/bin/seq 1 60); do
                 CID=$(${pkgs.podman}/bin/podman ps --format '{{.Names}}' \
-                  | ${pkgs.gnugrep}/bin/grep -E 'paperless-web' | head -n1 || true)
+                  | ${pkgs.gnugrep}/bin/grep -E 'paperless-web' | ${pkgs.coreutils}/bin/head -n1 || true)
                 if [ -n "$CID" ] && ${pkgs.podman}/bin/podman exec -e SEED_TOKEN="$TOKEN" "$CID" \
                   python3 manage.py shell -c '
               import os
@@ -186,7 +186,7 @@ in
                   echo "paperless API token seeded"
                   exit 0
                 fi
-                sleep 10
+                ${pkgs.coreutils}/bin/sleep 10
               done
               echo "paperless-token-seed: timed out waiting for admin user" >&2
               exit 1
