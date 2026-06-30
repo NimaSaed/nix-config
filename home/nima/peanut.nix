@@ -5,6 +5,13 @@
   ...
 }:
 
+let
+  # Teleport-issued SSH credentials for the company GitLab. `tsh login` writes
+  # these under ~/.tsh; the SSH cert is short-lived (~11h), so the Match exec
+  # below refreshes it on demand before git connects. The login is the local
+  # username plus the corporate domain (matches the SSO identity).
+  tshKey = "${config.home.homeDirectory}/.tsh/keys/bastion.man.nebiusinfra.net/nima@nebius.com";
+in
 {
   # Work laptop (Lenovo P14s Gen 5) — standalone home-manager on top of Ubuntu.
   # Graphics for Nix apps are provided by nix-system-graphics (see hosts/peanut),
@@ -155,12 +162,53 @@
 
     # Dev tools
     github-cli
+    teleport # `tsh` — mints short-lived SSH certs for the company GitLab via the Teleport bastion
   ];
 
   # ===========================================================================
   # Program Configurations
   # ===========================================================================
+  # `tsh` loads its minted SSH key into $SSH_AUTH_SOCK by default, but that
+  # socket is the Bitwarden agent (bitwarden-ssh-agent.nix), which rejects
+  # external key additions ("agent: failure"). We read the Teleport cert off
+  # disk in the SSH match block below, so the agent isn't needed — opt out of
+  # loading into it for every tsh invocation. The match exec also passes
+  # --no-use-local-ssh-agent so the auto-relogin path is covered regardless of
+  # how the environment is set up.
+  home.sessionVariables.TELEPORT_USE_LOCAL_SSH_AGENT = "false";
+
   programs = {
     home-manager.enable = true;
+
+    # Commit as my corporate identity in company repos. The global git config
+    # (home/nima/common/core/git.nix) uses my personal nima@nmsd.xyz — including
+    # for this nix-config repo — so this can't be set globally. Scope it to any
+    # repo whose remote is on gitlab.nebius.dev via a conditional include keyed
+    # on the remote URL, so it applies wherever the repo is cloned. The `*/**`
+    # pattern is required to span the group/repo path: plain `*` (and a bare
+    # `**` right after the `:`) won't cross the slash, but `*/**` does — verified
+    # against single-level and nested-subgroup SSH remotes.
+    git.includes = [
+      {
+        condition = "hasconfig:remote.*.url:git@gitlab.nebius.dev:*/**";
+        contents.user.email = "nima@nebius.com";
+      }
+    ];
+
+    # Company GitLab over SSH, authenticated through Teleport. Cloning/pushing
+    # gitlab.nebius.dev doesn't use a long-lived key — the Match exec runs
+    # `tsh login` (the teleport package above) whenever the cached cert is
+    # older than 11h, minting a fresh short-lived SSH certificate that git then
+    # uses. `identitiesOnly` restricts auth to these cert files, so the global
+    # Bitwarden IdentityAgent (bitwarden-ssh-agent.nix) is bypassed for this
+    # host. Peanut-only: that shared agent module is also used by hazelnut.
+    ssh.matchBlocks."gitlab.nebius.dev" = {
+      match = ''Host gitlab.nebius.dev exec "find ${tshKey}-ssh -mmin +660 -exec false {} + || $(which tsh) login --no-use-local-ssh-agent --proxy=bastion.man.nebiusinfra.net:443 bastion-man; echo -n"'';
+      identityFile = tshKey;
+      certificateFile = "${tshKey}-ssh/bastion-man-cert.pub";
+      identitiesOnly = true;
+      user = "git";
+      extraOptions.PreferredAuthentications = "publickey";
+    };
   };
 }
