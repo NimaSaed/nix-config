@@ -64,7 +64,6 @@ in
     ./pod-immich.nix
     ./pod-ai.nix
     ./pod-vaultwarden.nix
-    ./pod-paperless.nix
   ];
 
   options.services.pods = {
