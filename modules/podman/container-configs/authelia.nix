@@ -16,7 +16,6 @@ let
   shCfg = config.services.pods.smart-home;
   immichCfg = config.services.pods.immich;
   aiCfg = config.services.pods.ai;
-  paperlessCfg = config.services.pods.paperless;
   baseDN = authCfg._baseDN;
 
   # Emit an OIDC client only when its backing service is enabled, so a host that
@@ -198,28 +197,6 @@ let
           - authorization_code
         consent_mode: implicit
         token_endpoint_auth_method: client_secret_post
-    '')
-    + (mkOidcClient paperlessCfg.enable ''
-      - client_id: paperless
-        client_name: Paperless-ngx
-        client_secret: '{{ secret "/secrets/paperless_client_secret" }}'
-        public: false
-        authorization_policy: paperless_access
-        require_pkce: true
-        pkce_challenge_method: S256
-        redirect_uris:
-          - "https://${paperlessCfg.subdomain}.${domain}/accounts/oidc/authelia/login/callback/"
-        scopes:
-          - openid
-          - profile
-          - email
-          - groups
-        response_types:
-          - code
-        grant_types:
-          - authorization_code
-        consent_mode: implicit
-        token_endpoint_auth_method: client_secret_basic
     '');
 in
 {
@@ -289,12 +266,6 @@ in
             policy: two_factor
             subject:
               - 'group:changedetection-users'
-          - domain:
-              - "${paperlessCfg.ai.subdomain}.${domain}"
-              - "${paperlessCfg.gpt.subdomain}.${domain}"
-            policy: two_factor
-            subject:
-              - 'group:admins'
 
       session:
         cookies:
@@ -420,13 +391,6 @@ in
                   subject:
                     - 'group:ha-admins'
                     - 'group:ha-users'
-            paperless_access:
-              default_policy: deny
-              rules:
-                - policy: two_factor
-                  subject:
-                    - 'group:paperless-admins'
-                    - 'group:paperless-users'
 
           jwks:
             - key_id: 'authelia_key'
