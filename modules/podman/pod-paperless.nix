@@ -419,14 +419,6 @@ in
                   # Authelia's paperless_access policy; new SSO users auto-provision.
                   PAPERLESS_APPS = "allauth.socialaccount.providers.openid_connect";
                   PAPERLESS_SOCIAL_AUTO_SIGNUP = "true";
-
-                  # Sync the OIDC "groups" claim (already in SCOPE) into Paperless
-                  # Django groups on each login: a user is added/removed to match.
-                  # Paperless has NO OIDC->superuser/staff mapping, so "admin" must be
-                  # a Paperless group named exactly "paperless-admins" (matching the
-                  # LLDAP/Authelia group) that you create once in the GUI and grant
-                  # the desired permissions. Superuser status can only be set manually.
-                  PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS = "true";
                   PAPERLESS_ACCOUNT_ALLOW_SIGNUPS = "false";
                   PAPERLESS_REDIRECT_LOGIN_TO_SSO = "true";
                 };
@@ -550,14 +542,6 @@ in
 # 2. First admin login: the superuser "admin" is created from
 #    paperless/admin_password. Use it to mark SSO-provisioned users as staff/admin
 #    under Settings -> Users & Groups if they need more than default permissions.
-#
-# 2a. Group sync (PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS) maps the OIDC "groups" claim
-#     to Paperless groups by exact name. Paperless has NO OIDC->superuser mapping, so:
-#       - In Paperless GUI (as "admin"), create a group named exactly "paperless-admins"
-#         and grant it the permissions you want admins to have (typically all).
-#         Members of the LLDAP "paperless-admins" group are then added to it on login.
-#       - For true Django superuser access, promote the user manually once under
-#         Settings -> Users & Groups (or via manage.py); this cannot come from OIDC.
 #
 # 3. Verify the consume pipeline:
 #    sudo -u poddy XDG_RUNTIME_DIR=/run/user/1001 podman logs paperless-web
