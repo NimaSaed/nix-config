@@ -18,6 +18,7 @@ let
   aiCfg = config.services.pods.ai;
   paperlessCfg = config.services.pods.paperless;
   vaultwardenCfg = config.services.pods.vaultwarden;
+  haosCfg = config.services.haos or { enable = false; };
 in
 {
   options.services.pods.homepage = {
@@ -199,6 +200,15 @@ in
                   icon = "sh-vaultwarden";
                   href = "https://${vaultwardenCfg.subdomain}.${domain}/";
                   description = "Password manager";
+                };
+              }
+            ])
+            (lib.optionals haosCfg.enable [
+              {
+                "Home Assistant" = {
+                  icon = "sh-home-assistant";
+                  href = "https://${haosCfg.subdomain}.${domain}/";
+                  description = "Smart home automation platform";
                 };
               }
             ])
