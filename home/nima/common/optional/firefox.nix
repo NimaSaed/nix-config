@@ -71,6 +71,21 @@ in
     # Homebrew Bitwarden app registers its own native-messaging bridge there.
     nativeMessagingHosts = lib.optionals (!pkgs.stdenv.isDarwin) [ pkgs.bitwarden-desktop ];
 
+    # Allow every managed extension to run in private windows (the "Run in
+    # Private Windows" checkbox, normally a per-addon manual approval). Only
+    # reachable via enterprise policy (`private_browsing`, Firefox 136+ — same
+    # floor as the vertical tabs above). On Linux this lands in the wrapped
+    # package's policies.json; on Darwin Home Manager writes it to the
+    # org.mozilla.firefox user defaults (with EnterprisePoliciesEnabled), which
+    # the Homebrew Firefox.app picks up. Side effect: about:preferences shows a
+    # "your browser is being managed" notice.
+    policies.ExtensionSettings = {
+      "{446900e4-71c2-419f-a6a7-df9c091e268b}".private_browsing = true; # Bitwarden
+      "{d7742d87-e61d-4b78-b8a1-b469842139fa}".private_browsing = true; # Vimium
+      "uBlock0@raymondhill.net".private_browsing = true; # uBlock Origin
+      "jid1-MnnxcxisBPnSXQ@jetpack".private_browsing = true; # Privacy Badger
+    };
+
     profiles.default = {
       isDefault = true;
 
