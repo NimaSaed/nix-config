@@ -124,9 +124,15 @@
   # Services
   # ============================================================================
 
+  boot.kernelModules = [ "uinput" ];
+
   services.openssh = {
     enable = true;
   };
+
+  services.udev.extraRules = ''
+    KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
+  '';
 
   # Periodic TRIM for eMMC longevity
   services.fstrim.enable = true;
@@ -135,8 +141,12 @@
   # User Configuration
   # ============================================================================
 
-  # Add dialout group for RP2040 co-processor serial access (/dev/ttyACM0)
-  users.users.nima.extraGroups = [ "dialout" ];
+  # dialout: RP2040 co-processor serial access (/dev/ttyACM0)
+  # input: xremap reads keyboards and writes /dev/uinput for virtual events.
+  users.users.nima.extraGroups = [
+    "dialout"
+    "input"
+  ];
 
   # Configure root user for emergency mode access
   users.users.root = {

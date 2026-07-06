@@ -20,6 +20,38 @@
   # Allow running system-manager on a non-NixOS distro (Ubuntu).
   system-manager.allowAnyDistro = true;
 
+  # xremap needs read access to /dev/input/event* and write access to /dev/uinput
+  # for its virtual keyboard. Ubuntu already has the input group (gid 995 on
+  # this host); keep membership additive so system-manager does not replace the
+  # existing Ubuntu-managed account/group set.
+  users.groups = {
+    input.gid = 995;
+    sgx.gid = 994;
+    kvm.gid = 993;
+    render.gid = 992;
+  };
+  systemd.services.xremap-input-access = {
+    description = "Grant xremap input/uinput access";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "systemd-udevd.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "xremap-input-access" ''
+        ${pkgs.kmod}/bin/modprobe uinput
+        ${pkgs.shadow}/bin/usermod -a -G input nima
+        ${pkgs.systemd}/bin/udevadm control --reload
+        ${pkgs.systemd}/bin/udevadm trigger --subsystem-match=input || true
+        chgrp input /dev/uinput
+        chmod 0660 /dev/uinput
+      '';
+    };
+  };
+
+  environment.etc."udev/rules.d/70-xremap-uinput.rules".text = ''
+    KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
+  '';
+
   # Provide system-wide graphics drivers for Nix apps (Intel Mesa by default).
   system-graphics.enable = true;
 

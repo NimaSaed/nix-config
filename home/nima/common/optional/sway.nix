@@ -11,6 +11,7 @@ let
   ui = config.my.ui;
   # fuzzel expects colours as RRGGBBAA hex with no leading '#'.
   fz = c: "${lib.toLower (lib.removePrefix "#" c)}ff";
+  xremapConfig = "${config.xdg.configHome}/xremap/config.yml";
 in
 {
   # ===========================================================================
@@ -435,6 +436,41 @@ in
         "Utility"
         "System"
       ];
+    };
+
+    # xremap — app-aware key remapping. Firefox on Linux uses Alt+1..9 for tab
+    # selection; this keeps the preferred Ctrl+1..9 chord Firefox-only instead
+    # of capturing it globally in Sway and breaking apps like Slack.
+    xdg.configFile."xremap/config.yml".text = ''
+      keymap:
+        - name: Firefox Ctrl-number tab selection
+          application:
+            only: [firefox, Firefox]
+          exact_match: true
+          remap:
+            Ctrl-1: Alt-1
+            Ctrl-2: Alt-2
+            Ctrl-3: Alt-3
+            Ctrl-4: Alt-4
+            Ctrl-5: Alt-5
+            Ctrl-6: Alt-6
+            Ctrl-7: Alt-7
+            Ctrl-8: Alt-8
+            Ctrl-9: Alt-9
+    '';
+
+    systemd.user.services.xremap = {
+      Unit = {
+        Description = "App-aware keyboard remapping";
+        PartOf = [ "sway-session.target" ];
+        After = [ "sway-session.target" ];
+      };
+      Service = {
+        ExecStart = "${lib.getExe pkgs.xremap} --watch=device,config ${xremapConfig}";
+        Restart = "on-failure";
+        RestartSec = 2;
+      };
+      Install.WantedBy = [ "sway-session.target" ];
     };
 
     # =========================================================================
