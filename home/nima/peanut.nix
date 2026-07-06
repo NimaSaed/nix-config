@@ -27,6 +27,7 @@ in
     ./common/optional/bitwarden.nix
     ./common/optional/bitwarden-ssh-agent.nix
     ./common/optional/firefox.nix
+    ./common/optional/pipewire.nix
   ];
 
   # ===========================================================================
@@ -60,6 +61,154 @@ in
     default=gtk
     org.freedesktop.impl.portal.ScreenCast=wlr
     org.freedesktop.impl.portal.Screenshot=wlr
+  '';
+
+  # Declarative audio device preference. WirePlumber makes the default sink/
+  # source the highest priority.session among nodes currently present, so the
+  # desired setups fall out of one ordering (media keys and the bar's sound
+  # blocks always act on the default, so they follow along):
+  #   - undocked:            Speaker (1000) and internal mic (1648) win
+  #   - headphones in the 3.5mm jack (work): the UCM config models Speaker
+  #     and Headphones as mutually exclusive card profiles; a custom Lua
+  #     hook follows the jack (see sof-jack-profile.lua below)
+  #   - Blue Yeti on USB (home): Yeti monitor jack (1200) beats Speaker,
+  #     Yeti mic (2200) beats internal mic
+  # The Yeti values pin what stock heuristics happen to assign today (1109 /
+  # 2108), so the home setup keeps working if upstream reshuffles. The last
+  # rule is the 3.5mm jack mic — matched under both UCM namings (Mic2 with
+  # nixpkgs UCM, plain hw_sofhdadsp with Ubuntu's) — demoted below the
+  # internal mic (1648) so plugging a 4-pole headset cable never silently
+  # steals the default mic.
+  #
+  # A manual pick (wpctl set-default / pavucontrol) still overrides this via
+  # ~/.local/state/wireplumber/default-nodes until the picked node vanishes.
+  xdg.configFile."wireplumber/wireplumber.conf.d/51-peanut-device-priorities.conf".text = ''
+    monitor.alsa.rules = [
+      {
+        matches = [
+          { node.name = "~alsa_output.usb-Generic_Blue_Microphones.*" }
+        ]
+        actions = { update-props = { priority.session = 1200 } }
+      }
+      {
+        matches = [
+          { node.name = "~alsa_input.usb-Generic_Blue_Microphones.*" }
+        ]
+        actions = { update-props = { priority.session = 2200 } }
+      }
+      {
+        matches = [
+          { node.name = "alsa_input.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Mic2__source" }
+          { node.name = "alsa_input.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__hw_sofhdadsp__source" }
+        ]
+        actions = { update-props = { priority.session = 1500 } }
+      }
+    ]
+
+    wireplumber.components = [
+      {
+        name = sof-jack-profile.lua
+        type = script/lua
+        provides = custom.sof-jack-profile
+      }
+    ]
+    wireplumber.profiles = {
+      main = {
+        custom.sof-jack-profile = required
+      }
+    }
+  '';
+
+  # Follow the 3.5mm headphone jack across sof-hda-dsp's split UCM profiles.
+  # alsa-ucm-conf >= 1.2.11 models Speaker and Headphones as two mutually
+  # exclusive card profiles, and both always report "available" (each also
+  # contains the HDMI ports), so neither WirePlumber's availability-based
+  # profile selection nor ACP's api.acp.auto-profile ever switches on jack
+  # events — PulseAudio's module-switch-on-port-available has no PipeWire
+  # equivalent (verified empirically 2026-07-03; upstream:
+  # https://github.com/alsa-project/alsa-ucm-conf/issues/720 and /728).
+  # What DOES flip reliably on plug/unplug is the availability of the
+  # "[Out] Headphones" route, so this hook keys on that and re-asserts the
+  # matching profile. It also self-corrects after WirePlumber's stored-
+  # profile restore at startup (any Profile change re-triggers it, and it
+  # no-ops once the profile matches the jack). Delete when upstream learns
+  # to do this natively.
+  xdg.dataFile."wireplumber/scripts/sof-jack-profile.lua".text = ''
+    cutils = require ("common-utils")
+    log = Log.open_topic ("s-sof-jack")
+
+    local CARD = "alsa_card.pci-0000_00_1f.3-platform-skl_hda_dsp_generic"
+
+    -- the two analog HiFi profiles, distinguished by which device they carry
+    local function findProfile (device, want_headphones)
+      for p in device:iterate_params ("EnumProfile") do
+        local prof = cutils.parseParam (p, "EnumProfile")
+        if prof and prof.name:find ("HiFi", 1, true) then
+          if (prof.name:find ("Headphones", 1, true) ~= nil) == want_headphones then
+            return prof
+          end
+        end
+      end
+      return nil
+    end
+
+    local function sync (device)
+      local hp_available = nil
+      for p in device:iterate_params ("EnumRoute") do
+        local route = cutils.parseParam (p, "EnumRoute")
+        if route and route.name == "[Out] Headphones" then
+          hp_available = (route.available == "yes")
+        end
+      end
+      if hp_available == nil then
+        return
+      end
+
+      local active = nil
+      for p in device:iterate_params ("Profile") do
+        active = cutils.parseParam (p, "Profile")
+      end
+      -- only move between the two HiFi profiles; leave Off / Pro Audio /
+      -- other manual choices alone
+      if not active or not active.name:find ("HiFi", 1, true) then
+        return
+      end
+
+      local target = findProfile (device, hp_available)
+      if not target or target.index == active.index then
+        return
+      end
+
+      log:info (device, string.format ("headphone jack %s -> profile '%s'",
+          hp_available and "plugged" or "unplugged", target.name))
+      device:set_param ("Profile", Pod.Object {
+        "Spa:Pod:Object:Param:Profile", "Profile",
+        index = target.index,
+      })
+    end
+
+    SimpleEventHook {
+      name = "sof-jack-profile-switch",
+      interests = {
+        EventInterest {
+          Constraint { "event.type", "=", "device-added" },
+          Constraint { "device.name", "=", CARD },
+        },
+        EventInterest {
+          Constraint { "event.type", "=", "device-params-changed" },
+          Constraint { "event.subject.param-id", "c", "EnumRoute" },
+          Constraint { "device.name", "=", CARD },
+        },
+        EventInterest {
+          Constraint { "event.type", "=", "device-params-changed" },
+          Constraint { "event.subject.param-id", "c", "Profile" },
+          Constraint { "device.name", "=", CARD },
+        },
+      },
+      execute = function (event)
+        sync (event:get_subject ())
+      end
+    }:register ()
   '';
 
   # List only Nix-installed apps in the launcher. fuzzel scans every

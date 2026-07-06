@@ -56,6 +56,26 @@
       Type = "oneshot";
       RemainAfterExit = true;
       ExecStart = "${pkgs.powertop}/bin/powertop --auto-tune";
+      # auto-tune flips every power knob it finds, two of which break audio:
+      #   - snd_hda_intel power_save=1 suspends the SOF/HDA codec after 1s
+      #     idle; the wake-up latency stalls PipeWire's graph clock (clicking,
+      #     video frozen frame-by-frame) whenever output switches or resumes.
+      #   - USB autosuspend on audio-class devices (the USB-C monitor's hub
+      #     carries a mic) makes them vanish mid-stream with I/O errors.
+      # Re-assert audio-safe values right after. Only boot-time devices need
+      # the USB pass: devices hot-plugged later default to power/control=on,
+      # powertop only touches what is present when it runs. Shell builtins
+      # (read/echo) only — no coreutils on PATH in system-manager services.
+      ExecStartPost = pkgs.writeShellScript "powertop-audio-exceptions" ''
+        echo 0 > /sys/module/snd_hda_intel/parameters/power_save
+        echo N > /sys/module/snd_hda_intel/parameters/power_save_controller
+        for iface in /sys/bus/usb/devices/*/bInterfaceClass; do
+          [ -f "$iface" ] || continue
+          read -r class < "$iface"
+          [ "$class" = "01" ] || continue
+          echo on > "''${iface%/*}/../power/control"
+        done
+      '';
     };
   };
 
