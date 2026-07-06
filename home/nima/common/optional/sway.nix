@@ -160,11 +160,11 @@ in
         window.commands = [
           {
             criteria.app_id = "Bitwarden";
-            command = "resize set 50 ppt 70 ppt, move position center";
+            command = "resize set 90 ppt 70 ppt, move position center";
           }
           {
             criteria.class = "Bitwarden";
-            command = "resize set 50 ppt 70 ppt, move position center";
+            command = "resize set 90 ppt 70 ppt, move position center";
           }
           # Hold off the idle timeouts (below) whenever a window is fullscreen —
           # fullscreen video and Zoom screen-share/calls shouldn't blank or lock
