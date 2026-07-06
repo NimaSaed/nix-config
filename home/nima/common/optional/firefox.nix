@@ -79,6 +79,14 @@ in
     # org.mozilla.firefox user defaults (with EnterprisePoliciesEnabled), which
     # the Homebrew Firefox.app picks up. Side effect: about:preferences shows a
     # "your browser is being managed" notice.
+    # Don't let Firefox auto-update the Nix-managed extensions. An in-session
+    # auto-update replaces the store symlink with a real xpi; the next
+    # home-manager switch swaps the old version back in while Firefox keeps
+    # the updated one in memory, and lazily-loaded extension resources (e.g.
+    # Bitwarden's fido2 page script, i.e. passkeys) break until restart.
+    # Extension versions now move only with the firefox-addons flake input.
+    policies.ExtensionUpdate = false;
+
     policies.ExtensionSettings = {
       "{446900e4-71c2-419f-a6a7-df9c091e268b}".private_browsing = true; # Bitwarden
       "{d7742d87-e61d-4b78-b8a1-b469842139fa}".private_browsing = true; # Vimium
