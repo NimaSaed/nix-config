@@ -11,6 +11,23 @@ let
   # below refreshes it on demand before git connects. The login is the local
   # username plus the corporate domain (matches the SSO identity).
   tshKey = "${config.home.homeDirectory}/.tsh/keys/bastion.man.nebiusinfra.net/nima@nebius.com";
+
+  sway-lid-close = pkgs.writeShellApplication {
+    name = "sway-lid-close";
+    runtimeInputs = [
+      pkgs.jq
+      pkgs.sway
+    ];
+    text = ''
+      external_outputs=$(swaymsg -t get_outputs | jq '[.[] | select(.active and .name != "eDP-1")] | length')
+
+      if [ "$external_outputs" -gt 0 ]; then
+        swaymsg output eDP-1 disable
+      else
+        ${config.my.sway.lockCommand}
+      fi
+    '';
+  };
 in
 {
   # Work laptop (Lenovo P14s Gen 5) — standalone home-manager on top of Ubuntu.
@@ -254,14 +271,15 @@ in
     "XF86Favorites" = "exec ${lib.getExe pkgs.playerctl} play-pause";
   };
 
-  # Clamshell mode: disable the built-in panel when the lid closes so windows
-  # move to the external monitor (which becomes primary); re-enable on open.
-  # --locked keeps it working over the lock screen; --reload re-applies the
-  # state on config reload. eDP-1 is the laptop panel (see autoscale override
-  # above). logind leaves the machine awake when docked and still suspends on
-  # lid close when no external monitor is connected.
+  # Clamshell mode: when docked, disable the built-in panel on lid close so
+  # windows move to the external monitor (which becomes primary). When undocked,
+  # lock immediately and let logind suspend; disabling eDP-1 before suspend can
+  # leave a short unlocked-looking flash while the panel is re-enabled on wake.
+  # --locked keeps the reopen path working over the lock screen; --reload
+  # re-applies the state on config reload. eDP-1 is the laptop panel (see
+  # autoscale override above).
   wayland.windowManager.sway.extraConfig = ''
-    bindswitch --reload --locked lid:on output eDP-1 disable
+    bindswitch --reload --locked lid:on exec ${lib.getExe sway-lid-close}
     bindswitch --reload --locked lid:off output eDP-1 enable
   '';
 
