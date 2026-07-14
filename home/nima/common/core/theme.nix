@@ -217,6 +217,7 @@ in
       in
       {
         surface = palette.primary.background; # window/bar/chrome background
+        desktop = palette.bright.black; # desktop/wallpaper background
         surfaceAlt = palette.normal.black; # lifted surface (fields, tabs)
         onSurface = palette.primary.foreground; # primary text on the surface
         accent = palette.bright.yellow; # focused/active/good highlight

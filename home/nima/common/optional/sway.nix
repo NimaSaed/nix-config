@@ -92,7 +92,7 @@ in
         floating.titlebar = false;
 
         # Solid themed desktop background on every output.
-        output."*".bg = "${ui.surface} solid_color";
+        output."*".bg = "${ui.desktop} solid_color";
 
         # Window decoration colors. Titlebars are off, so in practice these
         # paint borders and the split indicator: the accent marks the focused
