@@ -605,13 +605,19 @@ in
     };
 
     # =========================================================================
-    # sway-autoscale — DPI-based output scaling
+    # sway-autoscale — DPI-based output scaling + placement
     # =========================================================================
     # Runs once at session start and then re-applies on every output hotplug
     # event (dock/undock, plugging a different office monitor). Idempotent:
-    # only calls `swaymsg output … scale` when the computed value differs from
-    # the current one, so the output events its own changes trigger converge
+    # only calls `swaymsg output …` when the computed value differs from the
+    # current one, so the output events its own changes trigger converge
     # instead of looping.
+    #
+    # Besides scaling, arrange() stacks the external output above the laptop
+    # panel, horizontally centered, so moving the mouse past eDP's top edge
+    # enters the external screen anywhere along it. Positions are derived from
+    # live logical sizes, so any monitor on any port works without per-output
+    # config.
     systemd.user.services.sway-autoscale =
       let
         cfg = config.my.sway.autoscale;
@@ -661,11 +667,48 @@ in
               done
             }
 
+            # Stack the first external output above the laptop panel. Reads
+            # swaymsg get_outputs rather than wlr-randr because its rects are
+            # in logical (post-scale) coordinates — what `output pos` expects —
+            # so the offset is right for whatever scale apply() just chose.
+            # No-op without an external or without a laptop panel; extra
+            # externals keep sway's default placement.
+            arrange() {
+              outs=$(swaymsg -t get_outputs)
+              ext=$(jq -c '[.[] | select(.active and (.name | startswith("eDP") | not))][0] // empty' <<<"$outs")
+              edp=$(jq -c '[.[] | select(.active and (.name | startswith("eDP")))][0] // empty' <<<"$outs")
+              if [ -z "$ext" ] || [ -z "$edp" ]; then
+                return 0
+              fi
+
+              ext_name=$(jq -r '.name' <<<"$ext")
+              ext_h=$(jq -r '.rect.height' <<<"$ext")
+              ext_w=$(jq -r '.rect.width' <<<"$ext")
+              edp_name=$(jq -r '.name' <<<"$edp")
+              edp_w=$(jq -r '.rect.width' <<<"$edp")
+              # Center the panel under the external so the width difference
+              # overhangs both sides equally — otherwise the flush corner
+              # blocks the pointer from crossing near one edge. Negative x
+              # (external narrower than the panel) is fine in sway's layout.
+              edp_x=$(( (ext_w - edp_w) / 2 ))
+
+              if [ "$(jq -r '.rect.x' <<<"$ext")" -ne 0 ] || [ "$(jq -r '.rect.y' <<<"$ext")" -ne 0 ]; then
+                echo "$ext_name: position 0,0"
+                swaymsg output "$ext_name" pos 0 0
+              fi
+              if [ "$(jq -r '.rect.x' <<<"$edp")" -ne "$edp_x" ] || [ "$(jq -r '.rect.y' <<<"$edp")" -ne "$ext_h" ]; then
+                echo "$edp_name: position $edp_x,$ext_h (centered below $ext_name)"
+                swaymsg output "$edp_name" pos "$edp_x" "$ext_h"
+              fi
+            }
+
             apply
+            arrange
             if [ "''${1:-}" = "--watch" ]; then
               swaymsg -t subscribe -m '["output"]' | while IFS= read -r _; do
                 sleep 0.5
                 apply
+                arrange
               done
             fi
           '';
@@ -673,7 +716,7 @@ in
       in
       lib.mkIf cfg.enable {
         Unit = {
-          Description = "Set sway output scale from physical panel DPI";
+          Description = "Set sway output scale and placement from panel geometry";
           PartOf = [ "sway-session.target" ];
           After = [ "sway-session.target" ];
         };
