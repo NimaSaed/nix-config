@@ -336,6 +336,13 @@ in
                 # mount_namespaces=false (rootless Podman compatibility).
                 exec = "--o:ssl.enable=false --o:ssl.termination=true --o:mount_namespaces=false";
 
+                # The image healthcheck (coolwsd --probe) reads /etc/coolwsd/coolwsd.xml
+                # where SSL is still enabled, so it probes https and always fails.
+                # It cannot be overridden: podman --health-cmd takes shell form only
+                # and the image has no /bin/sh. Disable it; Traefik routes to
+                # containers without health status, and systemd restarts on crash.
+                healthCmd = "none";
+
                 labels = mkTraefikLabels {
                   name = "collabora";
                   port = 9980;
