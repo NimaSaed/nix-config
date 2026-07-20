@@ -329,6 +329,13 @@ in
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
+                # Newer collabora/code images run coolwsd directly as entrypoint
+                # (--use-env-vars) and ignore the extra_params env var. Config
+                # overrides must be appended as command arguments instead:
+                # ssl.enable=false + ssl.termination=true (Traefik terminates TLS),
+                # mount_namespaces=false (rootless Podman compatibility).
+                exec = "--o:ssl.enable=false --o:ssl.termination=true --o:mount_namespaces=false";
+
                 labels = mkTraefikLabels {
                   name = "collabora";
                   port = 9980;
@@ -345,9 +352,6 @@ in
                   TZ = "Europe/Amsterdam";
                   # Nextcloud domain for WOPI integration
                   "aliasgroup1" = "https://${cfg.subdomain}.${domain}";
-                  # Disable internal SSL (Traefik handles it)
-                  # Disable mount namespaces for rootless Podman compatibility
-                  "extra_params" = "--o:ssl.enable=false --o:ssl.termination=true --o:mount_namespaces=false";
                 };
 
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-collabora-secrets".path ];
