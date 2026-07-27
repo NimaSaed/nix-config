@@ -239,8 +239,12 @@ in
             "${mod}+Shift+s" =
               "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
             "${mod}+Ctrl+l" = "exec ${config.my.sway.lockCommand}";
-            "${mod}+comma" = "move workspace to output left";
-            "${mod}+period" = "move workspace to output right";
+            # Both directions chained: autoscale stacks laptop+external
+            # vertically (up/down applies), wdisplays can arrange side-by-side
+            # (left/right applies). In a two-output layout only the direction
+            # that exists takes effect, so the keys work in either arrangement.
+            "${mod}+comma" = "move workspace to output left; move workspace to output up";
+            "${mod}+period" = "move workspace to output right; move workspace to output down";
 
             # Laptop media-key row. XF86 keysyms only fire on keyboards that
             # have them, so these are harmless on desktops with plain keyboards.
