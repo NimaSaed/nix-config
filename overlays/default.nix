@@ -18,4 +18,9 @@ final: prev: {
   # myScript = prev.writeShellScriptBin "my-script" ''
   #   echo "Hello from my custom script!"
   # '';
+
+  # Custom packages live under ../pkgs; the overlay only re-exports them so they
+  # are reachable as pkgs.<name> from any host.
+  nebius-cli = final.callPackage ../pkgs/nebius-cli { };
+  npc = final.callPackage ../pkgs/nebius-cli/npc.nix { };
 }

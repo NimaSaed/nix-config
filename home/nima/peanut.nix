@@ -45,6 +45,7 @@ in
     ./common/optional/bitwarden-ssh-agent.nix
     ./common/optional/firefox.nix
     ./common/optional/pipewire.nix
+    ./common/optional/nebius.nix
   ];
 
   # ===========================================================================

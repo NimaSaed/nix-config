@@ -38,7 +38,6 @@
     # Bash configuration dependencies
     coreutils # For gdircolors (macOS) and other GNU tools
     util-linux # For colrm and other utilities (Linux)
-    awscli2 # AWS CLI v2 for AWS functions
 
   ];
 }
