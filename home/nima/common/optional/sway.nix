@@ -443,8 +443,14 @@ in
     };
 
     # xremap — app-aware key remapping. Firefox on Linux uses Alt+1..9 for tab
-    # selection; this keeps the preferred Ctrl+1..9 chord Firefox-only instead
-    # of capturing it globally in Sway and breaking apps like Slack.
+    # selection and Alt+Left/Right for back/forward; this keeps the preferred
+    # Ctrl+ chords Firefox-only instead of capturing them globally in Sway and
+    # breaking apps like Slack.
+    #
+    # `exact_match: true` means a chord only fires when the modifier set matches
+    # exactly, so Ctrl+Shift+Left (extend selection by word) is untouched. Plain
+    # Ctrl+Left/Right no longer jumps by word inside Firefox — that chord is
+    # spent on history navigation here.
     xdg.configFile."xremap/config.yml".text = ''
       keymap:
         - name: Firefox Ctrl-number tab selection
@@ -461,6 +467,13 @@ in
             Ctrl-7: Alt-7
             Ctrl-8: Alt-8
             Ctrl-9: Alt-9
+        - name: Firefox Ctrl-arrow history navigation
+          application:
+            only: [firefox, Firefox]
+          exact_match: true
+          remap:
+            Ctrl-Left: Alt-Left
+            Ctrl-Right: Alt-Right
     '';
 
     systemd.user.services.xremap = {
