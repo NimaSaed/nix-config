@@ -1,4 +1,4 @@
-;; Software translation of https://configure.zsa.io/voyager/layouts/eVJKy/3vMbRr/0
+;; Software translation of https://configure.zsa.io/voyager/layouts/eVJKy
 ;; for ordinary keyboards. Only the 30 alpha-block keys, three thumb keys,
 ;; and laptop volume controls below are accepted; every other key is blocked.
 (defcfg
