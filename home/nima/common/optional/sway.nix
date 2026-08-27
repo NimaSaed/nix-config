@@ -11,6 +11,7 @@ let
   ui = config.my.ui;
   # fuzzel expects colours as RRGGBBAA hex with no leading '#'.
   fz = c: "${lib.toLower (lib.removePrefix "#" c)}ff";
+  kanataConfig = ./oryx-layout.kbd;
   xremapConfig = "${config.xdg.configHome}/xremap/config.yml";
 in
 {
@@ -442,10 +443,32 @@ in
       ];
     };
 
-    # xremap — app-aware key remapping. Firefox on Linux uses Alt+1..9 for tab
-    # selection and Alt+Left/Right for back/forward; this keeps the preferred
-    # Ctrl+ chords Firefox-only instead of capturing them globally in Sway and
-    # breaking apps like Slack.
+    # Kanata implements the Voyager layout in software for ordinary keyboards.
+    # It grabs every keyboard except the ZSA Voyager, exposes one virtual
+    # `kanata-oryx` device, and blocks every physical key outside the 33-key
+    # layout except volume controls. ThinkPad media/Fn events normally come
+    # from separate partial-key devices, which Kanata deliberately leaves alone.
+    systemd.user.services.kanata-oryx = {
+      Unit = {
+        Description = "Oryx layout for non-ZSA keyboards";
+        PartOf = [ "sway-session.target" ];
+        After = [ "sway-session.target" ];
+        Before = [ "xremap.service" ];
+      };
+      Service = {
+        ExecStart = "${lib.getExe pkgs.kanata} --cfg ${kanataConfig}";
+        Restart = "on-failure";
+        RestartSec = 2;
+      };
+      Install.WantedBy = [ "sway-session.target" ];
+    };
+
+    # xremap remains the application-aware second stage. It reads Kanata's
+    # virtual keyboard plus the firmware-managed Voyager, so Firefox-specific
+    # mappings work with either without racing Kanata to grab physical devices.
+    # Firefox on Linux uses Alt+1..9 for tab selection and Alt+Left/Right for
+    # back/forward; this keeps the preferred Ctrl+ chords Firefox-only instead
+    # of capturing them globally in Sway and breaking apps like Slack.
     #
     # `exact_match: true` means a chord only fires when the modifier set matches
     # exactly, so Ctrl+Shift+Left (extend selection by word) is untouched. Plain
@@ -480,10 +503,19 @@ in
       Unit = {
         Description = "App-aware keyboard remapping";
         PartOf = [ "sway-session.target" ];
-        After = [ "sway-session.target" ];
+        Wants = [ "kanata-oryx.service" ];
+        After = [
+          "sway-session.target"
+          "kanata-oryx.service"
+        ];
       };
       Service = {
-        ExecStart = "${lib.getExe pkgs.xremap} --watch=device,config ${xremapConfig}";
+        # Kanata creates its uinput node just after systemd marks it active.
+        # Let udev expose the node before xremap performs its initial scan.
+        ExecStartPre = "${pkgs.coreutils}/bin/sleep 1";
+        ExecStart = ''
+          ${lib.getExe pkgs.xremap} --watch=device,config --device kanata-oryx --device "ZSA Technology Labs Voyager Keyboard" ${xremapConfig}
+        '';
         Restart = "on-failure";
         RestartSec = 2;
       };
