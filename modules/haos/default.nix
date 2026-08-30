@@ -11,8 +11,7 @@ let
   bridgeName = "br-haos";
   # When vlanId is set, bridge the VLAN sub-interface (e.g. eno1.3) instead of
   # the physical NIC — host NIC keeps its own DHCP lease, VM gets the VLAN IP.
-  bridgeMember =
-    if cfg.vlanId != null then "${cfg.bridge}.${toString cfg.vlanId}" else cfg.bridge;
+  bridgeMember = if cfg.vlanId != null then "${cfg.bridge}.${toString cfg.vlanId}" else cfg.bridge;
 in
 {
   options.services.haos = {
@@ -22,6 +21,12 @@ in
       type = lib.types.str;
       default = "ha";
       description = "Traefik subdomain for HAOS (e.g. ha -> ha.domain)";
+    };
+
+    port = lib.mkOption {
+      type = lib.types.int;
+      default = 8123;
+      description = "Port Home Assistant listens on inside the VM";
     };
 
     vmIp = lib.mkOption {
@@ -55,6 +60,22 @@ in
     macAddress = lib.mkOption {
       type = lib.types.str;
       description = "Fixed MAC address for the VM NIC (52:54:00:xx:xx:xx range). Create a UniFi DHCP reservation for this MAC.";
+    };
+
+    musicAssistant = {
+      enable = lib.mkEnableOption "Traefik route to the Music Assistant add-on inside the HAOS VM";
+
+      subdomain = lib.mkOption {
+        type = lib.types.str;
+        default = "music";
+        description = "Traefik subdomain for Music Assistant (e.g. music -> music.domain)";
+      };
+
+      port = lib.mkOption {
+        type = lib.types.int;
+        default = 8095;
+        description = "Port the Music Assistant webserver listens on inside the VM";
+      };
     };
 
     haosVersion = lib.mkOption {
@@ -206,7 +227,7 @@ in
       after = [
         "haos-image-setup.service"
         "network-online.target"
-        "sys-subsystem-net-devices-${lib.replaceStrings ["."] ["-"] bridgeName}.device"
+        "sys-subsystem-net-devices-${lib.replaceStrings [ "." ] [ "-" ] bridgeName}.device"
       ];
 
       unitConfig.RequiresMountsFor = cfg.dataDir;
@@ -252,7 +273,8 @@ in
     # ============================================================================
     # Traefik Routing — label-carrier container
     # A minimal busybox container that exists solely to carry Traefik labels.
-    # Traefik reads the labels and routes ha.<domain> → http://<vmIp>:8123.
+    # Traefik reads the labels and routes ha.<domain> → http://<vmIp>:<port>,
+    # and optionally music.<domain> → the Music Assistant add-on port.
     # Same pattern as the HA host-network container (loadbalancer.server.url).
     # ============================================================================
     home-manager.users.poddy =
@@ -286,7 +308,17 @@ in
               "traefik.http.routers.homeassistant.tls" = "true";
               "traefik.http.routers.homeassistant.tls.certresolver" = "letsencrypt";
               "traefik.http.routers.homeassistant.service" = "homeassistant";
-              "traefik.http.services.homeassistant.loadbalancer.server.url" = "http://${cfg.vmIp}:8123";
+              "traefik.http.services.homeassistant.loadbalancer.server.url" =
+                "http://${cfg.vmIp}:${toString cfg.port}";
+            }
+            // lib.optionalAttrs cfg.musicAssistant.enable {
+              "traefik.http.routers.musicassistant.rule" = "Host(`${cfg.musicAssistant.subdomain}.${domain}`)";
+              "traefik.http.routers.musicassistant.entrypoints" = "websecure";
+              "traefik.http.routers.musicassistant.tls" = "true";
+              "traefik.http.routers.musicassistant.tls.certresolver" = "letsencrypt";
+              "traefik.http.routers.musicassistant.service" = "musicassistant";
+              "traefik.http.services.musicassistant.loadbalancer.server.url" =
+                "http://${cfg.vmIp}:${toString cfg.musicAssistant.port}";
             };
           };
         };

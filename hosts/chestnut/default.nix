@@ -80,6 +80,7 @@
     bridge = "eno1";
     vlanId = 3; # Main VLAN (tagged) — VM bridges eno1.3, host eno1 keeps Server VLAN IP
     macAddress = "52:54:00:87:89:6B";
+    musicAssistant.enable = true; # Traefik route: music.nmsd.xyz -> Music Assistant add-on (VM port 8095)
     # The haos version and hash are only needed for the first time, when .qcow2 doesn't exist.
     haosVersion = "17.2";
     # haos_ova-17.2.qcow2.xz
