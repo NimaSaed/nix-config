@@ -97,6 +97,15 @@ in
                 };
               }
             ])
+            (lib.optionals (haosCfg.enable && (haosCfg.musicAssistant.enable or false)) [
+              {
+                "Music Assistant" = {
+                  icon = "sh-music-assistant";
+                  href = "https://${haosCfg.musicAssistant.subdomain}.${domain}/";
+                  description = "Music library and multi-room streaming";
+                };
+              }
+            ])
             (lib.optionals mediaCfg.seerr.enable [
               {
                 seerr = {
