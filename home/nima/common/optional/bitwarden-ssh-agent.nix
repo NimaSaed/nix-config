@@ -17,8 +17,6 @@ in
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    matchBlocks."*".extraOptions = {
-      IdentityAgent = agentSocket;
-    };
+    settings."*".IdentityAgent = agentSocket;
   };
 }

@@ -370,13 +370,13 @@ in
     # uses. `identitiesOnly` restricts auth to these cert files, so the global
     # Bitwarden IdentityAgent (bitwarden-ssh-agent.nix) is bypassed for this
     # host. Peanut-only: that shared agent module is also used by hazelnut.
-    ssh.matchBlocks."gitlab.nebius.dev" = {
-      match = ''Host gitlab.nebius.dev exec "find ${tshKey}-ssh -mmin +660 -exec false {} + || $(which tsh) login --no-use-local-ssh-agent --proxy=bastion.man.nebiusinfra.net:443 bastion-man; echo -n"'';
-      identityFile = tshKey;
-      certificateFile = "${tshKey}-ssh/bastion-man-cert.pub";
-      identitiesOnly = true;
-      user = "git";
-      extraOptions.PreferredAuthentications = "publickey";
+    ssh.settings."gitlab.nebius.dev" = {
+      header = ''Match Host gitlab.nebius.dev exec "find ${tshKey}-ssh -mmin +660 -exec false {} + || $(which tsh) login --no-use-local-ssh-agent --proxy=bastion.man.nebiusinfra.net:443 bastion-man; echo -n"'';
+      IdentityFile = tshKey;
+      CertificateFile = "${tshKey}-ssh/bastion-man-cert.pub";
+      IdentitiesOnly = true;
+      User = "git";
+      PreferredAuthentications = "publickey";
     };
   };
 }
