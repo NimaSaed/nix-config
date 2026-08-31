@@ -18,6 +18,10 @@
     # Vi mode keybindings
     keyMode = "vi";
 
+    # Default 500ms disambiguates a bare Esc from the start of an Alt/arrow
+    # escape sequence, but it makes Esc feel laggy in vim.
+    escapeTime = 10;
+
     # Mouse support
     mouse = false;
 
@@ -27,15 +31,14 @@
     # Custom configuration
     extraConfig = ''
       # =========================================================================
-      # Platform-Specific Prefix Key
+      # Prefix Key
       # =========================================================================
-      ${lib.optionalString (!pkgs.stdenv.isDarwin) ''
-        # Change prefix from C-b to C-a on Linux/Server
-        unbind-key C-b
-        set-option -g prefix C-a
-        bind-key C-a send-prefix
-      ''}
-      # macOS keeps default C-b prefix
+      # The center-thumb Space tap keeps the prefix comfortable while leaving
+      # C-a available to Readline, Yazi, and applications inside tmux.
+      unbind-key -q C-b
+      unbind-key -q C-a
+      set-option -g prefix C-Space
+      bind-key C-Space send-prefix
 
       # =========================================================================
       # Clipboard (OSC 52)
@@ -95,7 +98,7 @@
       # =========================================================================
 
       # Reload tmux config
-      bind r source-file ~/.tmux.conf
+      bind r source-file ${config.xdg.configHome}/tmux/tmux.conf
 
       # Clear history
       bind-key L clear-history
@@ -117,31 +120,20 @@
       # =========================================================================
       # Vim-Style Pane Navigation
       # =========================================================================
-      bind-key h select-pane -L
-      bind-key j select-pane -D
-      bind-key k select-pane -U
-      bind-key l select-pane -R
+      bind-key -r h select-pane -L
+      bind-key -r j select-pane -D
+      bind-key -r k select-pane -U
+      bind-key -r l select-pane -R
 
       # =========================================================================
-      # Vim-Style Pane Resizing
+      # Pane Resizing via the Oryx Nav Layer
       # =========================================================================
-      unbind-key C-h
-      unbind-key C-j
-      unbind-key C-k
-      unbind-key C-l
-      bind-key C-h resize-pane -L 5
-      bind-key C-j resize-pane -D 5
-      bind-key C-k resize-pane -U 5
-      bind-key C-l resize-pane -R 5
-
-      # =========================================================================
-      # Quick Pane Selection (1-4)
-      # =========================================================================
-      set -g pane-base-index 1
-      bind-key C-q select-pane -t 1
-      bind-key C-w select-pane -t 2
-      bind-key C-e select-pane -t 3
-      bind-key C-r select-pane -t 4
+      # Prefix + Nav-H/J/K/L emits these arrows. Repeatable arrow events avoid
+      # holding base h/j/k, which would turn into home-row modifiers.
+      bind-key -r Left resize-pane -L 5
+      bind-key -r Down resize-pane -D 5
+      bind-key -r Up resize-pane -U 5
+      bind-key -r Right resize-pane -R 5
 
       # =========================================================================
       # Shell Configuration
