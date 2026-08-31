@@ -453,7 +453,6 @@ in
         Description = "Oryx layout for non-ZSA keyboards";
         PartOf = [ "sway-session.target" ];
         After = [ "sway-session.target" ];
-        Before = [ "xremap.service" ];
       };
       Service = {
         ExecStart = "${lib.getExe pkgs.kanata} --cfg ${kanataConfig}";
@@ -510,12 +509,10 @@ in
         ];
       };
       Service = {
-        # Kanata creates its uinput node just after systemd marks it active.
-        # Let udev expose the node before xremap performs its initial scan.
-        ExecStartPre = "${pkgs.coreutils}/bin/sleep 1";
-        ExecStart = ''
-          ${lib.getExe pkgs.xremap} --watch=device,config --device kanata-oryx --device "ZSA Technology Labs Voyager Keyboard" ${xremapConfig}
-        '';
+        # --output-device-name is pinned: without it xremap renames itself to
+        # "xremap pid=NN" when a device named xremap already exists, escaping
+        # Kanata's exact-name exclude list and feeding Kanata its own output.
+        ExecStart = "${lib.getExe pkgs.xremap} --watch=device,config --output-device-name xremap --device kanata-oryx --device 'ZSA Technology Labs Voyager Keyboard' ${xremapConfig}";
         Restart = "on-failure";
         RestartSec = 2;
       };

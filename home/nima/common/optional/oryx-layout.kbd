@@ -9,6 +9,10 @@
   linux-dev-names-exclude (
     "ZSA Technology Labs Voyager"
     "ZSA Technology Labs Voyager Keyboard"
+    "ZSA Technology Labs Voyager Consumer Control"
+    "ZSA Technology Labs Voyager System Control"
+    "ZSA Technology Labs Voyager Mouse"
+    "Generic Blue Microphones Consumer Control"
     "Intel HID events"
     "ThinkPad Extra Buttons"
     "Video Bus"
