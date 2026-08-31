@@ -537,16 +537,10 @@ in
           resumeCommand = "${pkgs.sway}/bin/swaymsg 'output * power on'";
         }
       ];
-      events = [
-        {
-          event = "before-sleep";
-          command = config.my.sway.lockCommand;
-        }
-        {
-          event = "lock";
-          command = config.my.sway.lockCommand;
-        }
-      ];
+      events = {
+        before-sleep = config.my.sway.lockCommand;
+        lock = config.my.sway.lockCommand;
+      };
     };
 
     # =========================================================================
