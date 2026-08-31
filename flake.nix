@@ -5,8 +5,8 @@
   # Flake Inputs - External dependencies and their sources
   # ============================================================================
   inputs = {
-    # Nixpkgs - The main package repository (stable 25.11 branch)
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    # Nixpkgs - The main package repository (stable 26.05 branch)
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
 
     # Nixpkgs Unstable
     # Access via pkgs.unstable.<package>
@@ -14,12 +14,12 @@
 
     # Home Manager - Declarative user environment management
     # Follows nixpkgs version to ensure compatibility
-    home-manager.url = "github:nix-community/home-manager/release-25.11";
+    home-manager.url = "github:nix-community/home-manager/release-26.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    # nix-darwin - macOS system configuration management (stable 25.11)
+    # nix-darwin - macOS system configuration management (stable 26.05)
     darwin = {
-      url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
+      url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -59,9 +59,7 @@
     # system-manager - Manage system-level config on non-NixOS distros (e.g. Ubuntu)
     # Used by peanut to drive nix-system-graphics.
     system-manager = {
-      # Upstream has no release-25.11 branch. Pin the last revision before main
-      # moved to newer nixpkgs module layouts and added release gating.
-      url = "github:numtide/system-manager/48d47346e0c6ad05b6c869ea92649c47723d1cfc";
+      url = "github:numtide/system-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
