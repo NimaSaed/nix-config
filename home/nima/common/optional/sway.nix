@@ -26,7 +26,7 @@ in
   # handled by the system; on a non-NixOS host (e.g. peanut) `/run/opengl-driver`
   # is populated by nix-system-graphics, so no nixGL wrapping is needed.
 
-  # Lock command bound to <modifier>+Ctrl+l. Declared as an option so the keybinding
+  # Lock command bound to <modifier>+Backspace. Declared as an option so the keybinding
   # can be defined once here while each host overrides only the command when
   # needed — e.g. peanut points it at the system swaylock because the Nix
   # swaylock can't authenticate via PAM on a non-NixOS distro. Hosts that work
@@ -35,7 +35,7 @@ in
     type = lib.types.str;
     default = "${lib.getExe pkgs.swaylock} -f -c ${lib.removePrefix "#" ui.surface}";
     defaultText = lib.literalExpression ''"''${lib.getExe pkgs.swaylock} -f -c 052B42"'';
-    description = "Command bound to <modifier>+l to lock the screen.";
+    description = "Command bound to <modifier>+Backspace to lock the screen.";
   };
 
   # Automatic per-output scaling from the panel's physical dimensions (EDID).
@@ -239,7 +239,9 @@ in
           lib.mkOptionDefault {
             "${mod}+Shift+s" =
               "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
-            "${mod}+Ctrl+l" = "exec ${config.my.sway.lockCommand}";
+
+            # Backspace is a thumb tap, opposite the left home-row Super key.
+            "${mod}+BackSpace" = "exec ${config.my.sway.lockCommand}";
             # Both directions chained: autoscale stacks laptop+external
             # vertically (up/down applies), wdisplays can arrange side-by-side
             # (left/right applies). In a two-output layout only the direction
