@@ -31,13 +31,9 @@
     outer.right      = 10
 
     [mode.main.binding]
-    # App launchers
-    alt-ctrl-a = 'exec-and-forget open /Applications/Alacritty.app'
-    alt-ctrl-s = 'exec-and-forget open /Applications/Safari.app'
-    alt-ctrl-d = 'exec-and-forget open /Applications/Slack.app'
-    alt-ctrl-f = 'exec-and-forget open /Applications/Microsoft\ Teams.app'
-    alt-ctrl-g = 'exec-and-forget open /System/Applications/Mail.app'
-    alt-ctrl-h = 'exec-and-forget open /System/Applications/Calendar.app'
+    # Sequential app mode avoids holding two home-row modifiers while tapping a
+    # third dual-role key.
+    alt-space = 'mode apps'
 
     # Layout
     alt-t = 'layout tiles horizontal vertical'
@@ -61,31 +57,35 @@
     alt-w = 'resize smart +50'
 
     # Workspaces
-    alt-1 = 'workspace 1'
-    alt-2 = 'workspace 2'
-    alt-3 = 'workspace 3'
-    alt-4 = 'workspace 4'
-    alt-5 = 'workspace 5'
-    alt-6 = 'workspace 6'
-
-    shift-ctrl-alt-cmd-a = 'workspace 1'
-    shift-ctrl-alt-cmd-s = 'workspace 2'
-    shift-ctrl-alt-cmd-d = 'workspace 3'
-    shift-ctrl-alt-cmd-f = 'workspace 4'
-    shift-ctrl-alt-cmd-g = 'workspace 5'
-    shift-ctrl-alt-cmd-h = 'workspace 6'
+    # Hold left Alt (D), then use the opposite-hand top and bottom rows.
+    alt-y = 'workspace 1'
+    alt-u = 'workspace 2'
+    alt-i = 'workspace 3'
+    alt-o = 'workspace 4'
+    alt-p = 'workspace 5'
+    alt-n = 'workspace 6'
+    alt-m = 'workspace 7'
 
     # Move node to workspace
-    alt-shift-1 = ['move-node-to-workspace 1', 'workspace 1']
-    alt-shift-2 = ['move-node-to-workspace 2', 'workspace 2']
-    alt-shift-3 = ['move-node-to-workspace 3', 'workspace 3']
-    alt-shift-4 = ['move-node-to-workspace 4', 'workspace 4']
-    alt-shift-5 = ['move-node-to-workspace 5', 'workspace 5']
-    alt-shift-6 = ['move-node-to-workspace 6', 'workspace 6']
-    alt-shift-7 = ['move-node-to-monitor 1', 'workspace 7']
+    alt-shift-y = ['move-node-to-workspace 1', 'workspace 1']
+    alt-shift-u = ['move-node-to-workspace 2', 'workspace 2']
+    alt-shift-i = ['move-node-to-workspace 3', 'workspace 3']
+    alt-shift-o = ['move-node-to-workspace 4', 'workspace 4']
+    alt-shift-p = ['move-node-to-workspace 5', 'workspace 5']
+    alt-shift-n = ['move-node-to-workspace 6', 'workspace 6']
+    alt-shift-m = ['move-node-to-workspace 7', 'workspace 7']
 
     # Service mode
     alt-shift-s = 'mode service'
+
+    [mode.apps.binding]
+    esc = 'mode main'
+    t = ['exec-and-forget open /Applications/Alacritty.app', 'mode main']
+    b = ['exec-and-forget open /Applications/Safari.app', 'mode main']
+    s = ['exec-and-forget open /Applications/Slack.app', 'mode main']
+    m = ['exec-and-forget open /Applications/Microsoft\ Teams.app', 'mode main']
+    e = ['exec-and-forget open /System/Applications/Mail.app', 'mode main']
+    c = ['exec-and-forget open /System/Applications/Calendar.app', 'mode main']
 
     [mode.service.binding]
     esc       = ['reload-config', 'mode main']

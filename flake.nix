@@ -59,7 +59,9 @@
     # system-manager - Manage system-level config on non-NixOS distros (e.g. Ubuntu)
     # Used by peanut to drive nix-system-graphics.
     system-manager = {
-      url = "github:numtide/system-manager";
+      # Upstream has no release-25.11 branch. Pin the last revision before main
+      # moved to newer nixpkgs module layouts and added release gating.
+      url = "github:numtide/system-manager/48d47346e0c6ad05b6c869ea92649c47723d1cfc";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

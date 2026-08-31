@@ -1,0 +1,125 @@
+;; Software adaptation of https://configure.zsa.io/voyager/layouts/eVJKy for
+;; ordinary keyboards. Only the 30 alpha-block keys, three thumb keys, and
+;; laptop volume controls below are accepted; every other key is blocked.
+(defcfg
+  process-unmapped-keys yes
+  block-unmapped-keys yes
+  concurrent-tap-hold yes
+  linux-device-detect-mode keyboard-mice
+  linux-dev-names-exclude (
+    "ZSA Technology Labs Voyager"
+    "ZSA Technology Labs Voyager Keyboard"
+    "ZSA Technology Labs Voyager Consumer Control"
+    "ZSA Technology Labs Voyager System Control"
+    "ZSA Technology Labs Voyager Mouse"
+    "Generic Blue Microphones Consumer Control"
+    "Intel HID events"
+    "ThinkPad Extra Buttons"
+    "Video Bus"
+    "kanata-oryx"
+    "xremap"
+  )
+  linux-continue-if-no-devs-found yes
+  linux-output-device-name kanata-oryx
+)
+
+(defsrc
+  q w e r t y u i o p
+  a s d f g h j k l ;
+  z x c v b n m , . /
+  lalt spc ralt
+  mute vold volu
+)
+
+(defalias
+  ;; Thumb keys: tap for the named key, hold for the layer.
+  nav (tap-hold-press 200 200 ret  (layer-while-held nav))
+  fn  (tap-hold-press 200 200 spc  (layer-while-held func))
+  sym (tap-hold-press 200 200 bspc (layer-while-held numsym))
+
+  ;; Base home-row mods.
+  ba (tap-hold 500 200 a    lsft)
+  bd (tap-hold 500 200 d    lalt)
+  bf (tap-hold 500 200 f    lmet)
+  bg (tap-hold 500 200 g    lctl)
+  bh (tap-hold 500 200 h    rctl)
+  bj (tap-hold 500 200 j    rmet)
+  bk (tap-hold 500 200 k    ralt)
+  bs (tap-hold 500 200 scln rsft)
+
+  ;; NumSym home-row mods, in the same physical positions.
+  na (tap-hold 500 200 1 lsft)
+  nd (tap-hold 500 200 3 lalt)
+  nf (tap-hold 500 200 4 lmet)
+  ng (tap-hold 500 200 5 lctl)
+  nh (tap-hold 500 200 6 rctl)
+  nj (tap-hold 500 200 7 rmet)
+  nk (tap-hold 500 200 8 ralt)
+  ns (tap-hold 500 200 0 rsft)
+
+  ;; Func home-row mods, in the same physical positions.
+  fa (tap-hold 500 200 f1  lsft)
+  fd (tap-hold 500 200 f3  lalt)
+  ff (tap-hold 500 200 f4  lmet)
+  fg (tap-hold 500 200 f5  lctl)
+  fh (tap-hold 500 200 f6  rctl)
+  fj (tap-hold 500 200 f7  rmet)
+  fk (tap-hold 500 200 f8  ralt)
+  fs (tap-hold 500 200 f10 rsft)
+
+  ;; Shifted US-layout symbols.
+  lp    S-9
+  rp    S-0
+  lc    S-lbrc
+  rc    S-rbrc
+  dq    S-apo
+  tilde S-grv
+  pipe  S-bksl
+  under S-min
+  plus  S-eql
+
+  ;; The published Nav layer uses mouse-wheel keys for U/I.
+  whdn (mwheel-down 50 120)
+  whup (mwheel-up   50 120)
+  nbf  (tap-hold 500 200 brup lmet)
+)
+
+(deflayer base
+  q   w e   r   t   y u   i   o p
+  @ba s @bd @bf @bg @bh @bj @bk l @bs
+  z   x c   v   b   n m   ,   . /
+  @nav @fn @sym
+  mute vold volu
+)
+
+(deflayer numsym
+  grv   @lp @lc lbrc apo @dq rbrc @rc @rp @tilde
+  @na   2   @nd @nf  @ng @nh @nj  @nk 9   @ns
+  @pipe XX  XX  @under min @plus eql XX  bksl /
+  _ _ _
+  _ _ _
+)
+
+(deflayer nav
+  XX   XX   XX   pp   prev next @whdn @whup XX   XX
+  lsft lctl lalt @nbf volu left down  up    rght rsft
+  XX   XX   XX   brdn vold home pgdn  pgup  end  XX
+  _ _ _
+  _ _ _
+)
+
+(deflayer func
+  XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
+  @fa f2  @fd @ff @fg @fh @fj @fk f9  @fs
+  f11 f12 XX  XX  XX  f11 f12 XX  XX  XX
+  _ _ _
+  _ _ _
+)
+
+;; Keep frequent utility keys on the original low-latency Oryx chords. Editor
+;; commands remain application-local rather than being emitted by the keyboard.
+(defchordsv2
+  (x c) tab 50 first-release (numsym nav func)
+  (e r) esc 50 first-release (numsym nav func)
+  (o p) del 50 first-release (numsym nav func)
+)

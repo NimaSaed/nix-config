@@ -11,6 +11,7 @@ let
   ui = config.my.ui;
   # fuzzel expects colours as RRGGBBAA hex with no leading '#'.
   fz = c: "${lib.toLower (lib.removePrefix "#" c)}ff";
+  kanataConfig = ./oryx-layout.kbd;
   xremapConfig = "${config.xdg.configHome}/xremap/config.yml";
 in
 {
@@ -25,7 +26,7 @@ in
   # handled by the system; on a non-NixOS host (e.g. peanut) `/run/opengl-driver`
   # is populated by nix-system-graphics, so no nixGL wrapping is needed.
 
-  # Lock command bound to <modifier>+Ctrl+l. Declared as an option so the keybinding
+  # Lock command bound to <modifier>+Backspace. Declared as an option so the keybinding
   # can be defined once here while each host overrides only the command when
   # needed — e.g. peanut points it at the system swaylock because the Nix
   # swaylock can't authenticate via PAM on a non-NixOS distro. Hosts that work
@@ -34,7 +35,7 @@ in
     type = lib.types.str;
     default = "${lib.getExe pkgs.swaylock} -f -c ${lib.removePrefix "#" ui.surface}";
     defaultText = lib.literalExpression ''"''${lib.getExe pkgs.swaylock} -f -c 052B42"'';
-    description = "Command bound to <modifier>+l to lock the screen.";
+    description = "Command bound to <modifier>+Backspace to lock the screen.";
   };
 
   # Automatic per-output scaling from the panel's physical dimensions (EDID).
@@ -238,7 +239,9 @@ in
           lib.mkOptionDefault {
             "${mod}+Shift+s" =
               "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
-            "${mod}+Ctrl+l" = "exec ${config.my.sway.lockCommand}";
+
+            # Backspace is a thumb tap, opposite the left home-row Super key.
+            "${mod}+BackSpace" = "exec ${config.my.sway.lockCommand}";
             # Both directions chained: autoscale stacks laptop+external
             # vertically (up/down applies), wdisplays can arrange side-by-side
             # (left/right applies). In a two-output layout only the direction
@@ -442,48 +445,60 @@ in
       ];
     };
 
-    # xremap — app-aware key remapping. Firefox on Linux uses Alt+1..9 for tab
-    # selection and Alt+Left/Right for back/forward; this keeps the preferred
-    # Ctrl+ chords Firefox-only instead of capturing them globally in Sway and
-    # breaking apps like Slack.
+    # Kanata implements the Voyager layout in software for ordinary keyboards.
+    # It grabs every keyboard except the ZSA Voyager, exposes one virtual
+    # `kanata-oryx` device, and blocks every physical key outside the 33-key
+    # layout except volume controls. ThinkPad media/Fn events normally come
+    # from separate partial-key devices, which Kanata deliberately leaves alone.
+    systemd.user.services.kanata-oryx = {
+      Unit = {
+        Description = "Oryx layout for non-ZSA keyboards";
+        PartOf = [ "sway-session.target" ];
+        After = [ "sway-session.target" ];
+      };
+      Service = {
+        ExecStart = "${lib.getExe pkgs.kanata} --cfg ${kanataConfig}";
+        Restart = "on-failure";
+        RestartSec = 2;
+      };
+      Install.WantedBy = [ "sway-session.target" ];
+    };
+
+    # xremap remains the application-aware second stage. It reads Kanata's
+    # virtual keyboard plus the firmware-managed Voyager, so Firefox-specific
+    # mappings work with either without racing Kanata to grab physical devices.
+    # Firefox uses Ctrl+T/Ctrl+W for new/close tab. Remap the easier home-row Alt
+    # variants only inside Firefox; native Alt+number tab selection and
+    # Alt+Left/Right history navigation need no translation.
     #
-    # `exact_match: true` means a chord only fires when the modifier set matches
-    # exactly, so Ctrl+Shift+Left (extend selection by word) is untouched. Plain
-    # Ctrl+Left/Right no longer jumps by word inside Firefox — that chord is
-    # spent on history navigation here.
+    # `exact_match: true` leaves Alt+Shift variants and every other application
+    # untouched.
     xdg.configFile."xremap/config.yml".text = ''
       keymap:
-        - name: Firefox Ctrl-number tab selection
+        - name: Firefox Alt tab controls
           application:
             only: [firefox, Firefox]
           exact_match: true
           remap:
-            Ctrl-1: Alt-1
-            Ctrl-2: Alt-2
-            Ctrl-3: Alt-3
-            Ctrl-4: Alt-4
-            Ctrl-5: Alt-5
-            Ctrl-6: Alt-6
-            Ctrl-7: Alt-7
-            Ctrl-8: Alt-8
-            Ctrl-9: Alt-9
-        - name: Firefox Ctrl-arrow history navigation
-          application:
-            only: [firefox, Firefox]
-          exact_match: true
-          remap:
-            Ctrl-Left: Alt-Left
-            Ctrl-Right: Alt-Right
+            Alt-t: Ctrl-t
+            Alt-w: Ctrl-w
     '';
 
     systemd.user.services.xremap = {
       Unit = {
         Description = "App-aware keyboard remapping";
         PartOf = [ "sway-session.target" ];
-        After = [ "sway-session.target" ];
+        Wants = [ "kanata-oryx.service" ];
+        After = [
+          "sway-session.target"
+          "kanata-oryx.service"
+        ];
       };
       Service = {
-        ExecStart = "${lib.getExe pkgs.xremap} --watch=device,config ${xremapConfig}";
+        # --output-device-name is pinned: without it xremap renames itself to
+        # "xremap pid=NN" when a device named xremap already exists, escaping
+        # Kanata's exact-name exclude list and feeding Kanata its own output.
+        ExecStart = "${lib.getExe pkgs.xremap} --watch=device,config --output-device-name xremap --device kanata-oryx --device 'ZSA Technology Labs Voyager Keyboard' ${xremapConfig}";
         Restart = "on-failure";
         RestartSec = 2;
       };

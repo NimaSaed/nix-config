@@ -92,15 +92,11 @@
 
       set encoding=utf-8
 
-      " Disable arrow keys
-      noremap <Up> <Nop>
-      noremap <Down> <Nop>
-      noremap <Left> <Nop>
-      noremap <Right> <Nop>
-      inoremap <Up> <Nop>
-      inoremap <Down> <Nop>
-      inoremap <Left> <Nop>
-      inoremap <Right> <Nop>
+      " Base h/j/k/l remain available for discrete motions; Nav-layer arrows
+      " provide repeatable movement without activating home-row modifiers.
+
+      nnoremap <leader>w :write<CR>
+      nnoremap <leader>q :quit<CR>
 
       " remove all white spaces at the end of lines when I save the file
       autocmd BufWritePre * %s/\s\+$//e
