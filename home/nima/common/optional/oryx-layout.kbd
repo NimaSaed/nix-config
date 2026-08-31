@@ -1,6 +1,6 @@
-;; Software translation of https://configure.zsa.io/voyager/layouts/eVJKy
-;; for ordinary keyboards. Only the 30 alpha-block keys, three thumb keys,
-;; and laptop volume controls below are accepted; every other key is blocked.
+;; Software adaptation of https://configure.zsa.io/voyager/layouts/eVJKy for
+;; ordinary keyboards. Only the 30 alpha-block keys, three thumb keys, and
+;; laptop volume controls below are accepted; every other key is blocked.
 (defcfg
   process-unmapped-keys yes
   block-unmapped-keys yes
@@ -112,11 +112,10 @@
   _ _ _
 )
 
-;; Oryx combos use QMK's default 50 ms combo term and are base-layer only.
+;; Keep frequent utility keys on the original low-latency Oryx chords. Editor
+;; commands remain application-local rather than being emitted by the keyboard.
 (defchordsv2
-  (x c) tab                         50 first-release (numsym nav func)
-  (u i) (macro S-scln 100 w 100 ret) 50 first-release (numsym nav func)
-  (m ,) (macro S-scln 100 q 100 ret) 50 first-release (numsym nav func)
-  (e r) esc                         50 first-release (numsym nav func)
-  (o p) del                         50 first-release (numsym nav func)
+  (x c) tab 50 first-release (numsym nav func)
+  (e r) esc 50 first-release (numsym nav func)
+  (o p) del 50 first-release (numsym nav func)
 )
