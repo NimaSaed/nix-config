@@ -467,37 +467,21 @@ in
     # xremap remains the application-aware second stage. It reads Kanata's
     # virtual keyboard plus the firmware-managed Voyager, so Firefox-specific
     # mappings work with either without racing Kanata to grab physical devices.
-    # Firefox on Linux uses Alt+1..9 for tab selection and Alt+Left/Right for
-    # back/forward; this keeps the preferred Ctrl+ chords Firefox-only instead
-    # of capturing them globally in Sway and breaking apps like Slack.
+    # Firefox uses Ctrl+T/Ctrl+W for new/close tab. Remap the easier home-row Alt
+    # variants only inside Firefox; native Alt+number tab selection and
+    # Alt+Left/Right history navigation need no translation.
     #
-    # `exact_match: true` means a chord only fires when the modifier set matches
-    # exactly, so Ctrl+Shift+Left (extend selection by word) is untouched. Plain
-    # Ctrl+Left/Right no longer jumps by word inside Firefox — that chord is
-    # spent on history navigation here.
+    # `exact_match: true` leaves Alt+Shift variants and every other application
+    # untouched.
     xdg.configFile."xremap/config.yml".text = ''
       keymap:
-        - name: Firefox Ctrl-number tab selection
+        - name: Firefox Alt tab controls
           application:
             only: [firefox, Firefox]
           exact_match: true
           remap:
-            Ctrl-1: Alt-1
-            Ctrl-2: Alt-2
-            Ctrl-3: Alt-3
-            Ctrl-4: Alt-4
-            Ctrl-5: Alt-5
-            Ctrl-6: Alt-6
-            Ctrl-7: Alt-7
-            Ctrl-8: Alt-8
-            Ctrl-9: Alt-9
-        - name: Firefox Ctrl-arrow history navigation
-          application:
-            only: [firefox, Firefox]
-          exact_match: true
-          remap:
-            Ctrl-Left: Alt-Left
-            Ctrl-Right: Alt-Right
+            Alt-t: Ctrl-t
+            Alt-w: Ctrl-w
     '';
 
     systemd.user.services.xremap = {
