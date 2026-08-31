@@ -63,6 +63,11 @@ in
   # that file, so the sway process — and apps launched from it — get it too.
   targets.genericLinux.enable = true;
 
+  # Activation must probe/reload user units with Ubuntu's own systemctl: the
+  # nixpkgs systemctl (260) can't connect to the host's older user daemon
+  # (255), so home-manager would silently skip reloading changed units.
+  systemd.user.systemctlPath = "/usr/bin/systemctl";
+
   # System-wide colour theme (terminal, sway, notifications). See
   # home/nima/common/core/theme.nix for the palette set.
   my.activeTheme = "nebius";
