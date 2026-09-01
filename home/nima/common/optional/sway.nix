@@ -155,8 +155,8 @@ in
 
         # Bitwarden always floats, regardless of workspace.
         floating.criteria = [
-          { app_id = "Bitwarden"; }
-          { class = "Bitwarden"; }
+          { app_id = "(?i)bitwarden"; }
+          { class = "(?i)bitwarden"; }
         ];
 
         # Size Bitwarden to 50%×70% of the output and center it. `ppt` is
@@ -164,11 +164,11 @@ in
         # resize so the window is centered at its final size.
         window.commands = [
           {
-            criteria.app_id = "Bitwarden";
+            criteria.app_id = "(?i)bitwarden";
             command = "resize set 90 ppt 70 ppt, move position center";
           }
           {
-            criteria.class = "Bitwarden";
+            criteria.class = "(?i)bitwarden";
             command = "resize set 90 ppt 70 ppt, move position center";
           }
           # Hold off the idle timeouts (below) whenever a window is fullscreen —
