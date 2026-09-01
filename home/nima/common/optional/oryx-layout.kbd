@@ -33,8 +33,8 @@
 
 (defalias
   ;; Thumb keys: tap for the named key, hold for the layer.
-  nav (tap-hold-press 200 200 ret  (layer-while-held nav))
-  fn  (tap-hold-press 200 200 spc  (layer-while-held func))
+  nav (tap-hold-press 200 200 spc  (layer-while-held nav))
+  fn  (tap-hold-press 200 200 ret  (layer-while-held func))
   sym (tap-hold-press 200 200 bspc (layer-while-held numsym))
 
   ;; Base home-row mods.
