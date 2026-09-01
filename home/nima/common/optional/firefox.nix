@@ -121,8 +121,12 @@ in
         # --- Native vertical tabs (Firefox 136+) -------------------------
         "sidebar.revamp" = true;
         "sidebar.verticalTabs" = true;
-        # Hide the sidebar launcher strip; expand-on-hover is the alternative.
-        "sidebar.visibility" = "hide-sidebar";
+        # Keep the vertical tab strip visible. Firefox 154 changed
+        # "hide-sidebar" semantics: it now force-hides the launcher (tab strip
+        # included) on every startup/new window, overriding the persisted
+        # visible state. Expand-on-hover moved to its own boolean
+        # (sidebar.expandOnHover), so this pref is just shown vs. hidden now.
+        "sidebar.visibility" = "always-show";
         # Remove the sidebar tool icons (history, bookmarks, synced tabs,
         # AI chat) that the revamped vertical-tabs sidebar shows. NOTE: on a
         # fresh profile this pref is not enough — Firefox's one-time sidebar
