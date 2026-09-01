@@ -289,11 +289,13 @@ in
         /* Hide the built-in sidebar tool icons (history, bookmarks, synced
            tabs, AI chat). Deterministic backstop for `sidebar.main.tools`,
            which Firefox's first-run migration overrides on a fresh profile.
-           Extension sidebar buttons and the customize gear are left intact. */
-        #sidebar-main moz-button[view="viewHistorySidebar"],
-        #sidebar-main moz-button[view="viewBookmarksSidebar"],
-        #sidebar-main moz-button[view="viewSyncedTabsSidebar"],
-        #sidebar-main moz-button[view="viewGenaiChatSidebar"] {
+           Extension sidebar buttons and the customize gear are left intact.
+           Matched by tag: Firefox 154 renamed the wrapper id #sidebar-main to
+           #sidebar-container, but the <sidebar-main> element is stable. */
+        sidebar-main moz-button[view="viewHistorySidebar"],
+        sidebar-main moz-button[view="viewBookmarksSidebar"],
+        sidebar-main moz-button[view="viewSyncedTabsSidebar"],
+        sidebar-main moz-button[view="viewGenaiChatSidebar"] {
           display: none !important;
         }
 
@@ -340,7 +342,8 @@ in
         #nav-bar,
         #TabsToolbar,
         #PersonalToolbar,
-        #sidebar-main,
+        #sidebar-container,
+        sidebar-main,
         #tabbrowser-tabbox {
           background-color: var(--nb-deep-blue) !important;
           color: var(--nb-light-blue) !important;
