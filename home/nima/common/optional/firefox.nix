@@ -299,6 +299,10 @@ in
           display: none !important;
         }
 
+        :root {
+          --sidebar-launcher-button-padding-inline: 8px !important;
+        }
+
         /* ===== System theme (browser chrome) ======================= */
         /* Values interpolated from config.my.ui (Nix) — they follow whichever
            theme my.activeTheme selects. Variable names kept for brevity. */
