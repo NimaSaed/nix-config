@@ -133,7 +133,10 @@ in
         # Assign applications to workspaces. Native-Wayland apps match on
         # `app_id`; XWayland apps match on `class`. For apps that may run
         # either way (Electron under different flag sets) we list both —
-        # entries within a workspace's list are OR'd.
+        # entries within a workspace's list are OR'd. Criteria are
+        # case-sensitive PCRE and Electron apps change identity casing across
+        # updates (Slack moved from XWayland class "Slack" to native Wayland
+        # app_id "slack"), so those entries match case-insensitively via (?i).
         assigns = {
           "1" = [ { app_id = "Alacritty"; } ];
           "2" = [
@@ -141,12 +144,12 @@ in
             { class = "Firefox"; }
           ];
           "3" = [
-            { app_id = "Slack"; }
-            { class = "Slack"; }
+            { app_id = "(?i)slack"; }
+            { class = "(?i)slack"; }
           ];
           "4" = [
-            { app_id = "Zoom"; }
-            { class = "zoom"; }
+            { app_id = "(?i)zoom"; }
+            { class = "(?i)zoom"; }
           ];
         };
 
