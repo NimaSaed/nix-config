@@ -52,6 +52,16 @@
     KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
   '';
 
+  # Device access for the ZSA keyboard (keymapp is installed via home-manager,
+  # see home/nima/peanut.nix): hidraw for live training / Oryx pairing, DFU
+  # bootloader for flashing. The uaccess tag makes logind grant an ACL to the
+  # active seat session, so no extra group membership is needed. udevd picks up
+  # rule changes on its own; replug the keyboard after switching.
+  environment.etc."udev/rules.d/50-zsa-oryx.rules".source =
+    "${pkgs.zsa-udev-rules}/lib/udev/rules.d/50-oryx.rules";
+  environment.etc."udev/rules.d/50-zsa-wally.rules".source =
+    "${pkgs.zsa-udev-rules}/lib/udev/rules.d/50-wally.rules";
+
   # Provide system-wide graphics drivers for Nix apps (Intel Mesa by default).
   system-graphics.enable = true;
 
