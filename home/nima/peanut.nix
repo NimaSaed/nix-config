@@ -326,6 +326,10 @@ in
     slack # Team chat
     unstable.zoom-us # Video conferencing
     bitwarden-desktop # Password manager (GUI)
+    # ZSA's app for flashing keyboard firmware and pairing with Oryx. Device
+    # access (DFU bootloader, hidraw) needs the udev rules installed system-side
+    # in hosts/peanut/default.nix — flashing fails without them.
+    keymapp
 
     # Power management CLI. The boot-time `--auto-tune` runs as a root systemd
     # service in system-manager (hosts/peanut/default.nix), since auto-tune
