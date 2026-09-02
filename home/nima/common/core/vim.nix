@@ -44,9 +44,12 @@
     ];
 
     initLua = ''
-      require('nvim-treesitter.configs').setup {
-        highlight = { enable = true },
-      }
+      -- nvim-treesitter's `main` branch dropped nvim-treesitter.configs;
+      -- highlighting is now native Neovim, started per filetype.
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = { 'markdown', 'nix', 'sh', 'yaml', 'json', 'dockerfile', 'lua', 'gitcommit', 'diff', 'toml' },
+        callback = function() vim.treesitter.start() end,
+      })
     '';
 
     extraConfig = ''
