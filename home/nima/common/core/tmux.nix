@@ -33,12 +33,7 @@
       # =========================================================================
       # Prefix Key
       # =========================================================================
-      # The center-thumb Space tap keeps the prefix comfortable while leaving
-      # C-a available to Readline, Yazi, and applications inside tmux.
-      unbind-key -q C-b
-      unbind-key -q C-a
-      set-option -g prefix C-Space
-      bind-key C-Space send-prefix
+      # Default C-b prefix; the keyboard's J+K chord emits it in one tap.
 
       # =========================================================================
       # Clipboard (OSC 52)

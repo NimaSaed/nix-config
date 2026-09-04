@@ -122,4 +122,6 @@
   (x c) tab 50 first-release (numsym nav func)
   (e r) esc 50 first-release (numsym nav func)
   (o p) del 50 first-release (numsym nav func)
+  ;; tmux prefix in one tap, skipping the home-row Ctrl hold.
+  (j k) C-b 50 first-release (numsym nav func)
 )
