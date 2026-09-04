@@ -46,6 +46,12 @@ in
       ];
     };
 
+    # The Traefik container bind-mounts this directory; rootless podman cannot
+    # create it under /etc, so it must exist even when no module drops a file in it
+    systemd.tmpfiles.rules = [
+      "d /etc/traefik/dynamic 0755 root root - -"
+    ];
+
     home-manager.users.poddy =
       { pkgs, config, ... }:
       {
@@ -109,6 +115,7 @@ in
                 volumes = [
                   "%t/podman/podman.sock:/var/run/docker.sock:ro"
                   "${volumes.traefik.ref}:/data"
+                  "/etc/traefik/dynamic:/etc/traefik/dynamic:ro"
                 ];
 
                 environmentFiles = [ secretsPath ];
@@ -117,6 +124,10 @@ in
                   TRAEFIK_LOG_LEVEL = "INFO";
                   TRAEFIK_PROVIDERS_DOCKER = "true";
                   TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT = "false";
+                  # Routes to non-container backends (e.g. the HAOS VM) are rendered
+                  # into this directory by other modules via environment.etc
+                  TRAEFIK_PROVIDERS_FILE_DIRECTORY = "/etc/traefik/dynamic";
+                  TRAEFIK_PROVIDERS_FILE_WATCH = "true";
                   TRAEFIK_API = "true";
                   TRAEFIK_API_DASHBOARD = "true";
                   TRAEFIK_API_INSECURE = "true";
