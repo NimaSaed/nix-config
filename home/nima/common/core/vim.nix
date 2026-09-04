@@ -66,6 +66,7 @@
       set undodir=${config.xdg.stateHome}/nvim/undo//
       set ignorecase
       set smartcase
+      set colorcolumn=80
 
       " }}}
 
@@ -168,6 +169,9 @@
 
           " Folded Color — muted surface
           highlight Folded ctermfg=15 ctermbg=8
+
+          " 80-column marker — muted surface, no fg text underneath
+          highlight ColorColumn ctermbg=8
 
           " Spelling Color
           highlight SpellBad term=reverse cterm=undercurl ctermbg=224 gui=undercurl guisp=#dc322f
