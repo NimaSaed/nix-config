@@ -526,25 +526,25 @@ in
     # the outputs off two minutes later to save the panel/battery, powering
     # them back on the moment there's activity. Fullscreen windows hold these
     # off via the `inhibit_idle` rules above, so calls/video aren't interrupted.
-    services.swayidle = {
-      enable = true;
-      extraArgs = [ "-w" ];
-      timeouts = [
-        {
-          timeout = 300;
-          command = config.my.sway.lockCommand;
-        }
-        {
-          timeout = 420;
-          command = "${pkgs.sway}/bin/swaymsg 'output * power off'";
-          resumeCommand = "${pkgs.sway}/bin/swaymsg 'output * power on'";
-        }
-      ];
-      events = {
-        before-sleep = config.my.sway.lockCommand;
-        lock = config.my.sway.lockCommand;
-      };
-    };
+    #services.swayidle = {
+    #  enable = true;
+    #  extraArgs = [ "-w" ];
+    #  timeouts = [
+    #    {
+    #      timeout = 300;
+    #      command = config.my.sway.lockCommand;
+    #    }
+    #    {
+    #      timeout = 420;
+    #      command = "${pkgs.sway}/bin/swaymsg 'output * power off'";
+    #      resumeCommand = "${pkgs.sway}/bin/swaymsg 'output * power on'";
+    #    }
+    #  ];
+    #  events = {
+    #    before-sleep = config.my.sway.lockCommand;
+    #    lock = config.my.sway.lockCommand;
+    #  };
+    #};
 
     # =========================================================================
     # dunst — notification daemon (theme-driven)
