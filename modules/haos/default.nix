@@ -271,57 +271,49 @@ in
     };
 
     # ============================================================================
-    # Traefik Routing — label-carrier container
-    # A minimal busybox container that exists solely to carry Traefik labels.
-    # Traefik reads the labels and routes ha.<domain> → http://<vmIp>:<port>,
-    # and optionally music.<domain> → the Music Assistant add-on port.
-    # Same pattern as the HA host-network container (loadbalancer.server.url).
+    # Traefik Routing — file provider
+    # The VM is not a container, so Traefik cannot discover it through labels.
+    # Routes are rendered into /etc/traefik/dynamic, which the Traefik container
+    # bind-mounts and watches (modules/podman/pod-reverse-proxy.nix). The file is
+    # written by NixOS system activation, so a route change never depends on a
+    # poddy user unit being regenerated or restarted.
+    #
+    # mode != "symlink" makes NixOS copy the file: a /nix/store symlink would
+    # not resolve inside the Traefik container.
     # ============================================================================
-    home-manager.users.poddy =
-      { pkgs, config, ... }:
-      let
-        inherit (config.virtualisation.quadlet) networks;
-      in
-      {
-        virtualisation.quadlet.containers.haos-route = {
-          autoStart = true;
-
-          serviceConfig = {
-            Restart = "always";
-          };
-
-          unitConfig = {
-            Description = "Traefik label carrier for HAOS VM routing";
-            After = [ "reverse_proxy-network.service" ];
-          };
-
-          containerConfig = {
-            image = "docker.io/library/busybox:latest";
-            exec = "sleep infinity";
-            autoUpdate = "registry";
-            networks = [ networks.reverse_proxy.ref ];
-
-            labels = {
-              "traefik.enable" = "true";
-              "traefik.http.routers.homeassistant.rule" = "Host(`${cfg.subdomain}.${domain}`)";
-              "traefik.http.routers.homeassistant.entrypoints" = "websecure";
-              "traefik.http.routers.homeassistant.tls" = "true";
-              "traefik.http.routers.homeassistant.tls.certresolver" = "letsencrypt";
-              "traefik.http.routers.homeassistant.service" = "homeassistant";
-              "traefik.http.services.homeassistant.loadbalancer.server.url" =
-                "http://${cfg.vmIp}:${toString cfg.port}";
-            }
-            // lib.optionalAttrs cfg.musicAssistant.enable {
-              "traefik.http.routers.musicassistant.rule" = "Host(`${cfg.musicAssistant.subdomain}.${domain}`)";
-              "traefik.http.routers.musicassistant.entrypoints" = "websecure";
-              "traefik.http.routers.musicassistant.tls" = "true";
-              "traefik.http.routers.musicassistant.tls.certresolver" = "letsencrypt";
-              "traefik.http.routers.musicassistant.service" = "musicassistant";
-              "traefik.http.services.musicassistant.loadbalancer.server.url" =
-                "http://${cfg.vmIp}:${toString cfg.musicAssistant.port}";
+    environment.etc."traefik/dynamic/haos.yml" = {
+      mode = "0444";
+      source = (pkgs.formats.yaml { }).generate "traefik-haos.yml" {
+        http = {
+          routers = {
+            homeassistant = {
+              rule = "Host(`${cfg.subdomain}.${domain}`)";
+              entryPoints = [ "websecure" ];
+              service = "homeassistant";
+              tls.certResolver = "letsencrypt";
             };
+          }
+          // lib.optionalAttrs cfg.musicAssistant.enable {
+            musicassistant = {
+              rule = "Host(`${cfg.musicAssistant.subdomain}.${domain}`)";
+              entryPoints = [ "websecure" ];
+              service = "musicassistant";
+              tls.certResolver = "letsencrypt";
+            };
+          };
+
+          services = {
+            homeassistant.loadBalancer.servers = [
+              { url = "http://${cfg.vmIp}:${toString cfg.port}"; }
+            ];
+          }
+          // lib.optionalAttrs cfg.musicAssistant.enable {
+            musicassistant.loadBalancer.servers = [
+              { url = "http://${cfg.vmIp}:${toString cfg.musicAssistant.port}"; }
+            ];
           };
         };
       };
+    };
   };
 }

@@ -24,7 +24,7 @@
   services.pods = {
     domain = "nmsd.xyz";
     reverse-proxy = {
-      subdomain = "traefik1";
+      subdomain = "traefik";
     };
     tools = {
       enable = true;
