@@ -598,6 +598,9 @@ in
                   # Set server identifier (silences admin panel warning)
                   occ config:system:set server_id --value "nextcloud-app"
 
+                  # Re-fetch subscribed (webcal) calendars every 15 minutes instead of the default P1D
+                  occ config:app:set dav calendarSubscriptionRefreshRate --value "PT15M"
+
                   # Collabora Office: set WOPI server URL and activate config
                   occ config:app:set richdocuments wopi_url --value "https://${cfg.collabora.subdomain}.${domain}"
                   occ richdocuments:activate-config
