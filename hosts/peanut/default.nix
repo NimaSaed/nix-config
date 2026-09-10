@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 
 {
   # system-manager module for peanut (Lenovo P14s Gen 5, work laptop).
@@ -160,4 +160,39 @@
       '';
     };
   };
+
+  # Home DNS. At home the router's DHCP hands out public resolvers, and the work
+  # tailnet's MagicDNS claims the catch-all routing domain (~.), so
+  # systemd-resolved never asks the home resolver and chestnut.nmsd.xyz does not
+  # resolve (Colmena fails at the SSH step). Pin the home resolver on the home
+  # Wi-Fi profile and route only nmsd.xyz to it: a specific routing domain beats
+  # ~., so everything else, work names included, still goes through Tailscale.
+  # Per profile rather than a resolved.conf drop-in so it only applies at home;
+  # elsewhere nmsd.xyz must resolve publicly (via walnut). The profile stays
+  # Ubuntu-managed (it holds the Wi-Fi PSK), hence nmcli instead of a keyfile;
+  # use Ubuntu's nmcli to match its NetworkManager. Applies on next (re)connect.
+  systemd.services.home-wifi-dns =
+    let
+      homeWifiProfiles = [ "88-Work" ];
+      homeDns = "10.10.10.1";
+      homeDomain = "nmsd.xyz";
+    in
+    {
+      description = "Pin the home DNS resolver on home Wi-Fi profiles";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "NetworkManager.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = pkgs.writeShellScript "home-wifi-dns" ''
+          for profile in ${lib.escapeShellArgs homeWifiProfiles}; do
+            /usr/bin/nmcli connection show "$profile" >/dev/null 2>&1 || continue
+            /usr/bin/nmcli connection modify "$profile" \
+              ipv4.dns ${homeDns} \
+              ipv4.ignore-auto-dns yes \
+              ipv4.dns-search "~${homeDomain}"
+          done
+        '';
+      };
+    };
 }
