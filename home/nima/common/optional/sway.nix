@@ -282,14 +282,19 @@ in
         seat * hide_cursor 1500
         seat * hide_cursor when-typing enable
 
-        mode "Power: (s) shutdown  (r) reboot  (l) logout" {
+        mode "Power: (s) shutdown  (r) reboot  (z) sleep  (l) logout" {
             bindsym s exec systemctl poweroff
             bindsym r exec systemctl reboot
+            # Lock before suspending: swaylock -f returns once the lock is up, so
+            # the screen is locked before the suspend is issued. Also leave the
+            # mode — unlike the other entries the session survives, and waking
+            # up still in Power mode would turn a stray keypress into a shutdown.
+            bindsym z exec ${config.my.sway.lockCommand} && systemctl suspend, mode default
             bindsym l exec ${pkgs.sway}/bin/swaymsg exit
             bindsym Return mode default
             bindsym Escape mode default
         }
-        bindsym --no-warn Mod4+Shift+e mode "Power: (s) shutdown  (r) reboot  (l) logout"
+        bindsym --no-warn Mod4+Shift+e mode "Power: (s) shutdown  (r) reboot  (z) sleep  (l) logout"
       '';
     };
 
