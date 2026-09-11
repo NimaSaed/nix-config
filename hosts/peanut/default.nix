@@ -1,5 +1,17 @@
 { lib, pkgs, ... }:
 
+let
+  # Kernel command-line additions. Ubuntu owns /etc/default/grub, so these go in
+  # as a drop-in under /etc/default/grub.d and reach the boot loader once
+  # grub.cfg is regenerated (grub-kernel-params below).
+  kernelParams = [
+    # i915 drives the panel backlight through an interface it doesn't support
+    # from kernel 7.0.0-28 on, so brightness keys silently do nothing.
+    # TODO: drop this once a fixed kernel ships.
+    # https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2161359
+    "i915.enable_dpcd_backlight=0"
+  ];
+in
 {
   # system-manager module for peanut (Lenovo P14s Gen 5, work laptop).
   #
@@ -133,18 +145,14 @@
     };
   };
 
-  # i915 drives the panel backlight through an interface it doesn't support from
-  # kernel 7.0.0-28 on, so brightness keys silently do nothing.
-  # TODO: drop this once a fixed kernel ships.
-  # https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2161359
-  environment.etc."default/grub.d/99-i915-dpcd-backlight.cfg".text = ''
-    GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT i915.enable_dpcd_backlight=0"
+  environment.etc."default/grub.d/99-nix-kernel-params.cfg".text = ''
+    GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT ${lib.concatStringsSep " " kernelParams}"
   '';
 
   # The drop-in above only reaches the boot loader once grub.cfg is regenerated,
   # which Ubuntu does on kernel upgrades but not on system-manager activation.
-  systemd.services.grub-i915-backlight = {
-    description = "Regenerate grub.cfg for the i915 backlight workaround";
+  systemd.services.grub-kernel-params = {
+    description = "Regenerate grub.cfg for the Nix-managed kernel parameters";
     wantedBy = [ "multi-user.target" ];
     unitConfig.RequiresMountsFor = "/boot/grub";
     serviceConfig = {
@@ -153,10 +161,12 @@
       # update-grub is a wrapper that execs grub-mkconfig by bare name, and the
       # /etc/grub.d scripts it runs expect Ubuntu's tools, so hand it Ubuntu's
       # PATH — system-manager's unit PATH is Nix-only.
-      ExecStart = pkgs.writeShellScript "grub-i915-backlight" ''
-        ${pkgs.gnugrep}/bin/grep -q i915.enable_dpcd_backlight=0 /boot/grub/grub.cfg && exit 0
-        export PATH=/usr/sbin:/usr/bin:/sbin:/bin
-        exec /usr/sbin/update-grub
+      ExecStart = pkgs.writeShellScript "grub-kernel-params" ''
+        for param in ${lib.escapeShellArgs kernelParams}; do
+          ${pkgs.gnugrep}/bin/grep -qF -- "$param" /boot/grub/grub.cfg && continue
+          export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+          exec /usr/sbin/update-grub
+        done
       '';
     };
   };
