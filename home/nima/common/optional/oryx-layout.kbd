@@ -1,6 +1,6 @@
 ;; Software adaptation of https://configure.zsa.io/voyager/layouts/eVJKy for
-;; ordinary keyboards. Only the 30 alpha-block keys, three thumb keys, and
-;; laptop volume controls below are accepted; every other key is blocked.
+;; ordinary keyboards. Only the 30 alpha-block keys, three thumb keys, Enter,
+;; and laptop volume controls below are accepted; every other key is blocked.
 (defcfg
   process-unmapped-keys yes
   block-unmapped-keys yes
@@ -27,14 +27,14 @@
   q w e r t y u i o p
   a s d f g h j k l ;
   z x c v b n m , . /
-  lalt spc ralt
+  lalt spc ralt ret
   mute vold volu
 )
 
 (defalias
   ;; Thumb keys: tap for the named key, hold for the layer.
   nav (tap-hold-press 200 200 spc  (layer-while-held nav))
-  fn  (tap-hold-press 200 200 ret  (layer-while-held func))
+  fn  (tap-hold-press 200 200 spc  (layer-while-held func))
   sym (tap-hold-press 200 200 bspc (layer-while-held numsym))
 
   ;; Base home-row mods.
@@ -88,7 +88,7 @@
   q   w e   r   t   y u   i   o p
   @ba s @bd @bf @bg @bh @bj @bk l @bs
   z   x c   v   b   n m   ,   . /
-  @nav @fn @sym
+  @nav @fn @sym ret
   mute vold volu
 )
 
@@ -96,7 +96,7 @@
   grv   @lp @lc lbrc apo @dq rbrc @rc @rp @tilde
   @na   2   @nd @nf  @ng @nh @nj  @nk 9   @ns
   @pipe XX  XX  @under min @plus eql XX  bksl /
-  _ _ _
+  _ _ _ _
   _ _ _
 )
 
@@ -104,7 +104,7 @@
   XX   XX   XX   pp   prev next @whdn @whup XX   XX
   lsft lctl lalt @nbf volu left down  up    rght rsft
   XX   XX   XX   brdn vold home pgdn  pgup  end  XX
-  _ _ _
+  _ _ _ _
   _ _ _
 )
 
@@ -112,7 +112,7 @@
   XX  XX  XX  XX  XX  XX  XX  XX  XX  XX
   @fa f2  @fd @ff @fg @fh @fj @fk f9  @fs
   f11 f12 XX  XX  XX  f11 f12 XX  XX  XX
-  _ _ _
+  _ _ _ _
   _ _ _
 )
 
