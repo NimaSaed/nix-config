@@ -74,6 +74,18 @@ in
   environment.etc."udev/rules.d/50-zsa-wally.rules".source =
     "${pkgs.zsa-udev-rules}/lib/udev/rules.d/50-wally.rules";
 
+  # The Voyager hangs off the CalDigit TS4's two USB 2.0 hubs. Its own remote
+  # wakeup is on (usbhid enables it for boot-protocol keyboards), but the kernel
+  # leaves hubs' wakeup off, and many hubs will not relay a downstream wake
+  # request upstream unless their own remote wakeup is enabled, so a keypress
+  # could not wake the laptop from suspend. Trade-off: connect/disconnect
+  # events at the dock wake it too. Applies to hubs enumerated after the rule
+  # is in place: replug the dock, or `udevadm trigger` the hubs after switching.
+  environment.etc."udev/rules.d/60-caldigit-ts4-wakeup.rules".text = ''
+    ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="2188", ATTR{idProduct}=="5802", ATTR{power/wakeup}="enabled"
+    ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="2188", ATTR{idProduct}=="5510", ATTR{power/wakeup}="enabled"
+  '';
+
   # Provide system-wide graphics drivers for Nix apps (Intel Mesa by default).
   system-graphics.enable = true;
 
