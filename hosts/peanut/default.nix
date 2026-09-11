@@ -74,6 +74,15 @@ in
   environment.etc."udev/rules.d/50-zsa-wally.rules".source =
     "${pkgs.zsa-udev-rules}/lib/udev/rules.d/50-wally.rules";
 
+  # Ubuntu's hwdb tags every USB touchpad ID_INPUT_TOUCHPAD_INTEGRATION=internal
+  # unless allow-listed, so libinput pairs the Voyager's touchpad with the lid
+  # switch and disables it while the lid is closed (docked, clamshell). Tag it
+  # external; libinput only lid-pairs internal touchpads. Runs after Ubuntu's
+  # 70-touchpad.rules, which imports the hwdb value. Replug after switching.
+  environment.etc."udev/rules.d/71-zsa-voyager-touchpad.rules".text = ''
+    ACTION=="add|change", KERNEL=="event*", ENV{ID_INPUT_TOUCHPAD}=="1", ATTRS{idVendor}=="3297", ATTRS{idProduct}=="1977", ENV{ID_INPUT_TOUCHPAD_INTEGRATION}="external"
+  '';
+
   # The Voyager hangs off the CalDigit TS4's two USB 2.0 hubs. Its own remote
   # wakeup is on (usbhid enables it for boot-protocol keyboards), but the kernel
   # leaves hubs' wakeup off, and many hubs will not relay a downstream wake
