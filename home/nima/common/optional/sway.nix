@@ -238,10 +238,15 @@ in
         keybindings =
           let
             mod = config.wayland.windowManager.sway.config.modifier;
+            # Screenshots go to the clipboard, never to a file.
+            shotRegion = "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
+            shotFull = "exec ${pkgs.grim}/bin/grim - | ${pkgs.wl-clipboard}/bin/wl-copy";
           in
           lib.mkOptionDefault {
-            "${mod}+Shift+s" =
-              "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
+            "${mod}+Shift+s" = shotRegion;
+            # The Voyager layout has no Print key, so full-screen needs a chord
+            # too. Mods on the left home row (a=Shift, f=Super), p on the right.
+            "${mod}+Shift+p" = shotFull;
 
             # Backspace is a thumb tap, opposite the left home-row Super key.
             "${mod}+BackSpace" = "exec ${config.my.sway.lockCommand}";
@@ -265,12 +270,10 @@ in
             "XF86AudioPlay" = "exec ${lib.getExe pkgs.playerctl} play-pause";
             "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set 5%-";
             "XF86MonBrightnessUp" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set +5%";
-            # Full-screen screenshot to clipboard. F9 (PrtSc) emits Print.
-            "Print" = "exec ${pkgs.grim}/bin/grim - | ${pkgs.wl-clipboard}/bin/wl-copy";
-            # ThinkPad F10 emits XF86Launch2 — alias to region-select (same as
-            # Mod+Shift+s) so the hardware key matches the chord shortcut.
-            "XF86Launch2" =
-              "exec ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | ${pkgs.wl-clipboard}/bin/wl-copy";
+            # ThinkPad F9 (PrtSc) emits Print; F10 emits XF86Launch2. Aliased to
+            # the chords above so the hardware keys match the keyboard shortcuts.
+            "Print" = shotFull;
+            "XF86Launch2" = shotRegion;
             # ThinkPad F7 (monitor icon) — pop up a GUI display picker for
             # layout / mirror / extend. Hand-rolled wlr-randr scripts break when
             # ports change, so we lean on wdisplays.
