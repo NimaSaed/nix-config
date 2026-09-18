@@ -282,10 +282,13 @@ in
   # lock immediately and let logind suspend; disabling eDP-1 before suspend can
   # leave a short unlocked-looking flash while the panel is re-enabled on wake.
   # --locked keeps the reopen path working over the lock screen; --reload
-  # re-applies the state on config reload. eDP-1 is the laptop panel (see
-  # autoscale override above).
+  # re-applies the state on config reload. A reload drops the runtime
+  # `output eDP-1 disable` and re-enables the panel, and sway ignores `exec`
+  # while reloading, so the lid:on side must be `exec_always` or the panel
+  # stays on until the lid is cycled. eDP-1 is the laptop panel (see autoscale
+  # override above).
   wayland.windowManager.sway.extraConfig = ''
-    bindswitch --reload --locked lid:on exec ${lib.getExe sway-lid-close}
+    bindswitch --reload --locked lid:on exec_always ${lib.getExe sway-lid-close}
     bindswitch --reload --locked lid:off output eDP-1 enable
   '';
 
