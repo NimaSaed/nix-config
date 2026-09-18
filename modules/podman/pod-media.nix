@@ -201,6 +201,9 @@ in
 
                 environments = {
                   TZ = "Europe/Amsterdam";
+                  # Authelia (Traefik middleware) is the gate. Since 4.0.20 Sonarr
+                  # challenges every proxied request unless TrustedNetworks is set.
+                  SONARR__AUTH__METHOD = "External";
                 };
 
                 volumes = [
@@ -237,6 +240,8 @@ in
 
                 environments = {
                   TZ = "Europe/Amsterdam";
+                  # Same reasoning as Sonarr; Radarr is pulling the same auth commits.
+                  RADARR__AUTH__METHOD = "External";
                 };
 
                 volumes = [
