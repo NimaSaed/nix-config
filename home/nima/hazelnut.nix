@@ -34,10 +34,26 @@
   # Common sway config + utilities come from ./common/optional/sway.nix.
   # Only host-specific bits live here.
   wayland.windowManager.sway.config = {
-    # Input configuration for Goodix touchscreen
     input = {
+      # Goodix touchscreen.
       "type:touch" = {
         tap = "enabled";
+      };
+
+      # The Voyager's touch navigator enumerates as a libinput touchpad with a
+      # BUTTONPAD flag but no physical click, so with libinput defaults (tap
+      # off, button_areas) there is no way to generate a button press at all.
+      # Mirrors peanut's trackpad block: tap-to-click, two-finger tap for
+      # right-click. drag_lock lets a tap-drag survive lifting the finger and
+      # putting it back (within libinput's ~300 ms timeout), which the tiny
+      # navigator surface needs for any selection wider than itself;
+      # `enabled_sticky` would hold the drag until an explicit closing tap.
+      "type:touchpad" = {
+        tap = "enabled";
+        drag_lock = "enabled";
+        natural_scroll = "enabled";
+        dwt = "enabled";
+        click_method = "clickfinger";
       };
     };
   };

@@ -296,11 +296,15 @@ in
   # to libinput defaults (no tap-to-click, traditional scroll direction), which
   # feel wrong on a laptop. `dwt` (disable-while-typing) suppresses stray cursor
   # jumps from the palm while typing; `clickfinger` makes a two-finger press the
-  # right-click instead of carving out a bottom-right button zone. Lives here
-  # rather than the shared module because it's per-device — desktops have no
-  # touchpad, and hazelnut configures its touchscreen the same host-local way.
+  # right-click instead of carving out a bottom-right button zone. `drag_lock`
+  # lets a tap-drag survive lifting the finger and putting it back within
+  # libinput's ~300 ms timeout; it also covers the Voyager's touch navigator
+  # when it is plugged in. Lives here rather than the shared module because
+  # it's per-device — desktops have no touchpad, and hazelnut configures its
+  # touchscreen the same host-local way.
   wayland.windowManager.sway.config.input."type:touchpad" = {
     tap = "enabled";
+    drag_lock = "enabled";
     natural_scroll = "enabled";
     dwt = "enabled";
     click_method = "clickfinger";
