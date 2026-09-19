@@ -121,10 +121,20 @@
   ];
 
   # ============================================================================
+  # LattePanda IOTA UPS (DFR1247) — battery percentage via HID
+  # ============================================================================
+  # The UPS presents as Arduino Leonardo (0x2341:0x8036). This out-of-tree
+  # driver exposes it as a power_supply device so upower and i3status-rust
+  # pick it up automatically. Upstream patch v3 by Andrew Maney, pending merge:
+  # https://lkml.iu.edu/hypermail/linux/kernel/2605.2/12097.html
+  boot.extraModulePackages = [
+    (config.boot.kernelPackages.callPackage ./hid-lattepanda-iota-ups { })
+  ];
+  boot.kernelModules = [ "uinput" "hid-lattepanda-iota-ups" ];
+
+  # ============================================================================
   # Services
   # ============================================================================
-
-  boot.kernelModules = [ "uinput" ];
 
   services.openssh = {
     enable = true;
@@ -132,7 +142,12 @@
 
   services.udev.extraRules = ''
     KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
+    KERNEL=="hidraw*", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="8036", GROUP="input", MODE="0660"
   '';
+
+  # UPower — computes time-to-empty/full from capacity change rate so that
+  # i3status-rust can display remaining time (the UPS hardware only reports %).
+  services.upower.enable = true;
 
   # Periodic TRIM for eMMC longevity
   services.fstrim.enable = true;

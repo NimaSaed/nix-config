@@ -369,6 +369,7 @@ in
           }
           {
             block = "battery";
+            driver = "upower";
             format = " $icon $percentage {$time |}";
           }
           # Secondary timezones (old bar's IR/MY clocks), then the local
