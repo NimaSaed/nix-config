@@ -34,9 +34,25 @@
   # CPU package power is capped to 5 W (PL1) in the BIOS; these trim the
   # platform's idle draw on top of that.
 
-  # Let idle PCIe links (BE200 Wi-Fi, Realtek NIC) enter L0s/L1. The firmware
-  # default leaves several links permanently in L0.
-  boot.kernelParams = [ "pcie_aspm.policy=powersave" ];
+  # PCIe ASPM: leave it to the BIOS. The board's FADT sets the NO_ASPM flag,
+  # so the kernel ignores `pcie_aspm.policy=*` ("FADT indicates ASPM is
+  # unsupported, using BIOS configuration"). Overriding that with
+  # `pcie_aspm=force pcie_aspm.policy=powersave` was tried on 2026-09-20 and
+  # only affected the BE200 link (r8169 disables L1 on its own, and the NIC
+  # sits in D3 anyway). In two of four boots the BE200 dropped off the bus
+  # within two minutes (all firmware registers 0xffffffff, iwlmld crash,
+  # Wi-Fi gone until reboot). Not worth one link's L1.
+
+  boot.kernel.sysctl = {
+    # The perf-based hard-lockup detector arms an NMI timer on every core. It
+    # only matters for debugging kernel hangs; drop the periodic wakeups.
+    "kernel.nmi_watchdog" = 0;
+    # Writeback flushes dirty pages every 5 s by default. 15 s batches the
+    # writes so the eMMC controller stays runtime-suspended longer between
+    # bursts. The UPS already covers mains loss, so the longer window costs
+    # nothing in practice.
+    "vm.dirty_writeback_centisecs" = 1500;
+  };
 
   # HWP energy/performance hint: bias the hardware P-state algorithm toward
   # lower frequencies on bursty load and faster ramp-down after it. Peak and
@@ -97,7 +113,11 @@
   # Bluetooth — Intel BE200
   # ============================================================================
   hardware.bluetooth.enable = true;
-  hardware.bluetooth.powerOnBoot = true;
+  # Nothing is paired on this host, so keep the radio off until it is turned
+  # on from blueman. A powered adapter runs page/inquiry scan windows on the
+  # BE200's shared radio even with no peers; off, the USB function stays
+  # runtime-suspended.
+  hardware.bluetooth.powerOnBoot = false;
   services.blueman.enable = true;
 
   # ============================================================================
@@ -152,7 +172,19 @@
   boot.extraModulePackages = [
     (config.boot.kernelPackages.callPackage ./hid-lattepanda-iota-ups { })
   ];
-  boot.kernelModules = [ "uinput" "hid-lattepanda-iota-ups" ];
+  boot.kernelModules = [
+    "uinput"
+    "hid-lattepanda-iota-ups"
+  ];
+  # The pack is 3 × Panasonic NCR18650GA, labelled 3300 mAh, 3.6 V nominal:
+  # 35.64 Wh. The driver's default assumes 3 × 3500 mAh at 3.7 V. This only
+  # scales the reported watts; UPower's time-to-empty is a ratio and unaffected.
+  # The driver's charge_limit option must mirror DIP switch SW3. The switch is
+  # in the full-charge position, matching the driver default of 100; set
+  # charge_limit=80 here if it is ever moved to 80%CHG.
+  boot.extraModprobeConfig = ''
+    options hid-lattepanda-iota-ups energy_full_uwh=35640000
+  '';
 
   # ============================================================================
   # Services
@@ -165,6 +197,21 @@
   services.udev.extraRules = ''
     KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
     KERNEL=="hidraw*", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="8036", GROUP="input", MODE="0660"
+
+    # Realtek RTL8168h NIC (02:00.0): the kernel leaves PCI runtime PM at
+    # `on`, so the chip and its PHY sit in D0 with no cable plugged in. With
+    # `auto`, r8169 suspends the device to D3hot whenever there is no carrier
+    # (WoL is off, so the PHY powers down too) and its root port follows.
+    # Plugging a cable in wakes it via the link-change interrupt.
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10ec", ATTR{device}=="0x8168", ATTR{power/control}="auto"
+
+    # RP2040 co-processor (MicroPython, cdc_acm). USB devices default to
+    # `on`; cdc_acm supports autosuspend and only allows it while the tty is
+    # closed, so an open /dev/ttyACM0 session is never interrupted. The
+    # Voyager keyboard and the UPS HID are left alone on purpose: usbhid
+    # refuses autosuspend for interfaces with LEDs or without remote wakeup,
+    # so a rule for them would be a no-op.
+    ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="2e8a", ATTR{idProduct}=="0005", ATTR{power/control}="auto"
   '';
 
   # UPower — computes time-to-empty/full from capacity change rate so that

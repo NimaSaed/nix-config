@@ -6,11 +6,25 @@
 // Local additions vs. upstream:
 //   - ENERGY_FULL_DESIGN / ENERGY_FULL / ENERGY_NOW derived from capacity %
 //     so that UPower has a non-zero energy baseline to work from.
-//   - POWER_NOW computed from the real elapsed time between consecutive 1%
-//     capacity steps (with EMA smoothing), avoiding UPower's wildly wrong
-//     instantaneous rate when it happens to poll right at a step boundary.
+//   - POWER_NOW estimated from the UPS's 1% capacity steps. The device only
+//     reports a whole percent (its HID descriptor has no voltage, current or
+//     runtime usage), and that percent is lumpy: it can sit still for 20 min
+//     and then drop 2% in 3 min. Rating from two consecutive steps therefore
+//     swings by an order of magnitude. Instead the driver keeps a ring of
+//     timestamped capacity samples and, at read time, averages over a window
+//     that spans at least rate_window_steps percent AND rate_window_ms of
+//     elapsed time. Using the read time as the end of the window makes the
+//     estimate decay smoothly during a plateau rather than freeze.
 //   - energy_full_uwh module param lets you tune to your actual cell capacity.
-//     Default: 3 × 3500mAh × 3.7V = 38,850,000 µWh.
+//     Default: 3 × 3500mAh × 3.7V = 38,850,000 µWh. It scales the reported
+//     watts but cancels out of UPower's time-to-empty.
+//   - PresentStatus decoded per the descriptor's usage order (Charging bit 0,
+//     Discharging bit 1, ACPresent bit 2, BatteryPresent bit 3, FullyCharged
+//     bit 8). Upstream reads bit 0 as "plugged in" and bit 2 as "charging";
+//     that works while charging because both bits are set, but at the 80%
+//     DIP-switch cap the firmware clears Charging and sets FullyCharged, which
+//     upstream would show as charging forever with AC offline.
+//   - charge_limit module param mirrors the SW3 DIP switch position.
 #include <linux/power_supply.h>
 #include <linux/completion.h>
 #include <linux/workqueue.h>
@@ -18,6 +32,8 @@
 #include <linux/moduleparam.h>
 #include <linux/spinlock.h>
 #include <linux/math64.h>
+#include <linux/minmax.h>
+#include <linux/limits.h>
 #include <linux/ktime.h>
 #include <linux/hid.h>
 #include <linux/usb.h>
@@ -28,9 +44,20 @@
 #define REPORT_ID_CAPACITY 0x0C
 #define REPORT_ID_STATUS   0x07
 
-#define STATUS_PLUGGED_IN  BIT(0)
-#define STATUS_DISCHARGING BIT(1)
-#define STATUS_CHARGING    BIT(2)
+/*
+ * PresentStatus (report 0x07) is a 16-bit little-endian bitfield laid out in
+ * the order the HID descriptor declares its usages, which matches the
+ * Arduino HIDPowerDevice library the firmware is built on. Observed while
+ * discharging: 0x0a = DISCHARGING | BATTERY_PRESENT.
+ */
+#define STATUS_CHARGING            BIT(0)
+#define STATUS_DISCHARGING         BIT(1)
+#define STATUS_AC_PRESENT          BIT(2)
+#define STATUS_BATTERY_PRESENT     BIT(3)
+#define STATUS_BELOW_CAPACITY_LIMIT BIT(4)
+#define STATUS_NEED_REPLACEMENT    BIT(6)
+#define STATUS_FULLY_CHARGED       BIT(8)
+#define STATUS_FULLY_DISCHARGED    BIT(9)
 
 /* 3 × 3500mAh × 3.7V = 38,850,000 µWh */
 #define ENERGY_FULL_DEFAULT_UWH 38850000
@@ -39,6 +66,40 @@ static unsigned int energy_full_uwh = ENERGY_FULL_DEFAULT_UWH;
 module_param(energy_full_uwh, uint, 0444);
 MODULE_PARM_DESC(energy_full_uwh,
 	"Battery design capacity in µWh (default: 38850000 = 3×3500mAh@3.7V)");
+
+/*
+ * Rate window. Both bounds must be met (or the sample history exhausted):
+ * at least this many 1% steps, and at least this much wall time. 6% is about
+ * half an hour at this board's idle draw; 20 min covers the longest gauge
+ * plateau seen. RATE_RING bounds how far back the window can reach.
+ */
+#define RATE_RING 16
+
+static unsigned int rate_window_steps = 6;
+module_param(rate_window_steps, uint, 0444);
+MODULE_PARM_DESC(rate_window_steps,
+	"Minimum number of 1% capacity steps averaged for POWER_NOW (default: 6)");
+
+static unsigned int rate_window_ms = 20 * 60 * 1000;
+module_param(rate_window_ms, uint, 0444);
+MODULE_PARM_DESC(rate_window_ms,
+	"Minimum time span averaged for POWER_NOW in ms (default: 1200000 = 20 min)");
+
+/*
+ * Where the board's SW3 DIP switch stops charging (80 or 100). The switch is
+ * not readable over USB, so this mirrors its position. Only used to report
+ * Full if the firmware does not raise FULLY_CHARGED at the cap. Also the
+ * initial value of the writable charge_control_end_threshold attribute.
+ */
+static unsigned int charge_limit = 100;
+module_param(charge_limit, uint, 0444);
+MODULE_PARM_DESC(charge_limit,
+	"Charge cap set by DIP switch SW3, 80 or 100 (default: 100)");
+
+struct iota_ups_sample {
+	ktime_t t;
+	int cap;
+};
 
 MODULE_AUTHOR("Andrew Maney");
 MODULE_DESCRIPTION("LattePanda IOTA UPS power supply driver");
@@ -51,14 +112,20 @@ struct iota_ups {
 	spinlock_t lock; /* Protects all cached values below */
 
 	bool plugged_in;
+	bool battery_present;
 	char serial[64];
 	int charge_limit;
 	int psu_status;
 	int capacity;
 
-	/* Rate tracking: time of last capacity change + smoothed power (µW) */
-	ktime_t last_capacity_time;
-	int power_now_uw;
+	/*
+	 * Rate tracking: ring of (time, capacity) taken at every capacity
+	 * change, plus one anchor sample at the start of a charge/discharge
+	 * run. sample_head is the next slot to write.
+	 */
+	struct iota_ups_sample samples[RATE_RING];
+	unsigned int sample_head;
+	unsigned int sample_count;
 
 	struct completion got_initial_data;
 	struct work_struct register_work;
@@ -91,6 +158,56 @@ static const struct hid_device_id iota_ups_devices[] = {
 };
 MODULE_DEVICE_TABLE(hid, iota_ups_devices);
 
+/*
+ * Estimate power (µW) over the recent capacity history. Called under
+ * ups->lock. Walks back from the newest sample until the window contains at
+ * least rate_window_steps steps and spans at least rate_window_ms, or the
+ * history runs out. The window ends at the read time, not at the newest
+ * step, so a long plateau lowers the estimate gradually instead of leaving a
+ * stale value. That also biases the result low by the fraction of a percent
+ * consumed since the last step, at most 1/rate_window_steps of the total.
+ * Returns 0 (unknown) until at least rate_window_ms of history exists.
+ */
+static int iota_ups_power_now(struct iota_ups *ups)
+{
+	const struct iota_ups_sample *newest, *oldest;
+	unsigned int steps_wanted, i;
+	ktime_t now = ktime_get();
+	u64 energy_uwh, power_uw;
+	s64 span_ms;
+
+	/* Need the anchor plus at least one step. */
+	if (ups->sample_count < 2)
+		return 0;
+
+	steps_wanted = clamp(rate_window_steps, 1U, RATE_RING - 1);
+	newest = &ups->samples[(ups->sample_head + RATE_RING - 1) % RATE_RING];
+	oldest = newest;
+
+	for (i = 1; i < ups->sample_count; i++) {
+		oldest = &ups->samples[(ups->sample_head + RATE_RING - 1 - i) % RATE_RING];
+		if (i >= steps_wanted &&
+		    ktime_to_ms(ktime_sub(now, oldest->t)) >= rate_window_ms)
+			break;
+	}
+
+	/*
+	 * Too little history to say anything. The gauge sags several percent
+	 * in the first minute after boot under load, so a rate from a short
+	 * window is nonsense (observed: 54 W, 17 min remaining). Report 0,
+	 * which UPower shows as unknown, until the window is long enough.
+	 */
+	span_ms = ktime_to_ms(ktime_sub(now, oldest->t));
+	if (span_ms < (s64)rate_window_ms)
+		return 0;
+
+	/* µWh consumed across the window; ≤ energy_full_uwh, fits u64 × 3.6e6. */
+	energy_uwh = div64_u64((u64)energy_full_uwh * abs(oldest->cap - newest->cap), 100);
+	power_uw = div64_u64(energy_uwh * 3600000ULL, (u64)span_ms);
+
+	return (int)min_t(u64, power_uw, INT_MAX);
+}
+
 static int iota_ups_get_property(struct power_supply *supply,
 				 enum power_supply_property psp,
 				 union power_supply_propval *val)
@@ -115,10 +232,10 @@ static int iota_ups_get_property(struct power_supply *supply,
 		val->intval = (int)div64_u64((u64)energy_full_uwh * ups->capacity, 100);
 		break;
 	case POWER_SUPPLY_PROP_POWER_NOW:
-		val->intval = ups->power_now_uw;
+		val->intval = iota_ups_power_now(ups);
 		break;
 	case POWER_SUPPLY_PROP_PRESENT:
-		val->intval = 1;
+		val->intval = ups->battery_present ? 1 : 0;
 		break;
 	case POWER_SUPPLY_PROP_ONLINE:
 		val->intval = ups->plugged_in ? 1 : 0;
@@ -177,42 +294,23 @@ static int iota_ups_property_is_writable(struct power_supply *supply,
 	return psp == POWER_SUPPLY_PROP_CHARGE_CONTROL_END_THRESHOLD;
 }
 
-/*
- * Compute power_now (µW) from the elapsed time since the last capacity step.
- * Uses a 50% EMA to smooth across multiple steps and avoid single-sample
- * spikes. Called under ups->lock with the new capacity already validated.
- */
-static void iota_ups_update_power(struct iota_ups *ups, int old_cap, int new_cap)
+/* Record a capacity sample. Called under ups->lock. */
+static void iota_ups_push_sample(struct iota_ups *ups, int cap)
 {
-	ktime_t now = ktime_get();
-	s64 delta_ms;
-	u64 energy_delta_uwh;
-	int new_power_uw;
+	ups->samples[ups->sample_head].t = ktime_get();
+	ups->samples[ups->sample_head].cap = cap;
+	ups->sample_head = (ups->sample_head + 1) % RATE_RING;
+	if (ups->sample_count < RATE_RING)
+		ups->sample_count++;
+}
 
-	/* Skip on first reading — no previous timestamp to compare against */
-	if (!ktime_to_ns(ups->last_capacity_time))
-		goto out;
-
-	delta_ms = ktime_to_ms(ktime_sub(now, ups->last_capacity_time));
-	if (delta_ms <= 0)
-		goto out;
-
-	/* µWh per 1% step, scaled by number of steps jumped */
-	energy_delta_uwh = div64_u64((u64)energy_full_uwh * abs(new_cap - old_cap), 100);
-
-	/*
-	 * power_uw = energy_delta_uwh [µWh] × 3,600,000 [ms/h] / delta_ms
-	 * Max value before div: ~3.885×10^7 × 3.6×10^6 = ~1.4×10^14 — fits u64.
-	 */
-	new_power_uw = (int)div64_u64(energy_delta_uwh * 3600000ULL, (u64)delta_ms);
-
-	/* 50% EMA: blend new measurement with running average */
-	ups->power_now_uw = ups->power_now_uw
-		? (ups->power_now_uw + new_power_uw) / 2
-		: new_power_uw;
-
-out:
-	ups->last_capacity_time = now;
+/* Forget the run so far and anchor a new one at the current capacity. */
+static void iota_ups_reset_samples(struct iota_ups *ups)
+{
+	ups->sample_head = 0;
+	ups->sample_count = 0;
+	if (ups->got_capacity)
+		iota_ups_push_sample(ups, ups->capacity);
 }
 
 static int iota_ups_raw_event(struct hid_device *hdev,
@@ -230,11 +328,21 @@ static int iota_ups_raw_event(struct hid_device *hdev,
 
 	switch (data[0]) {
 	case REPORT_ID_STATUS: {
-		u8 status = data[1];
+		u16 status = data[1] | (size > 2 ? data[2] << 8 : 0);
+		bool plugged_in = !!(status & STATUS_AC_PRESENT);
+		bool battery_present = !!(status & STATUS_BATTERY_PRESENT);
 		int new_status;
-		bool plugged_in = !!(status & STATUS_PLUGGED_IN);
 
-		if (status & STATUS_CHARGING) {
+		/*
+		 * The board's SW3 DIP switch can stop charging at 80%. At the
+		 * cap the firmware drops CHARGING and raises FULLY_CHARGED
+		 * while AC stays present. Report that as Full, and also treat
+		 * "AC present, not charging, at or above the configured limit"
+		 * as Full in case the firmware only clears CHARGING.
+		 */
+		if (status & STATUS_FULLY_CHARGED) {
+			new_status = POWER_SUPPLY_STATUS_FULL;
+		} else if (status & STATUS_CHARGING) {
 			if (ups->capacity >= ups->charge_limit)
 				new_status = POWER_SUPPLY_STATUS_FULL;
 			else
@@ -242,29 +350,31 @@ static int iota_ups_raw_event(struct hid_device *hdev,
 		} else if (status & STATUS_DISCHARGING) {
 			new_status = POWER_SUPPLY_STATUS_DISCHARGING;
 		} else if (plugged_in) {
-			new_status = POWER_SUPPLY_STATUS_NOT_CHARGING;
+			if (ups->capacity >= ups->charge_limit)
+				new_status = POWER_SUPPLY_STATUS_FULL;
+			else
+				new_status = POWER_SUPPLY_STATUS_NOT_CHARGING;
 		} else {
 			new_status = POWER_SUPPLY_STATUS_UNKNOWN;
 		}
 
-		if (new_status != ups->psu_status || plugged_in != ups->plugged_in) {
-			bool was_charging = (ups->psu_status == POWER_SUPPLY_STATUS_CHARGING);
-			bool is_charging  = (new_status      == POWER_SUPPLY_STATUS_CHARGING);
+		if (new_status != ups->psu_status ||
+		    plugged_in != ups->plugged_in ||
+		    battery_present != ups->battery_present) {
+			/*
+			 * Any status change starts a new run for the rate
+			 * estimate: time spent sitting Full must not be counted
+			 * against the first discharge step after unplugging.
+			 * iota_ups_reset_samples() re-anchors at the current
+			 * capacity, so the boot-time UNKNOWN→Discharging
+			 * transition costs nothing.
+			 */
+			if (new_status != ups->psu_status)
+				iota_ups_reset_samples(ups);
 
 			ups->plugged_in = plugged_in;
+			ups->battery_present = battery_present;
 			ups->psu_status = new_status;
-
-			/*
-			 * Reset the rate only when genuinely flipping between
-			 * charging and discharging — not on the initial
-			 * UNKNOWN→Discharging transition at boot, which would
-			 * wipe the timestamp set by the first capacity report
-			 * and delay power_now by an extra 1% step.
-			 */
-			if (was_charging != is_charging) {
-				ups->power_now_uw = 0;
-				ups->last_capacity_time = ktime_set(0, 0);
-			}
 			changed = true;
 		}
 
@@ -275,9 +385,14 @@ static int iota_ups_raw_event(struct hid_device *hdev,
 	case REPORT_ID_CAPACITY: {
 		int new_cap = clamp((int)data[1], 0, 100);
 
-		if (new_cap != ups->capacity) {
-			iota_ups_update_power(ups, ups->capacity, new_cap);
+		/*
+		 * The very first report anchors the run even when it happens to
+		 * equal the placeholder capacity, so the first real step is
+		 * measured against it instead of becoming the anchor itself.
+		 */
+		if (!ups->got_capacity || new_cap != ups->capacity) {
 			ups->capacity = new_cap;
+			iota_ups_push_sample(ups, new_cap);
 			changed = true;
 		}
 
@@ -347,8 +462,8 @@ static int iota_ups_probe(struct hid_device *hdev,
 	ups->hiddev = hdev;
 	ups->psu_status = POWER_SUPPLY_STATUS_UNKNOWN;
 	ups->capacity = 50;
-	ups->charge_limit = 100;
-	ups->last_capacity_time = ktime_set(0, 0);
+	ups->battery_present = true;
+	ups->charge_limit = (charge_limit == 80) ? 80 : 100;
 
 	init_completion(&ups->got_initial_data);
 	spin_lock_init(&ups->lock);

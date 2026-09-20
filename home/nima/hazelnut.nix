@@ -58,6 +58,30 @@
     };
   };
 
+  # ===========================================================================
+  # Idle display power-off (battery)
+  # ===========================================================================
+  # The LG 4K panel hangs off HDMI at 30 Hz. While the output is on, i915 has
+  # an active pipe and never runtime-suspends, so the display engine and the
+  # 3840x2160 scanout draw power around the clock. Ten minutes without input
+  # powers the output off; i915 enters runtime suspend about 10 s later
+  # (verified: power/runtime_status flips to `suspended`) and the monitor
+  # drops to standby on its own. Any input turns it back on.
+  #
+  # Display-off only, no lock: the idle lock in the shared sway module was
+  # disabled deliberately (badbc35). Fullscreen windows hold the timer off via
+  # the shared `inhibit_idle` rules, so video playback is not interrupted.
+  services.swayidle = {
+    enable = true;
+    timeouts = [
+      {
+        timeout = 600;
+        command = "${pkgs.sway}/bin/swaymsg 'output * power off'";
+        resumeCommand = "${pkgs.sway}/bin/swaymsg 'output * power on'";
+      }
+    ];
+  };
+
   home.packages = with pkgs; [
     bitwarden-desktop
   ];
