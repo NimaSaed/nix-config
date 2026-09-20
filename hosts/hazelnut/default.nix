@@ -29,11 +29,33 @@
   zramSwap.memoryPercent = 50;
 
   # ============================================================================
+  # Power Management — battery-backed (LattePanda IOTA UPS)
+  # ============================================================================
+  # CPU package power is capped to 5 W (PL1) in the BIOS; these trim the
+  # platform's idle draw on top of that.
+
+  # Let idle PCIe links (BE200 Wi-Fi, Realtek NIC) enter L0s/L1. The firmware
+  # default leaves several links permanently in L0.
+  boot.kernelParams = [ "pcie_aspm.policy=powersave" ];
+
+  # HWP energy/performance hint: bias the hardware P-state algorithm toward
+  # lower frequencies on bursty load and faster ramp-down after it. Peak and
+  # PL1-limited sustained speed are unaffected. Firmware default is
+  # balance_performance.
+  systemd.tmpfiles.rules = [
+    "w /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference - - - - balance_power"
+  ];
+
+  # ============================================================================
   # Networking
   # ============================================================================
   # Hazelnut - the coffee companion (LattePanda iota desktop)
   networking.hostName = "hazelnut";
   networking.networkmanager.enable = true;
+  # 802.11 power save: the BE200 sleeps between AP beacons instead of listening
+  # continuously. Costs tens of ms of inbound latency after idle; saves a
+  # noticeable share of this board's idle draw on battery.
+  networking.networkmanager.wifi.powersave = true;
 
   # ============================================================================
   # Localization
