@@ -30,7 +30,6 @@
                 mountpoint = "/";
                 mountOptions = [
                   "noatime" # Reduce write amplification on eMMC
-                  "discard" # Inline TRIM for eMMC wear leveling
                 ];
               };
             };

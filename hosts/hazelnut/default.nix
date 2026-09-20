@@ -22,11 +22,24 @@
 
   # Use systemd-boot (UEFI)
   boot.loader.systemd-boot.enable = true;
+  # A 512 MiB ESP fills quickly with several NixOS kernel generations. Five
+  # entries leave room for updates while retaining practical rollback coverage.
+  boot.loader.systemd-boot.configurationLimit = 5;
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Enable zram swap for better memory management
   zramSwap.enable = true;
   zramSwap.memoryPercent = 50;
+
+  # The eMMC has enough room for normal use but not for unbounded generations
+  # and duplicate store files. Keep a month of rollback history and reclaim
+  # identical paths automatically.
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";
+  };
+  nix.optimise.automatic = true;
 
   # ============================================================================
   # Power Management — battery-backed (LattePanda IOTA UPS)
