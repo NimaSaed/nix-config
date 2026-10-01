@@ -36,6 +36,16 @@
       # Default C-b prefix; the keyboard's J+K chord emits it in one tap.
 
       # =========================================================================
+      # Extended Keys
+      # =========================================================================
+      # Pass through modified keys (Shift/Ctrl/Alt+Enter, etc.) via the CSI-u /
+      # modifyOtherKeys protocol so TUIs like pi can distinguish them. Without
+      # this tmux collapses e.g. Shift+Enter down to a plain Enter.
+      set -s extended-keys on
+      set -g extended-keys-format csi-u
+      set -as terminal-features 'xterm*:extkeys'
+
+      # =========================================================================
       # Clipboard (OSC 52)
       # =========================================================================
       set -s set-clipboard on
