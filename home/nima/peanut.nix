@@ -39,6 +39,7 @@ in
     ./common/core/fonts.nix
     ./common/optional/alacritty.nix
     ./common/optional/claude-code.nix
+    ./common/optional/pi.nix
     ./common/optional/sway.nix
     ./common/optional/gtk.nix
     ./common/optional/bitwarden.nix
