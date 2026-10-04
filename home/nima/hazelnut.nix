@@ -17,6 +17,7 @@
     ./common/optional/bitwarden.nix
     ./common/optional/bitwarden-ssh-agent.nix
     ./common/optional/firefox.nix
+    ./common/optional/pi.nix
   ];
 
   # ===========================================================================
@@ -84,6 +85,7 @@
 
   home.packages = with pkgs; [
     bitwarden-desktop
+    openscad-unstable
   ];
 
   # ===========================================================================
