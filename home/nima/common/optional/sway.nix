@@ -390,10 +390,24 @@ in
           }
           # Speaker, then microphone. Left-click toggles mute, scroll
           # adjusts volume; both update instantly on PipeWire events.
-          { block = "sound"; }
+          {
+            block = "sound";
+            click = [
+              {
+                button = "left";
+                action = "toggle_mute";
+              }
+            ];
+          }
           {
             block = "sound";
             device_kind = "source";
+            click = [
+              {
+                button = "left";
+                action = "toggle_mute";
+              }
+            ];
           }
         ];
       };
