@@ -67,8 +67,9 @@
           ''
         else
           ''
-            # Linux - use xclip
-            bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel 'xclip -in -selection clipboard'
+            # Linux/Wayland - use wl-copy. This system runs Wayland, and xclip
+            # is an X11 client (and is not installed).
+            bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel '${pkgs.wl-clipboard}/bin/wl-copy'
           ''
       }
 
