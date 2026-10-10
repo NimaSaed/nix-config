@@ -74,6 +74,16 @@ in
   environment.etc."udev/rules.d/50-zsa-wally.rules".source =
     "${pkgs.zsa-udev-rules}/lib/udev/rules.d/50-wally.rules";
 
+  # Serial access for the ZMK keyboard (Halcyon Ferris). ZMK Studio
+  # (https://zmk.studio, Web Serial in Firefox) opens the keyboard's USB
+  # CDC-ACM port (/dev/ttyACM*) directly; Ubuntu ships those root:dialout
+  # 0660, so the browser gets "access denied". Same uaccess approach as the
+  # ZSA rules above, so no dialout membership. 1d50:615e is the shared ZMK
+  # project USB ID, so this covers any ZMK board. Replug after switching.
+  environment.etc."udev/rules.d/50-zmk-serial.rules".text = ''
+    SUBSYSTEM=="tty", ATTRS{idVendor}=="1d50", ATTRS{idProduct}=="615e", TAG+="uaccess"
+  '';
+
   # Ubuntu's hwdb tags every USB touchpad ID_INPUT_TOUCHPAD_INTEGRATION=internal
   # unless allow-listed, so libinput pairs the Voyager's touchpad with the lid
   # switch and disables it while the lid is closed (docked, clamshell). Tag it

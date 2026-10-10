@@ -94,6 +94,12 @@ in
       "jid1-MnnxcxisBPnSXQ@jetpack".private_browsing = true; # Privacy Badger
     };
 
+    # Web Serial (Firefox 151+) is blocked outright as soon as any enterprise
+    # policy is set — and the two above are. 3 = allowed: sites may ask, and
+    # the normal per-port permission prompt still applies. Needed for ZMK
+    # Studio (https://zmk.studio) to reach the keyboard over USB.
+    policies.DefaultSerialGuardSetting = 3;
+
     profiles.default = {
       isDefault = true;
 
