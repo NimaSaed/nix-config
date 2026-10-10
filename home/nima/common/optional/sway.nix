@@ -472,13 +472,14 @@ in
     };
 
     # Kanata implements the Voyager layout in software for ordinary keyboards.
-    # It grabs every keyboard except the ZSA Voyager, exposes one virtual
-    # `kanata-oryx` device, and blocks every physical key outside the 33-key
-    # layout except volume controls. ThinkPad media/Fn events normally come
-    # from separate partial-key devices, which Kanata deliberately leaves alone.
+    # It grabs every keyboard except the firmware-managed ZSA Voyager and ZMK
+    # Halcyon Ferris, exposes one virtual `kanata-oryx` device, and blocks every
+    # physical key outside the 33-key layout except volume controls. ThinkPad
+    # media/Fn events normally come from separate partial-key devices, which
+    # Kanata deliberately leaves alone.
     systemd.user.services.kanata-oryx = {
       Unit = {
-        Description = "Oryx layout for non-ZSA keyboards";
+        Description = "Oryx layout for ordinary keyboards";
         PartOf = [ "sway-session.target" ];
         After = [ "sway-session.target" ];
       };
@@ -491,8 +492,9 @@ in
     };
 
     # xremap remains the application-aware second stage. It reads Kanata's
-    # virtual keyboard plus the firmware-managed Voyager, so Firefox-specific
-    # mappings work with either without racing Kanata to grab physical devices.
+    # virtual keyboard plus the firmware-managed Voyager and Ferris, so
+    # Firefox-specific mappings work with any of them without racing Kanata to
+    # grab physical devices.
     # Firefox uses Ctrl+T/Ctrl+W for new/close tab. Remap the easier home-row Alt
     # variants only inside Firefox; native Alt+number tab selection and
     # Alt+Left/Right history navigation need no translation.
@@ -524,7 +526,7 @@ in
         # --output-device-name is pinned: without it xremap renames itself to
         # "xremap pid=NN" when a device named xremap already exists, escaping
         # Kanata's exact-name exclude list and feeding Kanata its own output.
-        ExecStart = "${lib.getExe pkgs.xremap} --watch=device,config --output-device-name xremap --device kanata-oryx --device 'ZSA Technology Labs Voyager Keyboard' ${xremapConfig}";
+        ExecStart = "${lib.getExe pkgs.xremap} --watch=device,config --output-device-name xremap --device kanata-oryx --device 'ZSA Technology Labs Voyager Keyboard' --device 'ZMK Project Halcyon Ferris Keyboard' ${xremapConfig}";
         Restart = "on-failure";
         RestartSec = 2;
       };
