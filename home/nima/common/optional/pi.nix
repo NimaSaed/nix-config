@@ -7,9 +7,12 @@ let
   # Nix-owned defaults.  Hosts can override or extend these via
   # `programs.pi.settings` (deep-merged, host wins).
   defaultSettings = {
-    theme = "dark";
-    defaultProvider = "openai-codex";
-    defaultModel = "gpt-5.6-luna";
+    theme = "system";
+    # Claude Fable 5.1 via the Anthropic subscription. Pi's bundled catalog
+    # already lists it with a 1M-token context window and 128k max output, so
+    # no models.json contextWindow override is needed.
+    defaultProvider = "anthropic";
+    defaultModel = "claude-fable-5-1";
     defaultThinkingLevel = "high";
     outputPad = 0;
     quietStartup = true;
@@ -23,7 +26,7 @@ let
     # fresh host picks these up on first launch.  Ad-hoc `pi install` entries
     # are preserved by the array union in the activation script below.
     packages = [
-      "npm:pi-web-search"
+      "npm:pi-web-access"
     ];
   };
 
@@ -46,7 +49,7 @@ in
   options.programs.pi.settings = lib.mkOption {
     type = jsonFormat.type;
     default = { };
-    example = { defaultModel = "gpt-5.5"; defaultThinkingLevel = "medium"; };
+    example = { defaultProvider = "anthropic"; defaultModel = "claude-fable-5-1"; defaultThinkingLevel = "xhigh"; };
     description = ''
       Per-host overrides for Pi's `~/.pi/agent/settings.json`.  Deep-merged
       over the module defaults; the result is merged into the real file at
@@ -97,12 +100,5 @@ in
       fi
     '';
 
-    # GPT-5.6 Luna supports the 1.05M-token long-context tier.  Pi only reads
-    # this file, so linking it from the store is fine.
-    home.file.".pi/agent/models.json".source = jsonFormat.generate "pi-models.json" {
-      providers."openai-codex".modelOverrides."gpt-5.6-luna" = {
-        contextWindow = 1050000;
-      };
-    };
   };
 }
