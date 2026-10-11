@@ -57,6 +57,19 @@
         click_method = "clickfinger";
       };
     };
+
+    # Autostart Bitwarden with the session so the vault (and its SSH agent,
+    # see bitwarden-ssh-agent.nix) is available right away. Merged with the
+    # shared startup list in common/optional/sway.nix.
+    # `--autostart` is the flag Bitwarden expects from any autostart mechanism
+    # (apps/desktop/src/main/messaging.main.ts): it skips showing the main
+    # window and hides to the tray, so the floating window doesn't pop up on
+    # every login. Requires the default "run in background" (tray) setting.
+    # Bitwarden's own "Open at login" writes an XDG autostart entry, which is
+    # inert here because the sway module has xdgAutostart = false.
+    startup = [
+      { command = "${lib.getExe pkgs.bitwarden-desktop} --autostart"; }
+    ];
   };
 
   # ===========================================================================
