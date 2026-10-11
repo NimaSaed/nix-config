@@ -89,6 +89,18 @@
   ];
 
   # ===========================================================================
+  # Nextcloud desktop sync
+  # ===========================================================================
+  # Runs as a user service bound to graphical-session.target (started by the
+  # sway session), so it comes up with the desktop and sits in the tray.
+  # Sync folder lives on the eMMC; incremental sync writes are light and the
+  # zram swap / noatime / fstrim setup on this host already covers wear.
+  services.nextcloud-client = {
+    enable = true;
+    startInBackground = true;
+  };
+
+  # ===========================================================================
   # Program Configurations
   # ===========================================================================
   programs = {

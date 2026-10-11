@@ -152,6 +152,14 @@
     };
   };
 
+  # Secret Service keyring. The Nextcloud client (via QtKeychain) and other
+  # apps store their login tokens here; without a daemon they are lost at
+  # logout and every session starts with a fresh login prompt. gnome-keyring
+  # is D-Bus-activated on first use and the greetd PAM entry unlocks the
+  # "login" keyring with the session password, so it never prompts.
+  services.gnome.gnome-keyring.enable = true;
+  security.pam.services.greetd.enableGnomeKeyring = true;
+
   # XDG Desktop Portal for Sway (screen sharing, file dialogs)
   xdg.portal = {
     enable = true;
