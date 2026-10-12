@@ -13,7 +13,7 @@ let
     # no models.json contextWindow override is needed.
     defaultProvider = "anthropic";
     defaultModel = "claude-fable-5-1";
-    defaultThinkingLevel = "high";
+    defaultThinkingLevel = "xhigh";
     outputPad = 0;
     quietStartup = true;
     tuiMode = "regular";
