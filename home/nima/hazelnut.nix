@@ -99,6 +99,7 @@
   home.packages = with pkgs; [
     bitwarden-desktop
     openscad-unstable
+    unstable.orca-slicer # 3D printing slicer (newer release = fresher printer profiles)
   ];
 
   # ===========================================================================
