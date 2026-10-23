@@ -33,7 +33,18 @@
       # =========================================================================
       # Prefix Key
       # =========================================================================
-      # Default C-b prefix; the keyboard's J+K chord emits it in one tap.
+      # Local: default C-b prefix; the keyboard's J+K chord emits it in one tap.
+      #
+      # Remote (over SSH): switch to C-a so a nested tmux is reachable. The
+      # outer/local tmux consumes C-b, so the inner server must answer to a
+      # different key. The server inherits SSH_CONNECTION/SSH_TTY from the
+      # shell that started it, so this is evaluated once at server start.
+      # C-a C-a sends a literal C-a through (readline beginning-of-line).
+      if-shell '[ -n "$SSH_CONNECTION" ] || [ -n "$SSH_TTY" ]' {
+        unbind-key C-b
+        set-option -g prefix C-a
+        bind-key C-a send-prefix
+      }
 
       # =========================================================================
       # Extended Keys
