@@ -25,7 +25,9 @@ let
     # Pi auto-installs any listed package that is missing on startup, so a
     # fresh host picks these up on first launch.  Ad-hoc `pi install` entries
     # are preserved by the array union in the activation script below.
+
     packages = [
+      "npm:pi-vimmode"
       "npm:pi-web-access"
     ];
   };
