@@ -135,12 +135,10 @@
                 # macOS
                 eval $(gdircolors -b ~/.dircolors/dircolors 2>/dev/null || echo "")
                 alias ls='gls --color=auto'
-                export TERM="screen-256color"
             else
                 # Linux
                 eval $(dircolors -b ~/.dircolors/dircolors 2>/dev/null || echo "")
                 alias ls='ls --color=auto'
-                export TERM="screen-256color"
                 export TERMINAL="st"
                 export TERMCMD="st"
                 export RUBYOPT="-W0"

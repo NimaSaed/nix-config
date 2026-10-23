@@ -58,6 +58,32 @@
 
       mouse.hide_when_typing = true;
 
+      # Alacritty would default to TERM=alacritty, but hosts without that
+      # terminfo (anything SSH'd into from outside tmux) then get broken
+      # clear/vim.  xterm-256color is universal and Alacritty is
+      # xterm-compatible; truecolor still works via COLORTERM=truecolor.  It
+      # also lets the `xterm*:extkeys` terminal-feature in tmux.nix match.
+      env.TERM = "xterm-256color";
+
+      # Shift+Enter / Ctrl+Enter as distinct keys in TUIs (pi, claude) under
+      # tmux.
+      #
+      # Alacritty only implements the kitty keyboard protocol, while tmux 3.6
+      # only asks the outer terminal for xterm modifyOtherKeys (`CSI > 4;2 m`),
+      # so the two never negotiate and both chords degrade to a plain Enter.
+      # Send the CSI-u encoding directly: tmux parses it unconditionally and
+      # forwards it to panes that have requested extended keys; other panes
+      # still receive a plain Enter, as before.
+      keyboard.bindings =
+        let
+          # Nix strings have no \e / \u escapes; borrow JSON's.
+          esc = builtins.fromJSON ''"\u001b"'';
+        in
+        [
+          { key = "Return"; mods = "Shift"; chars = "${esc}[13;2u"; }
+          { key = "Return"; mods = "Control"; chars = "${esc}[13;5u"; }
+        ];
+
       terminal.shell = {
         program = "${pkgs.bash}/bin/bash";
         args = [ "-l" ];
