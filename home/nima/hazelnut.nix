@@ -73,7 +73,7 @@
   };
 
   # ===========================================================================
-  # Idle display power-off (battery)
+  # Idle display power-off (battery) + lock before sleep
   # ===========================================================================
   # The LG 4K panel hangs off HDMI at 30 Hz. While the output is on, i915 has
   # an active pipe and never runtime-suspends, so the display engine and the
@@ -82,9 +82,17 @@
   # (verified: power/runtime_status flips to `suspended`) and the monitor
   # drops to standby on its own. Any input turns it back on.
   #
-  # Display-off only, no lock: the idle lock in the shared sway module was
-  # disabled deliberately (badbc35). Fullscreen windows hold the timer off via
-  # the shared `inhibit_idle` rules, so video playback is not interrupted.
+  # No idle lock: that was disabled deliberately (badbc35). Fullscreen windows
+  # hold the timer off via the shared `inhibit_idle` rules, so video playback
+  # is not interrupted.
+  #
+  # Lock before sleep: the power button suspends via logind (see
+  # hosts/hazelnut). swayidle listens for PrepareForSleep and, with the
+  # module's default `-w`, holds a delay inhibitor until swaylock reports the
+  # screen locked, so the session never wakes up unlocked. The unit is
+  # PartOf graphical-session.target, so headless/SSH-only use (no sway) has
+  # no swayidle and suspends straight away. `lock` makes `loginctl
+  # lock-session` work too, e.g. to lock a running session from SSH.
   services.swayidle = {
     enable = true;
     timeouts = [
@@ -94,6 +102,10 @@
         resumeCommand = "${pkgs.sway}/bin/swaymsg 'output * power on'";
       }
     ];
+    events = {
+      before-sleep = config.my.sway.lockCommand;
+      lock = config.my.sway.lockCommand;
+    };
   };
 
   home.packages = with pkgs; [

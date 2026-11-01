@@ -76,6 +76,23 @@
   ];
 
   # ============================================================================
+  # Power button → suspend
+  # ============================================================================
+  # logind owns the ACPI power button (PNP0C0C): sway neither binds
+  # XF86PowerOff nor takes a handle-power-key inhibitor. The default action is
+  # poweroff. S3 (deep) is verified working on this board and XHCI is an
+  # enabled wake source, so the keyboard or the button itself wakes it.
+  #
+  # Inside a sway session, swayidle (home/nima/hazelnut.nix) holds a delay
+  # inhibitor and locks the screen before the suspend goes through. With no
+  # graphical session (headless, SSH-only) there is no swayidle and the
+  # suspend proceeds directly.
+  services.logind.powerKey = "suspend";
+  # Keep a clean shutdown reachable without a shell: hold ~5 s. Firmware may
+  # hard-cut at 4 s first, so this is best-effort.
+  services.logind.powerKeyLongPress = "poweroff";
+
+  # ============================================================================
   # Networking
   # ============================================================================
   # Hazelnut - the coffee companion (LattePanda iota desktop)
