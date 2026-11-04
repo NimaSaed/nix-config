@@ -382,6 +382,8 @@
       # Deploy: colmena apply
       # Deploy specific host: colmena apply --on chestnut
       # =========================================================================
+      colmenaHive = inputs.colmena.lib.makeHive self.outputs.colmena;
+
       colmena = {
         meta = {
           nixpkgs = nixpkgs.legacyPackages.x86_64-linux;
