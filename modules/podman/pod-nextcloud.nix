@@ -516,9 +516,13 @@ in
 
         # User-space systemd services: cron + 4 AI workers
         # AI workers process tasks immediately rather than waiting for the 5-min cron cycle.
-        # 4 parallel workers required by apps like context_chat.
-        # -t 60: worker exits after 60 s so PHP/config changes are always picked up.
-        # StartLimitInterval/Burst: allow rapid restarts without systemd giving up.
+        # 4 parallel workers required by apps like context_chat; taskprocessing:worker
+        # claims tasks atomically so parallel workers never process the same task.
+        # taskprocessing:worker (NC 34+) is the only worker that records the heartbeat
+        # (core/ai.taskprocessing_worker_last_iteration) the admin setup check reads.
+        # -t 300: worker exits every 5 min (upstream recommendation) so config changes are picked up.
+        # RestartSec 10 s keeps restarts below StartLimitBurst even when podman exec fails
+        # instantly (pod stopped, occ upgrade running), so workers self-heal after outages.
         systemd.user.services =
           let
             # Add app names here to have them installed and enabled on every boot.
@@ -549,8 +553,7 @@ in
 
             aiWorkerScript = pkgs.writeShellScript "nextcloud-ai-worker" ''
               exec ${pkgs.podman}/bin/podman exec nextcloud-app \
-                php occ background-job:worker -t 60 \
-                'OC\TaskProcessing\SynchronousBackgroundJob'
+                php occ taskprocessing:worker -t 300
             '';
             aiWorkerService = {
               Unit = {
@@ -562,6 +565,7 @@ in
               Service = {
                 ExecStart = "${aiWorkerScript}";
                 Restart = "always";
+                RestartSec = "10s";
               };
               Install.WantedBy = [ "default.target" ];
             };
