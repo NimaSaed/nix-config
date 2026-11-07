@@ -14,7 +14,7 @@ let
   # Shared by nextcloud-app and nextcloud-push so the two never drift.
   # Nextcloud only upgrades one major at a time — the image entrypoint
   # refuses to skip majors (e.g. 33 -> 35). Bump this one line to upgrade.
-  nextcloudImage = "docker.io/library/nextcloud:34.0-fpm";
+  nextcloudImage = "docker.io/library/nextcloud:35.0-fpm";
 in
 {
   imports = [
