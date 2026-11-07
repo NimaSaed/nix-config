@@ -214,14 +214,15 @@
     "uinput"
     "hid-lattepanda-iota-ups"
   ];
-  # The pack is 3 × Panasonic NCR18650GA, labelled 3300 mAh, 3.6 V nominal:
-  # 35.64 Wh. The driver's default assumes 3 × 3500 mAh at 3.7 V. This only
-  # scales the reported watts; UPower's time-to-empty is a ratio and unaffected.
+  # The pack is 3 × Molicel INR18650-M35A (NMC, flat top, unprotected), rated
+  # 3500 mAh typical / 12.5 Wh per cell at 3.6 V nominal: 37.5 Wh. The driver's
+  # default assumes 3 × 3500 mAh at 3.7 V. This only scales the reported watts;
+  # UPower's time-to-empty is a ratio and unaffected.
   # The driver's charge_limit option must mirror DIP switch SW3. The switch is
   # in the full-charge position, matching the driver default of 100; set
   # charge_limit=80 here if it is ever moved to 80%CHG.
   boot.extraModprobeConfig = ''
-    options hid-lattepanda-iota-ups energy_full_uwh=35640000
+    options hid-lattepanda-iota-ups energy_full_uwh=37500000
   '';
 
   # ============================================================================
