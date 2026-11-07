@@ -471,6 +471,108 @@ in
       ];
     };
 
+    # =========================================================================
+    # File viewers — images, PDF, 3D models
+    # =========================================================================
+    # Keyboard-driven single-purpose viewers for the tiling desktop, registered
+    # as default handlers so `xdg-open` and Enter in yazi open them. The
+    # packages are in home.packages below.
+    #
+    # Images: Alacritty implements neither Sixel nor the kitty graphics
+    # protocol, so real images get a window: swayimg is Wayland-native
+    # (`swayimg img.png`, `swayimg *.jpg` for a gallery). In-terminal viewing
+    # (SSH, tmux, quick glance) falls back to chafa, which renders onto the
+    # character grid and works in any terminal.
+    #
+    # PDF: zathura, vim keys, no toolbar. The nixpkgs wrapper bundles the
+    # mupdf/djvu/ps/cb plugins, so EPUB and DjVu open with it too.
+    #
+    # 3D: f3d, a quick-look viewer (orbit with the mouse, keys toggle
+    # edges/axes/grid). nixpkgs builds it with the assimp + OCCT plugins, so
+    # STL/3MF/OBJ/PLY/glTF and STEP/IGES all open. It renders via VTK/X11,
+    # i.e. under XWayland. For slicing or measuring, orca-slicer is the tool.
+    xdg.mimeApps = {
+      enable = true;
+      defaultApplications = {
+        "image/png" = "swayimg.desktop";
+        "image/jpeg" = "swayimg.desktop";
+        "image/gif" = "swayimg.desktop";
+        "image/webp" = "swayimg.desktop";
+        "image/svg+xml" = "swayimg.desktop";
+        "image/bmp" = "swayimg.desktop";
+        "image/tiff" = "swayimg.desktop";
+
+        "application/pdf" = "org.pwmt.zathura.desktop";
+
+        "model/stl" = "f3d.desktop";
+        "model/3mf" = "f3d.desktop";
+        "model/obj" = "f3d.desktop";
+        "application/vnd.ply" = "f3d.desktop";
+        "application/vnd.step" = "f3d.desktop";
+        "model/gltf-binary" = "f3d.desktop";
+        "model/gltf+json" = "f3d.desktop";
+      };
+    };
+
+    # swayimg: vim keys on top of the defaults (F1 shows the full map) and
+    # colours from the theme. Only overrides are listed; swayimg merges this
+    # file over its built-in swayimgrc. Keys displaced by the vim bindings
+    # move to their Shift variants. Colours are #RRGGBBAA.
+    programs.swayimg = {
+      enable = true;
+      settings =
+        let
+          si = c: "${lib.toLower c}ff";
+          vimKeys = {
+            h = "step_left 10";
+            j = "step_down 10";
+            k = "step_up 10";
+            l = "step_right 10";
+            n = "next_file";
+            p = "prev_file";
+            g = "first_file";
+            "Shift+g" = "last_file";
+          };
+        in
+        {
+          viewer.window = si ui.surface;
+          gallery = {
+            window = si ui.surface;
+            background = si ui.surface;
+            select = si ui.accent;
+            border_color = si ui.accent;
+          };
+          font.color = si ui.onSurface;
+          "keys.viewer" = vimKeys // {
+            "Shift+k" = "zoom keep"; # was k
+            "Shift+n" = "animation"; # was n
+            Plus = "zoom +10";
+            Minus = "zoom -10";
+            Equal = "none";
+          };
+          "keys.gallery" = {
+            h = "step_left";
+            j = "step_down";
+            k = "step_up";
+            l = "step_right";
+            g = "first_file";
+            "Shift+g" = "last_file";
+          };
+          "keys.slideshow" = {
+            n = "next_file";
+            p = "prev_file";
+            g = "first_file";
+            "Shift+g" = "last_file";
+          };
+        };
+    };
+
+    # macOS muscle memory: `open file` dispatches through the handlers above.
+    # Lives here rather than in core/bash.nix because on the mac `open` is the
+    # native command. xdg-open comes from xdg-utils, pulled in by the sway
+    # wrapper on NixOS; listed explicitly so the alias works on peanut too.
+    programs.bash.shellAliases.open = "xdg-open";
+
     # Kanata implements the Voyager layout in software for ordinary keyboards.
     # It grabs every keyboard except the firmware-managed ZSA Voyager and ZMK
     # Halcyon Ferris, exposes one virtual `kanata-oryx` device, and blocks every
@@ -803,6 +905,17 @@ in
       # Desktop tools
       pavucontrol # PulseAudio volume control (works with PipeWire)
       networkmanagerapplet # Network manager tray applet
+
+      # File viewers (see the xdg.mimeApps block above; swayimg comes from
+      # programs.swayimg)
+      chafa # In-terminal image rendering as coloured block characters: `chafa img.png`
+      # yazi previews: on Wayland yazi auto-detects ueberzugpp and overlays real
+      # images on the terminal window; without it (or inside tmux, where the
+      # overlay can misplace) it falls back to chafa.
+      ueberzugpp
+      zathura # PDF/EPUB/DjVu viewer with vim keys
+      f3d # Quick-look 3D viewer: STL, 3MF, OBJ, PLY, glTF, STEP
+      xdg-utils # xdg-open, behind the `open` alias
     ];
 
     # Make fonts from home.packages (the Nerd Font symbols above) visible to
