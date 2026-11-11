@@ -194,8 +194,11 @@ let
     fi
   '';
 
-  # Directory mounted read-only as NZBGet's ScriptDir (see pod-media.nix),
-  # one sub-directory per extension.
+  # Extensions directory, one sub-directory per extension. NZBGet's health
+  # check insists ScriptDir is writable (the UI can install extensions into
+  # it), so this is not mounted as ScriptDir directly: pod-media.nix mounts
+  # it read-only under /defaults and copies it into ScriptDir at container
+  # start, same as nzbget.conf.
   extensionsPackage =
     pkgs.runCommand "nzbget-extensions" { nativeBuildInputs = [ pkgs.shellcheck ]; }
       ''
@@ -226,7 +229,7 @@ in
         QueueDir=''${MainDir}/queue
         TempDir=''${MainDir}/tmp
         WebDir=''${AppDir}/webui
-        ScriptDir=${cfg.extensionsDir}
+        ScriptDir=''${MainDir}/scripts
         LockFile=''${MainDir}/nzbget.lock
         LogFile=''${MainDir}/nzbget.log
         ConfigTemplate=''${AppDir}/webui/nzbget.conf.template
@@ -413,17 +416,11 @@ in
     };
 
     # Extensions
-    extensionsDir = lib.mkOption {
-      type = lib.types.str;
-      default = "/extensions";
-      description = "Path inside the container where extensionsPackage is mounted (NZBGet's ScriptDir)";
-    };
-
     extensionsPackage = lib.mkOption {
       type = lib.types.package;
       readOnly = true;
       default = extensionsPackage;
-      description = "Generated directory with the NZBGet extensions; mounted read-only at extensionsDir";
+      description = "Generated directory with the NZBGet extensions; deployed into ScriptDir at container start";
     };
 
     nestedUnpack = {

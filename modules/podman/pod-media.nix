@@ -106,6 +106,17 @@ in
               cp /defaults/nzbget.conf /config/nzbget.conf
               chmod 644 /config/nzbget.conf
               echo "[nix-init] nzbget.conf deployed successfully"
+
+              # ScriptDir must be writable for NZBGet's health check, so copy the
+              # store directory into the volume instead of mounting it. The whole
+              # directory is managed here: extensions installed via the UI are
+              # dropped on restart (Extensions= is declarative anyway).
+              echo "[nix-init] Deploying declarative extensions..."
+              rm -rf /config/scripts
+              cp -r /defaults/extensions /config/scripts
+              chmod -R u+w /config/scripts
+              chown -R abc:abc /config/scripts
+              echo "[nix-init] extensions deployed successfully"
             '';
             inherit (config.virtualisation.quadlet) networks pods volumes;
           in
@@ -286,7 +297,7 @@ in
                   "${volumes.nzbget.ref}:/config"
                   "${nzbgetConfigPath}:/defaults/nzbget.conf:ro"
                   "${nzbgetInitScript}:/custom-cont-init.d/01-deploy-config:ro"
-                  "${cfg.nzbget.extensionsPackage}:${cfg.nzbget.extensionsDir}:ro"
+                  "${cfg.nzbget.extensionsPackage}:/defaults/extensions:ro"
                   "/data/media:/media:rw"
                 ];
               };
