@@ -7,6 +7,205 @@
 
 let
   cfg = config.services.pods.media.nzbget;
+  yesNo = b: if b then "yes" else "no";
+
+  # ---------------------------------------------------------------------------
+  # NestedUnpack - post-processing extension
+  #
+  # NZBGet only unpacks archives in the top level of a job directory. Some
+  # posters pack an entire release folder (which itself holds a multi-volume
+  # RAR set) into one outer archive: NZBGet extracts that outer layer, stops,
+  # and Sonarr/Radarr only ever see the .nfo and the Sample. This extension
+  # runs after NZBGet's own unpack and extracts whatever archives are left in
+  # sub-folders, repeating for multi-level nesting.
+  #
+  # Layout NZBGet expects under ScriptDir: <Name>/manifest.json + the script
+  # named in "main". Exit codes: 93 = success, 94 = error, 95 = nothing done.
+  # ---------------------------------------------------------------------------
+  nestedUnpackManifest = (pkgs.formats.json { }).generate "manifest.json" {
+    main = "main.sh";
+    name = "NestedUnpack";
+    homepage = "";
+    kind = "POST-PROCESSING";
+    displayName = "Nested Unpack";
+    version = "1.0.0";
+    nzbgetMinVersion = "24";
+    author = "nima";
+    license = "MIT";
+    about = "Extracts archives left in sub-folders after the main unpack (double-packed releases).";
+    queueEvents = "";
+    taskTime = "";
+    requirements = [ "Requires bash, unrar and 7z (all present in the linuxserver/nzbget image)." ];
+    description = [
+      "NZBGet only unpacks archives in the top level of a job directory."
+      "Some releases are double-packed: an outer archive contains a folder that"
+      "itself holds a multi-volume RAR set. This extension walks the job directory"
+      "after NZBGet's own unpack and extracts any archives found in sub-folders,"
+      "repeating until nothing is left to extract."
+    ];
+    options = [
+      {
+        name = "Cleanup";
+        displayName = "Cleanup";
+        value = yesNo cfg.nestedUnpack.cleanup;
+        description = [ "Delete archive volumes after they were extracted successfully." ];
+        select = [
+          "yes"
+          "no"
+        ];
+      }
+      {
+        name = "MaxPasses";
+        displayName = "MaxPasses";
+        value = cfg.nestedUnpack.maxPasses;
+        description = [ "Maximum number of extraction passes (each pass handles one level of nesting)." ];
+        select = [
+          1
+          10
+        ];
+      }
+    ];
+    commands = [ ];
+  };
+
+  # Gets a store-path shebang like any writeShellScript; inside the container
+  # (no /nix/store) NZBGet runs it via ShellOverride=.sh=/bin/bash instead.
+  nestedUnpackScript = pkgs.writeShellScript "nzbget-nested-unpack.sh" ''
+    set -o nounset
+    set -o pipefail
+
+    POSTPROCESS_SUCCESS=93
+    POSTPROCESS_ERROR=94
+    POSTPROCESS_NONE=95
+
+    log() { printf '[%s] NestedUnpack: %s\n' "$1" "$2"; }
+
+    dir="''${NZBPP_DIRECTORY:-}"
+    cleanup="''${NZBPO_CLEANUP:-yes}"
+    max_passes="''${NZBPO_MAXPASSES:-3}"
+    # UnrarCmd/SevenZipCmd may contain extra arguments, so split on whitespace.
+    read -r -a unrar_cmd <<<"''${NZBOP_UNRARCMD:-unrar}"
+    read -r -a sevenzip_cmd <<<"''${NZBOP_SEVENZIPCMD:-7z}"
+
+    if [[ "''${NZBPP_TOTALSTATUS:-}" != "SUCCESS" ]]; then
+      log INFO "Skipping, job status is ''${NZBPP_STATUS:-unknown}"
+      exit $POSTPROCESS_NONE
+    fi
+
+    if [[ -z "$dir" || ! -d "$dir" ]]; then
+      log ERROR "Destination directory not found: '$dir'"
+      exit $POSTPROCESS_ERROR
+    fi
+
+    # Only the first volume of a set should be handed to unrar/7z.
+    is_first_volume() {
+      local name="''${1,,}"
+      case "$name" in
+        *.part*.rar) [[ "$name" =~ \.part0*1\.rar$ ]] ;;
+        *.rar | *.7z | *.7z.001 | *.zip) return 0 ;;
+        *) return 1 ;;
+      esac
+    }
+
+    # Extract an archive into the directory it lives in.
+    extract() {
+      local archive="$1" dest
+      dest="$(dirname -- "$archive")"
+      case "''${archive,,}" in
+        *.rar) "''${unrar_cmd[@]}" x -o+ -p- -y -idp -- "$archive" "$dest/" </dev/null ;;
+        *) "''${sevenzip_cmd[@]}" x -y -p- -o"$dest" -- "$archive" </dev/null ;;
+      esac
+    }
+
+    # Remove all volumes belonging to a successfully extracted archive.
+    cleanup_archive() {
+      local archive="$1" base
+      local -a volumes=()
+      case "''${archive,,}" in
+        *.part*.rar)
+          base="''${archive%.[pP][aA][rR][tT]*}"
+          volumes=("$base".[pP][aA][rR][tT]*.[rR][aA][rR])
+          ;;
+        *.rar)
+          base="''${archive%.*}"
+          volumes=("$archive" "$base".[rR][0-9][0-9]* "$base".[sS][0-9][0-9]*)
+          ;;
+        *.7z.001)
+          base="''${archive%.001}"
+          volumes=("$base".[0-9][0-9][0-9])
+          ;;
+        *.zip)
+          base="''${archive%.*}"
+          volumes=("$archive" "$base".[zZ][0-9][0-9])
+          ;;
+        *)
+          volumes=("$archive")
+          ;;
+      esac
+      local f
+      for f in "''${volumes[@]}"; do
+        [[ -f "$f" ]] && rm -f -- "$f"
+      done
+    }
+
+    declare -A seen=()
+    total_ok=0
+    total_fail=0
+    pass=0
+
+    while ((pass < max_passes)); do
+      pass=$((pass + 1))
+      found_new=0
+
+      while IFS= read -r -d ''' archive; do
+        [[ -n "''${seen[$archive]:-}" ]] && continue
+        seen[$archive]=1
+        is_first_volume "$archive" || continue
+        found_new=1
+
+        rel="''${archive#"$dir"/}"
+        log INFO "Pass $pass: extracting $rel"
+        if output=$(extract "$archive" 2>&1); then
+          total_ok=$((total_ok + 1))
+          log INFO "Extracted $rel"
+          [[ "$cleanup" == "yes" ]] && cleanup_archive "$archive"
+        else
+          rc=$?
+          total_fail=$((total_fail + 1))
+          log ERROR "Extraction failed (exit $rc): $rel"
+          printf '%s\n' "$output" | tail -n 15 | sed 's/^/[DETAIL] /'
+        fi
+      done < <(find "$dir" -mindepth 2 -type f \
+        \( -iname '*.rar' -o -iname '*.7z' -o -iname '*.7z.001' -o -iname '*.zip' \) \
+        -print0 | sort -z)
+
+      ((found_new)) || break
+    done
+
+    if ((total_fail > 0)); then
+      log ERROR "$total_fail nested archive(s) failed to extract ($total_ok succeeded)"
+      exit $POSTPROCESS_ERROR
+    elif ((total_ok > 0)); then
+      log INFO "Extracted $total_ok nested archive(s)"
+      exit $POSTPROCESS_SUCCESS
+    else
+      log DETAIL "No nested archives found"
+      exit $POSTPROCESS_NONE
+    fi
+  '';
+
+  # Directory mounted read-only as NZBGet's ScriptDir (see pod-media.nix),
+  # one sub-directory per extension.
+  extensionsPackage =
+    pkgs.runCommand "nzbget-extensions" { nativeBuildInputs = [ pkgs.shellcheck ]; }
+      ''
+        mkdir -p $out
+        ${lib.optionalString cfg.nestedUnpack.enable ''
+          shellcheck --shell=bash ${nestedUnpackScript}
+          install -Dm644 ${nestedUnpackManifest} $out/NestedUnpack/manifest.json
+          install -Dm755 ${nestedUnpackScript} $out/NestedUnpack/main.sh
+        ''}
+      '';
 in
 {
   options.services.pods.media.nzbget = {
@@ -27,7 +226,7 @@ in
         QueueDir=''${MainDir}/queue
         TempDir=''${MainDir}/tmp
         WebDir=''${AppDir}/webui
-        ScriptDir=''${MainDir}/scripts
+        ScriptDir=${cfg.extensionsDir}
         LockFile=''${MainDir}/nzbget.lock
         LogFile=''${MainDir}/nzbget.log
         ConfigTemplate=''${AppDir}/webui/nzbget.conf.template
@@ -196,13 +395,55 @@ in
 
         ##############################################################################
         ### EXTENSION SCRIPTS
-        Extensions=
+        Extensions=${lib.optionalString cfg.nestedUnpack.enable "NestedUnpack"}
         ScriptOrder=
         ScriptPauseQueue=no
-        ShellOverride=
+        # Extension scripts come from the nix store with patched shebangs; run
+        # them with the container's own bash instead.
+        ShellOverride=.sh=/bin/bash
         EventInterval=0
-      '';
+        ${lib.optionalString cfg.nestedUnpack.enable ''
+
+          ##############################################################################
+          ### NESTEDUNPACK
+          NestedUnpack.Cleanup=${yesNo cfg.nestedUnpack.cleanup}
+          NestedUnpack.MaxPasses=${toString cfg.nestedUnpack.maxPasses}
+        ''}'';
       description = "NZBGet config content with sops placeholders for secrets";
+    };
+
+    # Extensions
+    extensionsDir = lib.mkOption {
+      type = lib.types.str;
+      default = "/extensions";
+      description = "Path inside the container where extensionsPackage is mounted (NZBGet's ScriptDir)";
+    };
+
+    extensionsPackage = lib.mkOption {
+      type = lib.types.package;
+      readOnly = true;
+      default = extensionsPackage;
+      description = "Generated directory with the NZBGet extensions; mounted read-only at extensionsDir";
+    };
+
+    nestedUnpack = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Unpack archives left in sub-folders after the main unpack (double-packed releases)";
+      };
+
+      cleanup = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Delete archive volumes after they were extracted successfully";
+      };
+
+      maxPasses = lib.mkOption {
+        type = lib.types.ints.between 1 10;
+        default = 3;
+        description = "Maximum number of extraction passes (each pass handles one level of nesting)";
+      };
     };
 
     # Control settings

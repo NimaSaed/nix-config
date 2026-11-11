@@ -286,6 +286,7 @@ in
                   "${volumes.nzbget.ref}:/config"
                   "${nzbgetConfigPath}:/defaults/nzbget.conf:ro"
                   "${nzbgetInitScript}:/custom-cont-init.d/01-deploy-config:ro"
+                  "${cfg.nzbget.extensionsPackage}:${cfg.nzbget.extensionsDir}:ro"
                   "/data/media:/media:rw"
                 ];
               };
