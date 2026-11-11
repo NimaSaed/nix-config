@@ -546,7 +546,11 @@ in
           "keys.viewer" = vimKeys // {
             "Shift+k" = "zoom keep"; # was k
             "Shift+n" = "animation"; # was n
-            Plus = "zoom +10";
+            # swayimg matches keysym and modifier mask exactly. `+` is Shift+=
+            # on this layout, so upstream's `Plus` (no modifier) never fires;
+            # `Shift+Plus` is what the press produces. Equal is upstream's
+            # workaround for the same thing; `none` drops it.
+            "Shift+Plus" = "zoom +10";
             Minus = "zoom -10";
             Equal = "none";
           };
