@@ -8,7 +8,6 @@
     tree
     wget
     curl
-    tmux
 
     # File search and manipulation
     ripgrep # Better grep

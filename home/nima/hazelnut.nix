@@ -131,12 +131,5 @@
   # ===========================================================================
   programs = {
     home-manager.enable = true;
-
-    # Tmux for terminal multiplexing
-    tmux = {
-      enable = true;
-      terminal = "screen-256color";
-      keyMode = "vi";
-    };
   };
 }

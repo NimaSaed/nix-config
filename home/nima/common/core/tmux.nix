@@ -9,8 +9,8 @@
   programs.tmux = {
     enable = true;
 
-    # Use screen-256color for better color support
-    terminal = "screen-256color";
+    package = pkgs.tmux.override { withSixel = false; };
+    terminal = "xterm-256color";
 
     # Start window and pane numbering at 1 (0 is too far!)
     baseIndex = 1;
