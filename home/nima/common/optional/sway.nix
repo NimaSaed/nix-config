@@ -913,6 +913,22 @@ in
       # File viewers (see the xdg.mimeApps block above; swayimg comes from
       # programs.swayimg)
       chafa # In-terminal image rendering as coloured block characters: `chafa img.png`
+      # `imgview FILE…`: chafa in a throwaway Alacritty with a tiny font. The
+      # character grid gets dense enough to read text in screenshots while the
+      # working terminal keeps its normal font. Any key closes it. --class keeps
+      # it off the Alacritty → workspace 1 assign rule.
+      (pkgs.writeShellApplication {
+        name = "imgview";
+        runtimeInputs = [
+          alacritty
+          chafa
+          bash
+        ];
+        text = ''
+          exec alacritty --class imgview -o font.size=4 \
+            -e bash -c 'chafa --scale max --align mid,mid "$@"; read -rsn1' _ "$@"
+        '';
+      })
       # yazi previews: on Wayland yazi auto-detects ueberzugpp and overlays real
       # images on the terminal window; without it (or inside tmux, where the
       # overlay can misplace) it falls back to chafa.
