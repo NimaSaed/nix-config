@@ -14,7 +14,7 @@
         email = "nima@nmsd.xyz";
       };
       init.defaultBranch = "main";
-      pull.rebase = false;
+      pull.rebase = true;
       gpg.ssh.program = "${pkgs.openssh}/bin/ssh-keygen";
       alias = {
         st = "status";
