@@ -377,7 +377,10 @@ in
     git.includes = [
       {
         condition = "hasconfig:remote.*.url:git@gitlab.nebius.dev:*/**";
-        contents.user.email = "nima@nebius.com";
+        contents.user = {
+          email = "nima@nebius.com";
+          name = "Nima Saed";
+        };
       }
     ];
 
