@@ -33,6 +33,44 @@ let
     ];
   };
 
+  # pi-mcp-adapter settings.  Server definitions stay in the (unmanaged)
+  # `~/.pi/agent/mcp.json`; entries here merge into them field by field.
+  #
+  # Ask before any MCP tool that modifies something.  "destructive" gates
+  # every tool a server does not mark read-only or non-destructive, which
+  # covers Home Assistant.  Slack, Atlassian and Fireflies mark most of their
+  # write tools `destructiveHint: false`, so those need explicit patterns; a
+  # per-server list replaces the global value for that server.  Re-check the
+  # lists against `~/.pi/agent/mcp-cache.json` when a server adds tools.
+  mcpAdapterConfig = jsonFormat.generate "pi-mcp-adapter.json" {
+    settings.approveTools = "destructive";
+    mcpServers = {
+      slack.approveTools = [
+        "slack_send_*"
+        "slack_schedule_*"
+        "slack_add_*"
+        "slack_create_*"
+        "slack_update_*"
+      ];
+      atlassian.approveTools = [
+        "create*"
+        "update*"
+        "edit*"
+        "transition*"
+        "add*"
+        "executeWrite"
+        "executeDestructive"
+      ];
+      fireflies.approveTools = [
+        "fireflies_share_*"
+        "fireflies_revoke_*"
+        "fireflies_move_*"
+        "fireflies_update_*"
+        "fireflies_create_*"
+      ];
+    };
+  };
+
   # Keep settings.json writable: Pi's package manager updates this file when
   # installing/removing packages.  Home Manager links home.file entries into
   # the Nix store, which makes `pi install` fail with a read-only-file error.
@@ -77,6 +115,11 @@ in
     # it only reads these, so a store symlink is fine (unlike settings.json).
     home.file.".pi/agent/extensions/tmux-status.ts".source =
       ./pi-extensions/tmux-status.ts;
+
+    # Read-only store symlink: the adapter cannot persist its own changes
+    # (e.g. direct-tool selections from `/mcp-adapter`) to this file, so make
+    # those here instead.
+    home.file.".pi/agent/mcp-adapter.json".source = mcpAdapterConfig;
 
     # Merge Nix-owned defaults into a real file instead of linking
     # settings.json into the store.  The existing file wins for fields not
