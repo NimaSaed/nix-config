@@ -348,6 +348,7 @@ in
     # Dev tools
     github-cli
     teleport # `tsh` — mints short-lived SSH certs for the company GitLab via the Teleport bastion
+    git-lfs # Required by the nebo monorepo clone script
   ];
 
   # ===========================================================================
