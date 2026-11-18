@@ -12,8 +12,8 @@ let
     # already lists it with a 1M-token context window and 128k max output, so
     # no models.json contextWindow override is needed.
     defaultProvider = "anthropic";
-    defaultModel = "claude-fable-5-1";
-    defaultThinkingLevel = "xhigh";
+    defaultModel = "claude-fable-5-2";
+    defaultThinkingLevel = "high";
     outputPad = 0;
     quietStartup = true;
     tuiMode = "regular";
@@ -29,6 +29,7 @@ let
     packages = [
       "npm:pi-vimmode"
       "npm:pi-web-access"
+      "npm:pi-mcp-adapter"
     ];
   };
 
@@ -51,7 +52,7 @@ in
   options.programs.pi.settings = lib.mkOption {
     type = jsonFormat.type;
     default = { };
-    example = { defaultProvider = "anthropic"; defaultModel = "claude-fable-5-1"; defaultThinkingLevel = "xhigh"; };
+    example = { defaultProvider = "anthropic"; defaultModel = "claude-fable-5-2"; defaultThinkingLevel = "high"; };
     description = ''
       Per-host overrides for Pi's `~/.pi/agent/settings.json`.  Deep-merged
       over the module defaults; the result is merged into the real file at
