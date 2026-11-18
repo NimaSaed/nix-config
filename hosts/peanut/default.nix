@@ -105,6 +105,20 @@ in
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="2188", ATTR{idProduct}=="5510", ATTR{power/wakeup}="enabled"
   '';
 
+  # The Halcyon Ferris (ZMK; the wired RP2040 left half, or the dongle) is
+  # not a boot-protocol keyboard (CONFIG_ZMK_USB_BOOT off), so usbhid does
+  # not turn on its remote wakeup the way it does for the Voyager: the kernel
+  # leaves it "disabled", never sends SET_FEATURE(REMOTE_WAKEUP) on suspend,
+  # and a keypress cannot wake the laptop. Enable it here. Only effective once
+  # the firmware advertises the capability (CONFIG_USB_DEVICE_REMOTE_WAKEUP=y
+  # in nix-halcyon-ferris config/halcyon_wired.conf; the RP2040 Zephyr driver
+  # does not imply it, unlike the nRF one) — until then power/wakeup reads
+  # empty, the write fails with EINVAL and udev moves on. 1d50:615e is the
+  # shared ZMK USB ID. Replug after switching.
+  environment.etc."udev/rules.d/60-zmk-wakeup.rules".text = ''
+    ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="1d50", ATTR{idProduct}=="615e", ATTR{power/wakeup}="enabled"
+  '';
+
   # Provide system-wide graphics drivers for Nix apps (Intel Mesa by default).
   system-graphics.enable = true;
 
