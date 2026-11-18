@@ -72,6 +72,11 @@ in
     # check only produces an un-actionable "new version available" banner.
     home.sessionVariables.PI_SKIP_VERSION_CHECK = "1";
 
+    # Global extensions.  Pi auto-discovers `~/.pi/agent/extensions/*.ts`;
+    # it only reads these, so a store symlink is fine (unlike settings.json).
+    home.file.".pi/agent/extensions/tmux-status.ts".source =
+      ./pi-extensions/tmux-status.ts;
+
     # Merge Nix-owned defaults into a real file instead of linking
     # settings.json into the store.  The existing file wins for fields not
     # declared above, so Pi can own e.g. `lastChangelogVersion`.

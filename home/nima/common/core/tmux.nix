@@ -126,6 +126,15 @@
       # Move window
       bind M command-prompt "move-window -t ':%%'"
 
+      # Pi session picker: tree of only the windows running pi, with their
+      # state glyph in the name (set by the pi tmux-status extension via the
+      # @pi_state window option). Enter jumps to the selected window.
+      #
+      # Custom -F: tmux's default row format appends the pane title, which pi
+      # sets to "π - <session> - <dir>", so the session name showed twice.
+      # Rows: pane -> command; window -> name + dimmed path; session -> count.
+      bind P choose-tree -w -f '#{@pi_state}' -F '#{?pane_format,#{pane_current_command},#{?window_format,#{window_name}#{window_flags}  #[dim]#{s|^${config.home.homeDirectory}|~|:#{pane_current_path}},#{session_windows} windows#{?session_attached, (attached),}}}'
+
       # Open new pane in current path
       bind '"' split-window -v -c "#{pane_current_path}"
       bind % split-window -h -c "#{pane_current_path}"
