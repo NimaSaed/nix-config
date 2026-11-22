@@ -97,6 +97,8 @@ in
       enable = true;
     };
 
+    systemd.sockets.podman.wantedBy = lib.mkForce [ ];
+
     # Allow rootless Podman to bind to ports 80+
     boot.kernel.sysctl = {
       "net.ipv4.ip_unprivileged_port_start" = 80;
@@ -113,7 +115,6 @@ in
       linger = true;
       shell = "${pkgs.shadow}/bin/nologin";
       extraGroups = [
-        "podman"
         "render"
         "video"
       ];
