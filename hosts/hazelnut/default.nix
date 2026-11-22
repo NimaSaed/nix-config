@@ -210,10 +210,7 @@
   boot.extraModulePackages = [
     (config.boot.kernelPackages.callPackage ./hid-lattepanda-iota-ups { })
   ];
-  boot.kernelModules = [
-    "uinput"
-    "hid-lattepanda-iota-ups"
-  ];
+  boot.kernelModules = [ "hid-lattepanda-iota-ups" ];
   # The pack is 3 × Molicel INR18650-M35A (NMC, flat top, unprotected), rated
   # 3500 mAh typical / 12.5 Wh per cell at 3.6 V nominal: 37.5 Wh. The driver's
   # default assumes 3 × 3500 mAh at 3.7 V. This only scales the reported watts;
@@ -234,7 +231,6 @@
   };
 
   services.udev.extraRules = ''
-    KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
     KERNEL=="hidraw*", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="8036", GROUP="input", MODE="0660"
 
     # Realtek RTL8168h NIC (02:00.0): the kernel leaves PCI runtime PM at
@@ -265,7 +261,7 @@
   # ============================================================================
 
   # dialout: RP2040 co-processor serial access (/dev/ttyACM0)
-  # input: xremap reads keyboards and writes /dev/uinput for virtual events.
+  # input: group the UPS hidraw node is handed to (udev rule above).
   users.users.nima.extraGroups = [
     "dialout"
     "input"

@@ -11,6 +11,52 @@ let
     # https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2161359
     "i915.enable_dpcd_backlight=0"
   ];
+
+  # Built-in input devices to switch off while a ZMK keyboard is plugged in
+  # (see 61-zmk-inhibit-laptop-input.rules below): keyboard, TrackPoint,
+  # touchpad (two nodes: the pad, and the TrackPoint buttons wired through
+  # it) and the Fn-row hotkey devices. Power Button and Lid Switch are left
+  # alone on purpose. Names as in /proc/bus/input/devices.
+  laptopInputs = [
+    "AT Translated Set 2 keyboard"
+    "TPPS/2 Elan TrackPoint"
+    "ELAN0676:00 04F3:3195 Touchpad"
+    "ELAN0676:00 04F3:3195 Mouse"
+    "ThinkPad Extra Buttons"
+    "Intel HID events"
+    "Video Bus"
+    "Sleep Button"
+  ];
+
+  # Sets the kernel's per-device `inhibited` switch on laptopInputs: 1 if a ZMK
+  # keyboard (USB 1d50:615e) is present, else 0. Stateless, so every trigger
+  # just re-derives the right value. $1 is the devpath of a ZMK device being
+  # removed, whose sysfs entry can outlive its remove uevent. Shell builtins
+  # only, udev runs this with no PATH to speak of.
+  zmkInhibitLaptopInput = pkgs.writeShellScript "zmk-inhibit-laptop-input" ''
+    removed="''${1##*/}"
+    inhibit=0
+    for dev in /sys/bus/usb/devices/*; do
+      [ "''${dev##*/}" = "$removed" ] && continue
+      [ -r "$dev/idVendor" ] || continue
+      read -r vendor < "$dev/idVendor" || continue
+      read -r product < "$dev/idProduct" || continue
+      if [ "$vendor:$product" = "1d50:615e" ]; then
+        inhibit=1
+        break
+      fi
+    done
+
+    for dev in /sys/class/input/input*; do
+      read -r name < "$dev/name" || continue
+      case "$name" in
+        ${lib.concatMapStringsSep " | " lib.escapeShellArg laptopInputs})
+          echo "$inhibit" > "$dev/inhibited"
+          ;;
+      esac
+    done
+    exit 0
+  '';
 in
 {
   # system-manager module for peanut (Lenovo P14s Gen 5, work laptop).
@@ -32,37 +78,15 @@ in
   # Allow running system-manager on a non-NixOS distro (Ubuntu).
   system-manager.allowAnyDistro = true;
 
-  # xremap needs read access to /dev/input/event* and write access to /dev/uinput
-  # for its virtual keyboard. Ubuntu already has the input group (gid 995 on
-  # this host); keep membership additive so system-manager does not replace the
-  # existing Ubuntu-managed account/group set.
+  # system-manager's userborn declares these groups itself; pin them to the
+  # gids Ubuntu already assigned on this host so the existing groups are left
+  # as they are.
   users.groups = {
     input.gid = 995;
     sgx.gid = 994;
     kvm.gid = 993;
     render.gid = 992;
   };
-  systemd.services.xremap-input-access = {
-    description = "Grant xremap input/uinput access";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "systemd-udevd.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = pkgs.writeShellScript "xremap-input-access" ''
-        ${pkgs.kmod}/bin/modprobe uinput
-        ${pkgs.shadow}/bin/usermod -a -G input nima
-        ${pkgs.systemd}/bin/udevadm control --reload
-        ${pkgs.systemd}/bin/udevadm trigger --subsystem-match=input || true
-        chgrp input /dev/uinput
-        chmod 0660 /dev/uinput
-      '';
-    };
-  };
-
-  environment.etc."udev/rules.d/70-xremap-uinput.rules".text = ''
-    KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
-  '';
 
   # Device access for the ZSA keyboard (keymapp is installed via home-manager,
   # see home/nima/peanut.nix): hidraw for live training / Oryx pairing, DFU
@@ -117,6 +141,21 @@ in
   # shared ZMK USB ID. Replug after switching.
   environment.etc."udev/rules.d/60-zmk-wakeup.rules".text = ''
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="1d50", ATTR{idProduct}=="615e", ATTR{power/wakeup}="enabled"
+  '';
+
+  # With a ZMK keyboard plugged in, the split halves sit on top of the laptop's
+  # own keyboard, so switch every built-in key and pointer off; unplugging
+  # brings them back. Done with the kernel's `inhibited` switch rather than in
+  # sway so it holds for every consumer (GDM, TTYs, swaylock, logind's sleep
+  # key). The first two rules follow the ZMK device (ATTR is gone by the time
+  # of the remove event, hence ENV{PRODUCT}); the third re-applies the state
+  # when a built-in device (re)appears, which covers booting with the keyboard
+  # attached and drivers re-creating a device after resume. USB only: a ZMK
+  # board connected over Bluetooth does not trigger it. Replug after switching.
+  environment.etc."udev/rules.d/61-zmk-inhibit-laptop-input.rules".text = ''
+    ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="1d50", ATTR{idProduct}=="615e", RUN+="${zmkInhibitLaptopInput}"
+    ACTION=="remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ENV{PRODUCT}=="1d50/615e/*", RUN+="${zmkInhibitLaptopInput} %p"
+    ACTION=="add", SUBSYSTEM=="input", KERNEL=="input*", ATTR{name}=="${lib.concatStringsSep "|" laptopInputs}", RUN+="${zmkInhibitLaptopInput}"
   '';
 
   # Provide system-wide graphics drivers for Nix apps (Intel Mesa by default).

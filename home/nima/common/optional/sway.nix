@@ -11,8 +11,6 @@ let
   ui = config.my.ui;
   # fuzzel expects colours as RRGGBBAA hex with no leading '#'.
   fz = c: "${lib.toLower (lib.removePrefix "#" c)}ff";
-  kanataConfig = ./oryx-layout.kbd;
-  xremapConfig = "${config.xdg.configHome}/xremap/config.yml";
 in
 {
   # ===========================================================================
@@ -576,68 +574,6 @@ in
     # native command. xdg-open comes from xdg-utils, pulled in by the sway
     # wrapper on NixOS; listed explicitly so the alias works on peanut too.
     programs.bash.shellAliases.open = "xdg-open";
-
-    # Kanata implements the Voyager layout in software for ordinary keyboards.
-    # It grabs every keyboard except the firmware-managed ZSA Voyager and ZMK
-    # Halcyon Ferris, exposes one virtual `kanata-oryx` device, and blocks every
-    # physical key outside the 33-key layout except volume controls. ThinkPad
-    # media/Fn events normally come from separate partial-key devices, which
-    # Kanata deliberately leaves alone.
-    systemd.user.services.kanata-oryx = {
-      Unit = {
-        Description = "Oryx layout for ordinary keyboards";
-        PartOf = [ "sway-session.target" ];
-        After = [ "sway-session.target" ];
-      };
-      Service = {
-        ExecStart = "${lib.getExe pkgs.kanata} --cfg ${kanataConfig}";
-        Restart = "on-failure";
-        RestartSec = 2;
-      };
-      Install.WantedBy = [ "sway-session.target" ];
-    };
-
-    # xremap remains the application-aware second stage. It reads Kanata's
-    # virtual keyboard plus the firmware-managed Voyager and Ferris, so
-    # Firefox-specific mappings work with any of them without racing Kanata to
-    # grab physical devices.
-    # Firefox uses Ctrl+T/Ctrl+W for new/close tab. Remap the easier home-row Alt
-    # variants only inside Firefox; native Alt+number tab selection and
-    # Alt+Left/Right history navigation need no translation.
-    #
-    # `exact_match: true` leaves Alt+Shift variants and every other application
-    # untouched.
-    xdg.configFile."xremap/config.yml".text = ''
-      keymap:
-        - name: Firefox Alt tab controls
-          application:
-            only: [firefox, Firefox]
-          exact_match: true
-          remap:
-            Alt-t: Ctrl-t
-            Alt-w: Ctrl-w
-    '';
-
-    systemd.user.services.xremap = {
-      Unit = {
-        Description = "App-aware keyboard remapping";
-        PartOf = [ "sway-session.target" ];
-        Wants = [ "kanata-oryx.service" ];
-        After = [
-          "sway-session.target"
-          "kanata-oryx.service"
-        ];
-      };
-      Service = {
-        # --output-device-name is pinned: without it xremap renames itself to
-        # "xremap pid=NN" when a device named xremap already exists, escaping
-        # Kanata's exact-name exclude list and feeding Kanata its own output.
-        ExecStart = "${lib.getExe pkgs.xremap} --watch=device,config --output-device-name xremap --device kanata-oryx --device 'ZSA Technology Labs Voyager Keyboard' --device 'ZMK Project Halcyon Ferris Keyboard' ${xremapConfig}";
-        Restart = "on-failure";
-        RestartSec = 2;
-      };
-      Install.WantedBy = [ "sway-session.target" ];
-    };
 
     # =========================================================================
     # swayidle — idle lock, display power-off, and lock before suspend
