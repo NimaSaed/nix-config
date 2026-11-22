@@ -8,7 +8,7 @@
 let
   cfg = config.services.pods.media;
   nixosConfig = config;
-  inherit (config.services.pods) domain mkTraefikLabels;
+  inherit (config.services.pods) domain mkTraefikRoute;
 in
 {
   imports = [
@@ -169,7 +169,7 @@ in
                 pod = pods.media.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "jellyfin";
                   port = 8096;
                   subdomain = cfg.jellyfin.subdomain;
@@ -203,7 +203,7 @@ in
                 pod = pods.media.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "sonarr";
                   port = 8989;
                   subdomain = cfg.sonarr.subdomain;
@@ -242,7 +242,7 @@ in
                 pod = pods.media.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "radarr";
                   port = 7878;
                   subdomain = cfg.radarr.subdomain;
@@ -280,7 +280,7 @@ in
                 pod = pods.media.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "nzbget";
                   port = 6789;
                   subdomain = cfg.nzbget.subdomain;
@@ -321,7 +321,7 @@ in
                 pod = pods.media.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "seerr";
                   port = 5055;
                   subdomain = cfg.seerr.subdomain;

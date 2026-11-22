@@ -15,18 +15,18 @@ let
   poddyDataRoot = "/data/containers";
   anyPodEnabled = cfg._enabledPods != [ ];
 
-  # Helper function to generate consistent Traefik labels for containers
-  mkTraefikLabels =
+  # Helper function to generate consistent Traefik routes
+  mkTraefikRoute =
     {
       name,
       port,
       subdomain ? name,
       scheme ? "http",
       middlewares ? false,
-      # Function that receives `name` and returns extra labels attrset
-      # Usage: extraLabels = name: { "traefik.tcp.routers.${name}.rule" = "..."; }
+      # Function that receives `name` and returns extra route config attrset
+      # Usage: extraRouteConfig = name: { "traefik.tcp.routers.${name}.rule" = "..."; }
       # Default: (_: { }) = function that ignores arg and returns empty attrset
-      extraLabels ? (_: { }),
+      extraRouteConfig ? (_: { }),
     }:
     let
       resolvedMiddleware =
@@ -50,7 +50,7 @@ let
     // lib.optionalAttrs (resolvedMiddleware != null) {
       "traefik.http.routers.${name}.middlewares" = resolvedMiddleware;
     }
-    // (extraLabels name);
+    // (extraRouteConfig name);
 in
 {
   imports = [
@@ -75,11 +75,11 @@ in
       description = "Base domain for all pod services (e.g., example.com)";
     };
 
-    mkTraefikLabels = lib.mkOption {
+    mkTraefikRoute = lib.mkOption {
       type = lib.types.functionTo lib.types.attrs;
-      default = mkTraefikLabels;
+      default = mkTraefikRoute;
       internal = true;
-      description = "Helper function to generate Traefik labels for containers";
+      description = "Helper function to generate Traefik routes";
     };
 
     _enabledPods = lib.mkOption {

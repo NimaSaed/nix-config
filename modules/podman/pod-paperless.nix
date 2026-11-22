@@ -7,7 +7,7 @@
 let
   cfg = config.services.pods.paperless;
   nixosConfig = config;
-  inherit (config.services.pods) domain mkTraefikLabels;
+  inherit (config.services.pods) domain mkTraefikRoute;
   authCfg = config.services.pods.auth;
   authBaseUrl = "https://${authCfg.authelia.subdomain}.${domain}";
   litellmUrl = "http://ai:4000/v1";
@@ -440,7 +440,7 @@ in
 
                 healthCmd = "curl -fs http://localhost:8000 || exit 1";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "paperless";
                   port = 8000;
                   subdomain = cfg.subdomain;
@@ -488,7 +488,7 @@ in
                   "${volumes.paperless_ai_data.ref}:/app/data:U"
                 ];
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "paperless-ai";
                   port = 3000;
                   subdomain = cfg.ai.subdomain;
@@ -529,7 +529,7 @@ in
                   "${volumes.paperless_gpt_prompts.ref}:/app/prompts"
                 ];
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "paperless-gpt";
                   port = 8080;
                   subdomain = cfg.gpt.subdomain;

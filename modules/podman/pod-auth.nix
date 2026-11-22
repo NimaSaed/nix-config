@@ -8,7 +8,7 @@
 let
   cfg = config.services.pods.auth;
   nixosConfig = config;
-  inherit (config.services.pods) domain mkTraefikLabels;
+  inherit (config.services.pods) domain mkTraefikRoute;
   # Convert "example.com" to "dc=example,dc=com" for LDAP Base DN
   domainToBaseDN = d: lib.concatStringsSep "," (map (part: "dc=${part}") (lib.splitString "." d));
   baseDN = domainToBaseDN domain;
@@ -157,11 +157,11 @@ in
                 pod = pods.auth.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "authelia";
                   port = 9091;
                   subdomain = cfg.authelia.subdomain;
-                  extraLabels = _: {
+                  extraRouteConfig = _: {
                     # ForwardAuth middleware definition (used by other services via middlewares = true)
                     # Note: middleware name stays "authelia" regardless of container name
                     "traefik.http.middlewares.authelia.forwardauth.address" = "http://auth:9091/api/authz/forward-auth";
@@ -230,12 +230,12 @@ in
                 pod = pods.auth.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "lldap";
                   port = 17170;
                   subdomain = cfg.lldap.subdomain;
                   middlewares = true;
-                  extraLabels = name: {
+                  extraRouteConfig = name: {
                     # TCP router for LDAPS
                     "traefik.tcp.routers.${name}.rule" = "HostSNI(`*`)";
                     "traefik.tcp.routers.${name}.entrypoints" = "lldapsecure";

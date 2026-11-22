@@ -7,7 +7,7 @@
 let
   cfg = config.services.pods.vaultwarden;
   nixosConfig = config;
-  inherit (config.services.pods) mkTraefikLabels domain;
+  inherit (config.services.pods) mkTraefikRoute domain;
   authCfg = config.services.pods.auth;
 in
 {
@@ -164,7 +164,7 @@ in
                   "${volumes.vaultwarden_data.ref}:/data"
                 ];
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "vaultwarden";
                   port = 80;
                   subdomain = cfg.subdomain;

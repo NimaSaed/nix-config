@@ -7,7 +7,7 @@
 let
   cfg = config.services.pods.immich;
   nixosConfig = config;
-  inherit (config.services.pods) domain mkTraefikLabels;
+  inherit (config.services.pods) domain mkTraefikRoute;
 in
 {
   imports = [
@@ -171,7 +171,7 @@ in
                 pod = pods.immich.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "immich";
                   port = 2283;
                   subdomain = cfg.subdomain;

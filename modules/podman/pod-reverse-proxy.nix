@@ -7,7 +7,7 @@
 
 let
   cfg = config.services.pods.reverse-proxy;
-  inherit (config.services.pods) domain mkTraefikLabels;
+  inherit (config.services.pods) domain mkTraefikRoute;
   nixosConfig = config;
 in
 {
@@ -100,12 +100,12 @@ in
                 pod = pods.reverse_proxy.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "traefik";
                   port = 8080;
                   subdomain = cfg.subdomain;
                   middlewares = true;
-                  extraLabels = name: {
+                  extraRouteConfig = name: {
                     # Override service to use Traefik's internal dashboard API
                     "traefik.http.routers.${name}.service" = "api@internal";
                   };

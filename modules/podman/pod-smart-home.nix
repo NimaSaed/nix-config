@@ -7,7 +7,7 @@
 
 let
   cfg = config.services.pods.smart-home;
-  inherit (config.services.pods) domain mkTraefikLabels;
+  inherit (config.services.pods) domain mkTraefikRoute;
 in
 {
   options.services.pods.smart-home = {
@@ -73,13 +73,13 @@ in
                 pod = pods.smart_home.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "scrypted";
                   port = 10443;
                   scheme = "https";
                   subdomain = cfg.scrypted.subdomain;
                   middlewares = true;
-                  extraLabels = name: {
+                  extraRouteConfig = name: {
                     "traefik.tcp.routers.${name}-homekit.entrypoints" = "scryptedhomekit";
                     "traefik.tcp.routers.${name}-homekit.rule" = "HostSNI(`*`)";
                     "traefik.tcp.routers.${name}-homekit.service" = "${name}-homekit";

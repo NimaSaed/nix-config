@@ -7,7 +7,7 @@
 let
   cfg = config.services.pods.ai;
   nixosConfig = config;
-  inherit (config.services.pods) mkTraefikLabels domain;
+  inherit (config.services.pods) mkTraefikRoute domain;
   authCfg = config.services.pods.auth;
 in
 {
@@ -183,7 +183,7 @@ in
                 healthCmd = "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:4000/health/liveliness\")'";
 
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "litellm";
                   port = 4000;
                   subdomain = cfg.litellm.subdomain;
@@ -246,7 +246,7 @@ in
 
                 healthCmd = "curl -sf http://ai:8080/health || exit 1";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "openwebui";
                   port = 8080;
                   subdomain = cfg.openwebui.subdomain;

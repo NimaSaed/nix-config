@@ -9,7 +9,7 @@ let
   cfg = config.services.pods.nextcloud;
   authCfg = config.services.pods.auth;
   nixosConfig = config;
-  inherit (config.services.pods) domain mkTraefikLabels;
+  inherit (config.services.pods) domain mkTraefikRoute;
 
   # Shared by nextcloud-app and nextcloud-push so the two never drift.
   # Nextcloud only upgrades one major at a time — the image entrypoint
@@ -275,11 +275,11 @@ in
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "nextcloud";
                   port = 8080;
                   subdomain = cfg.subdomain;
-                  extraLabels = name: {
+                  extraRouteConfig = name: {
                     # CalDAV/CardDAV well-known URL redirects (required for mobile apps)
                     "traefik.http.middlewares.nextcloud-caldav.redirectregex.permanent" = "true";
                     "traefik.http.middlewares.nextcloud-caldav.redirectregex.regex" =
@@ -348,11 +348,11 @@ in
                 # containers without health status, and systemd restarts on crash.
                 healthCmd = "none";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "collabora";
                   port = 9980;
                   subdomain = cfg.collabora.subdomain;
-                  extraLabels = name: {
+                  extraRouteConfig = name: {
                     # Forward HTTPS protocol header (SSL termination via Traefik)
                     "traefik.http.middlewares.collabora-headers.headers.customRequestHeaders.X-Forwarded-Proto" =
                       "https";
@@ -453,7 +453,7 @@ in
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "talk";
                   port = 8088;
                   subdomain = cfg.talk.hpb.subdomain;
@@ -493,11 +493,11 @@ in
 
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-whiteboard-secrets".path ];
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "nextcloud-whiteboard";
                   port = 3002;
                   subdomain = cfg.whiteboard.subdomain;
-                  extraLabels = _: { };
+                  extraRouteConfig = _: { };
                 };
               };
             };

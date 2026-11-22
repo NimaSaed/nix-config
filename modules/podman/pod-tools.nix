@@ -8,7 +8,7 @@
 let
   cfg = config.services.pods.tools;
   homepageCfg = config.services.pods.homepage;
-  inherit (config.services.pods) domain mkTraefikLabels;
+  inherit (config.services.pods) domain mkTraefikRoute;
 in
 {
   imports = [ ./container-configs/homepage.nix ];
@@ -114,7 +114,7 @@ in
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "homepage";
                   port = 3000;
                   subdomain = cfg.homepage.subdomain;
@@ -159,7 +159,7 @@ in
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "it-tools";
                   port = 80;
                   subdomain = cfg.itTools.subdomain;
@@ -185,7 +185,7 @@ in
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikLabels {
+                labels = mkTraefikRoute {
                   name = "changedetection";
                   port = 5000;
                   subdomain = cfg.changedetection.subdomain;
