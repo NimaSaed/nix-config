@@ -194,15 +194,6 @@ in
                 };
               }
             ])
-            (lib.optionals toolsCfg.dozzle.enable [
-              {
-                Dozzle = {
-                  icon = "sh-dozzle";
-                  href = "https://${toolsCfg.dozzle.subdomain}.${domain}/";
-                  description = "Real-time Docker log viewer";
-                };
-              }
-            ])
             (lib.optionals vaultwardenCfg.enable [
               {
                 Vaultwarden = {

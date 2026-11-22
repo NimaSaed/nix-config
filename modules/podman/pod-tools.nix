@@ -41,19 +41,6 @@ in
       };
     };
 
-    dozzle = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = false;
-        description = "Enable Dozzle log viewer container in the tools pod";
-      };
-      subdomain = lib.mkOption {
-        type = lib.types.str;
-        default = "dozzle";
-        description = "Subdomain for Dozzle log viewer";
-      };
-    };
-
     changedetection = {
       enable = lib.mkEnableOption "changedetection.io website change monitor in the tools pod";
       subdomain = lib.mkOption {
@@ -180,41 +167,6 @@ in
               };
             };
 
-            containers.tools-dozzle = lib.mkIf cfg.dozzle.enable {
-              autoStart = true;
-
-              serviceConfig = {
-                Restart = "always";
-                TimeoutStopSec = 70;
-              };
-
-              unitConfig = {
-                Description = "Dozzle log viewer container";
-                After = [ pods.tools.ref ];
-              };
-
-              containerConfig = {
-                image = "docker.io/amir20/dozzle:latest";
-                pod = pods.tools.ref;
-                autoUpdate = "registry";
-
-                labels = mkTraefikLabels {
-                  name = "dozzle";
-                  port = 8080;
-                  subdomain = cfg.dozzle.subdomain;
-                  middlewares = true;
-                };
-
-                environments = {
-                  DOZZLE_NO_ANALYTICS = "true";
-                };
-
-                volumes = [
-                  "%t/podman/podman.sock:/var/run/docker.sock:ro"
-                ];
-              };
-            };
-
             containers.tools-changedetection = lib.mkIf cfg.changedetection.enable {
               autoStart = true;
 
@@ -280,8 +232,8 @@ in
                     autoUpdate = "registry";
 
                     # Move the websocket (3000) and stats (8080) ports off the
-                    # defaults so they don't clash with Homepage and Dozzle, which
-                    # share this pod's single network namespace. The image's
+                    # defaults so they don't clash with Homepage, which shares
+                    # this pod's single network namespace. The image's
                     # entrypoint is tini, so the CMD (the server launcher script)
                     # must be repeated before the flags it forwards to server.py.
                     exec = [

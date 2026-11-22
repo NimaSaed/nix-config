@@ -270,7 +270,6 @@ in
               - 'group:media-admins'
           - domain:
               - "${rpCfg.subdomain}.${domain}"
-              - "${toolsCfg.dozzle.subdomain}.${domain}"
             policy: two_factor
             subject:
               - 'group:admins'

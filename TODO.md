@@ -88,7 +88,7 @@ nix why-depends .#nixosConfigurations.walnut.config.system.build.toplevel /nix/s
 - `TRAEFIK_SERVERSTRANSPORT_INSECURESKIPVERIFY=true` skips TLS verification for
   backends. Fine for homelab but worth a comment explaining why.
 - Authelia LDAP `tls.skip_verify: true` - same, document the reason.
-- Missing `TZ` env var on some containers (Jellyfin, Homepage, IT Tools, Dozzle) while
+- Missing `TZ` env var on some containers (Jellyfin, Homepage, IT Tools) while
   auth containers have it set.
 - `autoStart = true` is redundant (it's the default in quadlet-nix). Not harmful but
   adds visual noise.
