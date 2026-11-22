@@ -105,6 +105,7 @@ in
     home.packages = with pkgs; [
       unstable.pi-coding-agent
       nodejs_22
+      libnotify # notify-send, used by the tmux-status extension below
     ];
 
     # The Nix store install can't self-update, so the pi.dev latest-version
