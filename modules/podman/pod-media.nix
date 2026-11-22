@@ -164,16 +164,16 @@ in
                 After = [ pods.media.ref ];
               };
 
+              routes = mkTraefikRoute {
+                name = "jellyfin";
+                port = 8096;
+                subdomain = cfg.jellyfin.subdomain;
+              };
+
               containerConfig = {
                 image = "docker.io/jellyfin/jellyfin:latest";
                 pod = pods.media.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "jellyfin";
-                  port = 8096;
-                  subdomain = cfg.jellyfin.subdomain;
-                };
 
                 volumes = [
                   "${volumes.jellyfin_cache.ref}:/cache"
@@ -198,17 +198,17 @@ in
                 After = [ pods.media.ref ];
               };
 
+              routes = mkTraefikRoute {
+                name = "sonarr";
+                port = 8989;
+                subdomain = cfg.sonarr.subdomain;
+                middlewares = true;
+              };
+
               containerConfig = {
                 image = "lscr.io/linuxserver/sonarr:latest";
                 pod = pods.media.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "sonarr";
-                  port = 8989;
-                  subdomain = cfg.sonarr.subdomain;
-                  middlewares = true;
-                };
 
                 environments = {
                   TZ = "Europe/Amsterdam";
@@ -237,17 +237,17 @@ in
                 After = [ pods.media.ref ];
               };
 
+              routes = mkTraefikRoute {
+                name = "radarr";
+                port = 7878;
+                subdomain = cfg.radarr.subdomain;
+                middlewares = true;
+              };
+
               containerConfig = {
                 image = "lscr.io/linuxserver/radarr:latest";
                 pod = pods.media.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "radarr";
-                  port = 7878;
-                  subdomain = cfg.radarr.subdomain;
-                  middlewares = true;
-                };
 
                 environments = {
                   TZ = "Europe/Amsterdam";
@@ -275,17 +275,17 @@ in
                 After = [ pods.media.ref ];
               };
 
+              routes = mkTraefikRoute {
+                name = "nzbget";
+                port = 6789;
+                subdomain = cfg.nzbget.subdomain;
+                middlewares = true;
+              };
+
               containerConfig = {
                 image = "lscr.io/linuxserver/nzbget:latest";
                 pod = pods.media.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "nzbget";
-                  port = 6789;
-                  subdomain = cfg.nzbget.subdomain;
-                  middlewares = true;
-                };
 
                 environments = {
                   TZ = "Europe/Amsterdam";
@@ -316,17 +316,17 @@ in
                 After = [ pods.media.ref ];
               };
 
+              routes = mkTraefikRoute {
+                name = "seerr";
+                port = 5055;
+                subdomain = cfg.seerr.subdomain;
+                middlewares = true;
+              };
+
               containerConfig = {
                 image = "ghcr.io/seerr-team/seerr:latest";
                 pod = pods.media.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "seerr";
-                  port = 5055;
-                  subdomain = cfg.seerr.subdomain;
-                  middlewares = true;
-                };
 
                 environments = {
                   TZ = "Europe/Amsterdam";

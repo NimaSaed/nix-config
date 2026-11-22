@@ -373,6 +373,14 @@ in
                 ];
               };
 
+              routes = mkTraefikRoute {
+                name = "paperless";
+                port = 8000;
+                subdomain = cfg.subdomain;
+                # Paperless handles auth itself via OIDC — no forward-auth middleware.
+                middlewares = false;
+              };
+
               containerConfig = {
                 image = "ghcr.io/paperless-ngx/paperless-ngx:latest";
                 pod = pods.paperless.ref;
@@ -440,13 +448,6 @@ in
 
                 healthCmd = "curl -fs http://localhost:8000 || exit 1";
 
-                labels = mkTraefikRoute {
-                  name = "paperless";
-                  port = 8000;
-                  subdomain = cfg.subdomain;
-                  # Paperless handles auth itself via OIDC — no forward-auth middleware.
-                  middlewares = false;
-                };
               };
             };
 
@@ -461,6 +462,13 @@ in
               unitConfig = {
                 Description = "paperless-ai (LLM document analysis + RAG) container";
                 After = [ pods.paperless-llm.ref ];
+              };
+
+              routes = mkTraefikRoute {
+                name = "paperless-ai";
+                port = 3000;
+                subdomain = cfg.ai.subdomain;
+                middlewares = true;
               };
 
               containerConfig = {
@@ -488,12 +496,6 @@ in
                   "${volumes.paperless_ai_data.ref}:/app/data:U"
                 ];
 
-                labels = mkTraefikRoute {
-                  name = "paperless-ai";
-                  port = 3000;
-                  subdomain = cfg.ai.subdomain;
-                  middlewares = true;
-                };
               };
             };
 
@@ -508,6 +510,13 @@ in
               unitConfig = {
                 Description = "paperless-gpt (LLM tag/title generation) container";
                 After = [ pods.paperless-llm.ref ];
+              };
+
+              routes = mkTraefikRoute {
+                name = "paperless-gpt";
+                port = 8080;
+                subdomain = cfg.gpt.subdomain;
+                middlewares = true;
               };
 
               containerConfig = {
@@ -529,12 +538,6 @@ in
                   "${volumes.paperless_gpt_prompts.ref}:/app/prompts"
                 ];
 
-                labels = mkTraefikRoute {
-                  name = "paperless-gpt";
-                  port = 8080;
-                  subdomain = cfg.gpt.subdomain;
-                  middlewares = true;
-                };
               };
             };
           };

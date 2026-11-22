@@ -173,6 +173,13 @@ in
                 ];
               };
 
+              routes = mkTraefikRoute {
+                name = "litellm";
+                port = 4000;
+                subdomain = cfg.litellm.subdomain;
+                middlewares = false;
+              };
+
               containerConfig = {
                 image = "docker.litellm.ai/berriai/litellm-database:main-stable";
                 pod = pods.ai.ref;
@@ -183,12 +190,6 @@ in
                 healthCmd = "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:4000/health/liveliness\")'";
 
 
-                labels = mkTraefikRoute {
-                  name = "litellm";
-                  port = 4000;
-                  subdomain = cfg.litellm.subdomain;
-                  middlewares = false;
-                };
               };
             };
 
@@ -206,6 +207,13 @@ in
                   pods.ai.ref
                   "ai-litellm.service"
                 ];
+              };
+
+              routes = mkTraefikRoute {
+                name = "openwebui";
+                port = 8080;
+                subdomain = cfg.openwebui.subdomain;
+                middlewares = false;
               };
 
               containerConfig = {
@@ -246,12 +254,6 @@ in
 
                 healthCmd = "curl -sf http://ai:8080/health || exit 1";
 
-                labels = mkTraefikRoute {
-                  name = "openwebui";
-                  port = 8080;
-                  subdomain = cfg.openwebui.subdomain;
-                  middlewares = false;
-                };
               };
             };
           };

@@ -152,24 +152,24 @@ in
                 ];
               };
 
+              routes = mkTraefikRoute {
+                name = "authelia";
+                port = 9091;
+                subdomain = cfg.authelia.subdomain;
+                extraRouteConfig = _: {
+                  # ForwardAuth middleware definition (used by other services via middlewares = true)
+                  # Note: middleware name stays "authelia" regardless of container name
+                  "traefik.http.middlewares.authelia.forwardauth.address" = "http://auth:9091/api/authz/forward-auth";
+                  "traefik.http.middlewares.authelia.forwardauth.trustforwardheader" = "true";
+                  "traefik.http.middlewares.authelia.forwardauth.authresponseheaders" =
+                    "remote-user,remote-groups,remote-email,remote-name";
+                };
+              };
+
               containerConfig = {
                 image = "ghcr.io/authelia/authelia:latest";
                 pod = pods.auth.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "authelia";
-                  port = 9091;
-                  subdomain = cfg.authelia.subdomain;
-                  extraRouteConfig = _: {
-                    # ForwardAuth middleware definition (used by other services via middlewares = true)
-                    # Note: middleware name stays "authelia" regardless of container name
-                    "traefik.http.middlewares.authelia.forwardauth.address" = "http://auth:9091/api/authz/forward-auth";
-                    "traefik.http.middlewares.authelia.forwardauth.trustforwardheader" = "true";
-                    "traefik.http.middlewares.authelia.forwardauth.authresponseheaders" =
-                      "remote-user,remote-groups,remote-email,remote-name";
-                  };
-                };
 
                 environments = {
                   TZ = "Europe/Amsterdam";
@@ -225,26 +225,27 @@ in
                 After = [ pods.auth.ref ];
               };
 
+              routes = mkTraefikRoute {
+                name = "lldap";
+                port = 17170;
+                subdomain = cfg.lldap.subdomain;
+                middlewares = true;
+                extraRouteConfig = name: {
+                  # TCP router for LDAPS
+                  "traefik.tcp.routers.${name}.rule" = "HostSNI(`*`)";
+                  "traefik.tcp.routers.${name}.entrypoints" = "lldapsecure";
+                  "traefik.tcp.routers.${name}.tls" = "true";
+                  "traefik.tcp.routers.${name}.tls.domains[0].main" = "${cfg.lldap.subdomain}.${domain}";
+                  "traefik.tcp.routers.${name}.tls.certresolver" = "letsencrypt";
+                  "traefik.tcp.routers.${name}.service" = name;
+                  "traefik.tcp.services.${name}.loadbalancer.server.port" = "3890";
+                };
+              };
+
               containerConfig = {
                 image = "docker.io/lldap/lldap:stable";
                 pod = pods.auth.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "lldap";
-                  port = 17170;
-                  subdomain = cfg.lldap.subdomain;
-                  middlewares = true;
-                  extraRouteConfig = name: {
-                    # TCP router for LDAPS
-                    "traefik.tcp.routers.${name}.rule" = "HostSNI(`*`)";
-                    "traefik.tcp.routers.${name}.entrypoints" = "lldapsecure";
-                    "traefik.tcp.routers.${name}.tls" = "true";
-                    "traefik.tcp.routers.${name}.tls.domains[0].main" = "${cfg.lldap.subdomain}.${domain}";
-                    "traefik.tcp.routers.${name}.tls.certresolver" = "letsencrypt";
-                    "traefik.tcp.services.${name}.loadbalancer.server.port" = "3890";
-                  };
-                };
 
                 exec = "run --config-file /etc/lldap/lldap_config.toml";
 

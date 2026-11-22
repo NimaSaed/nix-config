@@ -31,14 +31,13 @@ let
     let
       resolvedMiddleware =
         if middlewares == true then
-          "authelia@docker"
+          "authelia@file"
         else if middlewares == false then
           null
         else
           middlewares;
     in
     {
-      "traefik.enable" = "true";
       "traefik.http.routers.${name}.rule" = "Host(`${subdomain}.${cfg.domain}`)";
       "traefik.http.routers.${name}.entrypoints" = "websecure";
       "traefik.http.routers.${name}.tls" = "true";

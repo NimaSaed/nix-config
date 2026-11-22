@@ -270,39 +270,39 @@ in
                 ];
               };
 
+              routes = mkTraefikRoute {
+                name = "nextcloud";
+                port = 8080;
+                subdomain = cfg.subdomain;
+                extraRouteConfig = name: {
+                  # CalDAV/CardDAV well-known URL redirects (required for mobile apps)
+                  "traefik.http.middlewares.nextcloud-caldav.redirectregex.permanent" = "true";
+                  "traefik.http.middlewares.nextcloud-caldav.redirectregex.regex" =
+                    "^https://(.*)/.well-known/(card|cal)dav";
+                  "traefik.http.middlewares.nextcloud-caldav.redirectregex.replacement" =
+                    "https://\${1}/remote.php/dav/";
+
+                  # WebFinger/NodeInfo well-known URL redirects (required for federation and social apps)
+                  "traefik.http.middlewares.nextcloud-wellknown.redirectregex.permanent" = "true";
+                  "traefik.http.middlewares.nextcloud-wellknown.redirectregex.regex" =
+                    "^https://([^/]+)/.well-known/(webfinger|nodeinfo)(.*)";
+                  "traefik.http.middlewares.nextcloud-wellknown.redirectregex.replacement" =
+                    "https://\${1}/index.php/.well-known/\${2}\${3}";
+
+                  # HSTS and security headers
+                  "traefik.http.middlewares.nextcloud-headers.headers.stsSeconds" = "315360000";
+                  "traefik.http.middlewares.nextcloud-headers.headers.stsIncludeSubdomains" = "true";
+
+                  # Apply middlewares (NO authelia - Nextcloud has its own auth + OIDC)
+                  "traefik.http.routers.${name}.middlewares" =
+                    "nextcloud-caldav,nextcloud-wellknown,nextcloud-headers";
+                };
+              };
+
               containerConfig = {
                 image = "docker.io/nginxinc/nginx-unprivileged:alpine";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "nextcloud";
-                  port = 8080;
-                  subdomain = cfg.subdomain;
-                  extraRouteConfig = name: {
-                    # CalDAV/CardDAV well-known URL redirects (required for mobile apps)
-                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.permanent" = "true";
-                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.regex" =
-                      "^https://(.*)/.well-known/(card|cal)dav";
-                    "traefik.http.middlewares.nextcloud-caldav.redirectregex.replacement" =
-                      "https://$${1}/remote.php/dav/";
-
-                    # WebFinger/NodeInfo well-known URL redirects (required for federation and social apps)
-                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.permanent" = "true";
-                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.regex" =
-                      "^https://([^/]+)/.well-known/(webfinger|nodeinfo)(.*)";
-                    "traefik.http.middlewares.nextcloud-wellknown.redirectregex.replacement" =
-                      "https://$${1}/index.php/.well-known/$${2}$${3}";
-
-                    # HSTS and security headers
-                    "traefik.http.middlewares.nextcloud-headers.headers.stsSeconds" = "315360000";
-                    "traefik.http.middlewares.nextcloud-headers.headers.stsIncludeSubdomains" = "true";
-
-                    # Apply middlewares (NO authelia - Nextcloud has its own auth + OIDC)
-                    "traefik.http.routers.${name}.middlewares" =
-                      "nextcloud-caldav,nextcloud-wellknown,nextcloud-headers";
-                  };
-                };
 
                 environments = {
                   TZ = "Europe/Amsterdam";
@@ -329,6 +329,18 @@ in
                 After = [ pods.nextcloud.ref ];
               };
 
+              routes = mkTraefikRoute {
+                name = "collabora";
+                port = 9980;
+                subdomain = cfg.collabora.subdomain;
+                extraRouteConfig = name: {
+                  # Forward HTTPS protocol header (SSL termination via Traefik)
+                  "traefik.http.middlewares.collabora-headers.headers.customRequestHeaders.X-Forwarded-Proto" =
+                    "https";
+                  "traefik.http.routers.${name}.middlewares" = "collabora-headers";
+                };
+              };
+
               containerConfig = {
                 image = "docker.io/collabora/code:latest";
                 pod = pods.nextcloud.ref;
@@ -347,18 +359,6 @@ in
                 # and the image has no /bin/sh. Disable it; Traefik routes to
                 # containers without health status, and systemd restarts on crash.
                 healthCmd = "none";
-
-                labels = mkTraefikRoute {
-                  name = "collabora";
-                  port = 9980;
-                  subdomain = cfg.collabora.subdomain;
-                  extraRouteConfig = name: {
-                    # Forward HTTPS protocol header (SSL termination via Traefik)
-                    "traefik.http.middlewares.collabora-headers.headers.customRequestHeaders.X-Forwarded-Proto" =
-                      "https";
-                    "traefik.http.routers.${name}.middlewares" = "collabora-headers";
-                  };
-                };
 
                 environments = {
                   TZ = "Europe/Amsterdam";
@@ -448,16 +448,16 @@ in
                 ];
               };
 
+              routes = mkTraefikRoute {
+                name = "talk";
+                port = 8088;
+                subdomain = cfg.talk.hpb.subdomain;
+              };
+
               containerConfig = {
                 image = "ghcr.io/strukturag/nextcloud-spreed-signaling:latest";
                 pod = pods.nextcloud.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "talk";
-                  port = 8088;
-                  subdomain = cfg.talk.hpb.subdomain;
-                };
 
                 environments.TZ = "Europe/Amsterdam";
 
@@ -481,6 +481,13 @@ in
                 After = [ pods.nextcloud.ref ];
               };
 
+              routes = mkTraefikRoute {
+                name = "nextcloud-whiteboard";
+                port = 3002;
+                subdomain = cfg.whiteboard.subdomain;
+                extraRouteConfig = _: { };
+              };
+
               containerConfig = {
                 image = "ghcr.io/nextcloud-releases/whiteboard:stable";
                 pod = pods.nextcloud.ref;
@@ -493,12 +500,6 @@ in
 
                 environmentFiles = [ nixosConfig.sops.templates."nextcloud-whiteboard-secrets".path ];
 
-                labels = mkTraefikRoute {
-                  name = "nextcloud-whiteboard";
-                  port = 3002;
-                  subdomain = cfg.whiteboard.subdomain;
-                  extraRouteConfig = _: { };
-                };
               };
             };
           };

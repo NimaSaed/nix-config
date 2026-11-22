@@ -109,17 +109,17 @@ in
                 After = [ pods.tools.ref ];
               };
 
+              routes = mkTraefikRoute {
+                name = "homepage";
+                port = 3000;
+                subdomain = cfg.homepage.subdomain;
+                middlewares = true;
+              };
+
               containerConfig = {
                 image = "ghcr.io/gethomepage/homepage:latest";
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "homepage";
-                  port = 3000;
-                  subdomain = cfg.homepage.subdomain;
-                  middlewares = true;
-                };
 
                 environments = {
                   HOMEPAGE_ALLOWED_HOSTS = "${cfg.homepage.subdomain}.${domain},tools:3000";
@@ -154,16 +154,17 @@ in
                 After = [ pods.tools.ref ];
               };
 
+              routes = mkTraefikRoute {
+                name = "it-tools";
+                port = 80;
+                subdomain = cfg.itTools.subdomain;
+              };
+
               containerConfig = {
                 image = "ghcr.io/corentinth/it-tools:latest";
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
 
-                labels = mkTraefikRoute {
-                  name = "it-tools";
-                  port = 80;
-                  subdomain = cfg.itTools.subdomain;
-                };
               };
             };
 
@@ -180,17 +181,17 @@ in
                 After = [ pods.tools.ref ];
               };
 
+              routes = mkTraefikRoute {
+                name = "changedetection";
+                port = 5000;
+                subdomain = cfg.changedetection.subdomain;
+                middlewares = true;
+              };
+
               containerConfig = {
                 image = "ghcr.io/dgtlmoon/changedetection.io:latest";
                 pod = pods.tools.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "changedetection";
-                  port = 5000;
-                  subdomain = cfg.changedetection.subdomain;
-                  middlewares = true;
-                };
 
                 environments = {
                   BASE_URL = "https://${cfg.changedetection.subdomain}.${domain}";

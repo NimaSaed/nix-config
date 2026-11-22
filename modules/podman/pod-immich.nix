@@ -166,18 +166,18 @@ in
                 ];
               };
 
+              routes = mkTraefikRoute {
+                name = "immich";
+                port = 2283;
+                subdomain = cfg.subdomain;
+                # No forward auth middleware — Immich handles auth itself via OIDC
+                middlewares = false;
+              };
+
               containerConfig = {
                 image = "ghcr.io/immich-app/immich-server:release";
                 pod = pods.immich.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "immich";
-                  port = 2283;
-                  subdomain = cfg.subdomain;
-                  # No forward auth middleware — Immich handles auth itself via OIDC
-                  middlewares = false;
-                };
 
                 environments = {
                   TZ = "Europe/Amsterdam";

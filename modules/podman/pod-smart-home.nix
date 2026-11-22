@@ -68,24 +68,24 @@ in
                 After = [ "smart_home-pod.service" ];
               };
 
+              routes = mkTraefikRoute {
+                name = "scrypted";
+                port = 10443;
+                scheme = "https";
+                subdomain = cfg.scrypted.subdomain;
+                middlewares = true;
+                extraRouteConfig = name: {
+                  "traefik.tcp.routers.${name}-homekit.entrypoints" = "scryptedhomekit";
+                  "traefik.tcp.routers.${name}-homekit.rule" = "HostSNI(`*`)";
+                  "traefik.tcp.routers.${name}-homekit.service" = "${name}-homekit";
+                  "traefik.tcp.services.${name}-homekit.loadbalancer.server.port" = "45888";
+                };
+              };
+
               containerConfig = {
                 image = "ghcr.io/koush/scrypted";
                 pod = pods.smart_home.ref;
                 autoUpdate = "registry";
-
-                labels = mkTraefikRoute {
-                  name = "scrypted";
-                  port = 10443;
-                  scheme = "https";
-                  subdomain = cfg.scrypted.subdomain;
-                  middlewares = true;
-                  extraRouteConfig = name: {
-                    "traefik.tcp.routers.${name}-homekit.entrypoints" = "scryptedhomekit";
-                    "traefik.tcp.routers.${name}-homekit.rule" = "HostSNI(`*`)";
-                    "traefik.tcp.routers.${name}-homekit.service" = "${name}-homekit";
-                    "traefik.tcp.services.${name}-homekit.loadbalancer.server.port" = "45888";
-                  };
-                };
 
                 environments = {
                   SCRYPTED_DEFAULT_AUTHENTICATION = "nima";

@@ -140,6 +140,14 @@ in
                 ];
               };
 
+              routes = mkTraefikRoute {
+                name = "vaultwarden";
+                port = 80;
+                subdomain = cfg.subdomain;
+                # No ForwardAuth middleware — Vaultwarden handles auth itself via OIDC
+                middlewares = false;
+              };
+
               containerConfig = {
                 # SSO support included in stable releases since v1.35.0 (Dec 2024)
                 image = "docker.io/vaultwarden/server:latest";
@@ -164,13 +172,6 @@ in
                   "${volumes.vaultwarden_data.ref}:/data"
                 ];
 
-                labels = mkTraefikRoute {
-                  name = "vaultwarden";
-                  port = 80;
-                  subdomain = cfg.subdomain;
-                  # No ForwardAuth middleware — Vaultwarden handles auth itself via OIDC
-                  middlewares = false;
-                };
               };
             };
           };

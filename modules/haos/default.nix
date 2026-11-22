@@ -7,7 +7,7 @@
 
 let
   cfg = config.services.haos;
-  domain = config.services.pods.domain;
+  inherit (config.services.pods) mkTraefikRoute;
   bridgeName = "br-haos";
   # When vlanId is set, bridge the VLAN sub-interface (e.g. eno1.3) instead of
   # the physical NIC — host NIC keeps its own DHCP lease, VM gets the VLAN IP.
@@ -270,50 +270,19 @@ in
       };
     };
 
-    # ============================================================================
-    # Traefik Routing — file provider
-    # The VM is not a container, so Traefik cannot discover it through labels.
-    # Routes are rendered into /etc/traefik/dynamic, which the Traefik container
-    # bind-mounts and watches (modules/podman/pod-reverse-proxy.nix). The file is
-    # written by NixOS system activation, so a route change never depends on a
-    # poddy user unit being regenerated or restarted.
-    #
-    # mode != "symlink" makes NixOS copy the file: a /nix/store symlink would
-    # not resolve inside the Traefik container.
-    # ============================================================================
-    environment.etc."traefik/dynamic/haos.yml" = {
-      mode = "0444";
-      source = (pkgs.formats.yaml { }).generate "traefik-haos.yml" {
-        http = {
-          routers = {
-            homeassistant = {
-              rule = "Host(`${cfg.subdomain}.${domain}`)";
-              entryPoints = [ "websecure" ];
-              service = "homeassistant";
-              tls.certResolver = "letsencrypt";
-            };
-          }
-          // lib.optionalAttrs cfg.musicAssistant.enable {
-            musicassistant = {
-              rule = "Host(`${cfg.musicAssistant.subdomain}.${domain}`)";
-              entryPoints = [ "websecure" ];
-              service = "musicassistant";
-              tls.certResolver = "letsencrypt";
-            };
-          };
-
-          services = {
-            homeassistant.loadBalancer.servers = [
-              { url = "http://${cfg.vmIp}:${toString cfg.port}"; }
-            ];
-          }
-          // lib.optionalAttrs cfg.musicAssistant.enable {
-            musicassistant.loadBalancer.servers = [
-              { url = "http://${cfg.vmIp}:${toString cfg.musicAssistant.port}"; }
-            ];
-          };
-        };
-      };
+    services.pods.reverse-proxy.backends.haos = {
+      host = cfg.vmIp;
+      routes =
+        mkTraefikRoute {
+          name = "homeassistant";
+          port = cfg.port;
+          subdomain = cfg.subdomain;
+        }
+        // lib.optionalAttrs cfg.musicAssistant.enable (mkTraefikRoute {
+          name = "musicassistant";
+          port = cfg.musicAssistant.port;
+          subdomain = cfg.musicAssistant.subdomain;
+        });
     };
   };
 }
