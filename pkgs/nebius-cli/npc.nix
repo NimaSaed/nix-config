@@ -17,14 +17,14 @@
 callPackage ./generic.nix {
   pname = "npc";
   binName = "npc";
-  version = "0.0.172";
+  version = "0.0.236";
   baseUrl = "https://artifactory.nebius.dev/artifactory/npc";
 
   sources = {
     x86_64-linux = {
       os = "linux";
       arch = "x86_64";
-      hash = "sha256-SYJ1rsjaSGIEz6VDx5NRPyrPTayrElRa6EPDV4HXng0=";
+      hash = "sha256-e9LOS9Pqb0GQ8nVF8k1/j8ZWqgvZHPjLCyACdsI5L48=";
     };
   };
 
